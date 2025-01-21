@@ -1,0 +1,16 @@
+{
+  "name": "fixithub",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start:frontend": "npm --prefix frontend run dev",
+    "start:backend": "npm --prefix backend run dev",
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
