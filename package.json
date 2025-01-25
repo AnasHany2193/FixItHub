@@ -6,9 +6,9 @@
     "backend"
   ],
   "scripts": {
-    "start:frontend": "npm --prefix frontend run dev",
-    "start:backend": "npm --prefix backend run dev",
-    "dev": "concurrently \"npm run start:frontend\" \"npm run start:backend\""
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\""
   },
   "devDependencies": {
     "concurrently": "^7.6.0"

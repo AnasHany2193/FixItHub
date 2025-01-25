@@ -114,10 +114,10 @@ npm run start:frontend
 
 ## 👥 **Team Members**:
 
-- **Anas Hany** - Full Stack Developer (MERN)
-- **Islam Sobhi** - Mobile Developer (Flutter)
-- **Ahmed Matter** - Front-End Developer
-- **Afnan Raafat** - Documentation
 - **Mariam Zaki** - UI/UX Designer
+- **Ahmed Matter** - Back-End Developer
+- **Afnan Raafat** - Front-End Developer
+- **Islam Sobhi** - Mobile Developer (Flutter)
+- **Anas Hany** - Full Stack Developer (MERN)
 
 ## 🎉 **Happy Coding!** 🚀

@@ -2,28 +2,40 @@ import express from "express";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js"; // Import the DB connection function
 
-dotenv.config();
+import authRoutes from "./routes/authRoutes.js";
+import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
 
-export const ENV = process.env.NODE_ENV;
-export const PORT = process.env.PORT || 3000;
+dotenv.config(); // Load environment variables
 
 // Initialize Express app
 const app = express();
-
-// Connect to MongoDB
-connectDB();
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json()); // To parse JSON data from requests
 
 // Routes
+app.use("/api/v1/auth", authRoutes);
 app.get("/", (_, res) => {
   res.send("Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀");
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(
-    `🟢 Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Server is running on http://localhost:${PORT}`
-  );
-});
+// Error handling middleware should be added last
+app.use(errorHandler);
+
+// Start Server
+const startServer = async () => {
+  try {
+    await connectDB(); // Connect to the database
+    app.listen(PORT, () => {
+      console.log(
+        `🟢 Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Server is running on http://localhost:${PORT}`
+      );
+    });
+  } catch (error) {
+    console.error("Failed to start the server:", error.message);
+    process.exit(1); // Exit with failure code
+  }
+};
+
+startServer();
