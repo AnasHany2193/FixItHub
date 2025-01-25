@@ -29,6 +29,11 @@ const userSchema = new mongoose.Schema(
       default:
         "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
     },
+    role: {
+      type: String,
+      enum: ["user", "worker", "admin"], // Roles allowed
+      default: "user", // Default role is "user"
+    },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
 );
