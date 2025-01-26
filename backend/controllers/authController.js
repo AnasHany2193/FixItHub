@@ -59,13 +59,9 @@ export const login = async (req, res, next) => {
       throw error;
     }
 
-    const token = jwt.sign(
-      { id: user._id, username: user.username, email: user.email },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
-      }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+    });
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -98,5 +94,25 @@ export const logout = async (req, res, next) => {
     });
   } catch (error) {
     next(error); // Pass the error to the centralized error handler
+  }
+};
+
+// Get the currently logged-in user
+export const getCurrentUser = async (req, res, next) => {
+  try {
+    // Ensure req.user exists (set by authMiddleware)
+    if (!req.user) {
+      const error = new Error("No user is logged in.");
+      error.statusCode = 401; // Unauthorized
+      return next(error);
+    }
+
+    // Send the user details back as a response
+    res.status(200).json({
+      success: true,
+      user: req.user, // req.user is populated by authMiddleware
+    });
+  } catch (error) {
+    next(error); // Pass any errors to the global error handler
   }
 };

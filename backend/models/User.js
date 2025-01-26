@@ -34,6 +34,10 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "worker", "admin"], // Roles allowed
       default: "user", // Default role is "user"
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
 );

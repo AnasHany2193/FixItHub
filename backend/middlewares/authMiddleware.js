@@ -1,12 +1,21 @@
 import jwt from "jsonwebtoken";
+import User from "../models/User.js";
 
 // Middleware to authenticate the user
 export const authMiddleware = async (req, res, next) => {
   const token =
     req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 
+  console.log("------------------------------");
+  console.log("| req.cookies    ", req.cookies);
+  console.log("------------------------------");
+  console.log("| Authorization  ", req.header("Authorization"));
+  console.log("------------------------------");
+  console.log("| token          ", token);
+  console.log("|------------------------------");
+
   if (!token) {
-    const error = new Error("No token provided. Please log in.");
+    const error = new Error("No token provided. Please log in. 123");
     error.statusCode = 401;
     return next(error); // Passing the error to the global error handler
   }
@@ -14,7 +23,6 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id).select("-password"); // Attach the user data to the request
-    console.log(req.user);
     next(); // Proceed to the next middleware or route handler
   } catch (error) {
     error.statusCode = 401;
