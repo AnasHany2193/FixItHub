@@ -4,17 +4,24 @@ import { useApp } from "./contexts/AppContext";
 import { HomePage } from "./pages/public/HomePage";
 import { AboutPage } from "./pages/public/AboutPage";
 import { MainLayout } from "./pages/public/MainLayout";
+import { LoginPage } from "./pages/auth/LoginPage";
+import { RegisterPage } from "./pages/auth/RegisterPage";
 
 function App() {
   const { darkMode } = useApp();
 
   return (
-    <main className={`${darkMode ? "dark" : ""} flex min-h-screen`}>
+    <main
+      className={`${darkMode ? "dark" : ""} flex min-h-screen font-JosefinSans`}
+    >
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="/about" element={<AboutPage />} />
+          <Route path="about" element={<AboutPage />} />
         </Route>
+
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
       </Routes>
     </main>
   );

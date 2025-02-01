@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -114,4 +116,43 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+/* Light Mode Scrollbar */
+:root {
+  --scrollbar-bg: #e0e7ff; /* Light blue (matches light background) */
+  --scrollbar-thumb: #4f46e5; /* Strong blue (matches buttons) */
+  --scrollbar-thumb-hover: #4338ca; /* Darker blue for hover */
+}
+
+/* Dark Mode Scrollbar */
+.dark {
+  --scrollbar-bg: #1e1b4b; /* Deep indigo (matches dark mode) */
+  --scrollbar-thumb: #6366f1; /* Lighter indigo for contrast */
+  --scrollbar-thumb-hover: #818cf8; /* Even lighter on hover */
+}
+
+/* Background of the scrollbar */
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+  border-radius: 10px;
+}
+
+/* Scrollbar handle */
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+  transition: background 0.3s ease-in-out;
+}
+
+/* Scrollbar handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+  cursor: pointer;
 }
