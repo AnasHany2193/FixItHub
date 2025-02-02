@@ -3,10 +3,10 @@ import { useApp } from "./contexts/AppContext";
 
 import { HomePage } from "./pages/public/HomePage";
 import { AboutPage } from "./pages/public/AboutPage";
-import { MainLayout } from "./pages/public/MainLayout";
+import { MainLayout } from "./layout/MainLayout";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
-import { AuthLayout } from "./pages/auth/AuthLayout";
+import { AuthLayout } from "./layout/AuthLayout";
 
 function App() {
   const { darkMode } = useApp();

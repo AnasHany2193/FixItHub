@@ -1,11 +1,14 @@
-import { Link, Outlet } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { useApp } from "@/contexts/AppContext";
+import PageTransition from "@/components/shared/PageTransition";
 
 export const AuthLayout = () => {
+  const location = useLocation();
   const { darkMode, changeMode } = useApp();
 
   return (
@@ -18,14 +21,18 @@ export const AuthLayout = () => {
         ← Back to Home Page
       </Link>
 
-      {/* Auth Card */}
-      <Card className="relative w-full max-w-md p-8 m-4 border border-blue-200 backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
-        {/* Decorative Light */}
-        <div className="absolute w-24 h-24 bg-blue-400 rounded-full opacity-50 -top-6 -left-6 blur-xl dark:bg-indigo-600" />
+      {/* Animated Auth Card */}
+      <AnimatePresence mode="wait">
+        <PageTransition key={location.key}>
+          <Card className="relative w-full max-w-md p-8 m-4 mx-auto border border-blue-200 backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
+            {/* Decorative Light */}
+            <div className="absolute w-24 h-24 bg-blue-400 rounded-full opacity-50 -top-6 -left-6 blur-xl dark:bg-indigo-600" />
 
-        {/* Login || Register */}
-        <Outlet />
-      </Card>
+            {/* Animated Content Area */}
+            <Outlet />
+          </Card>
+        </PageTransition>
+      </AnimatePresence>
 
       <Button
         onClick={changeMode}

@@ -118,12 +118,16 @@
   }
 }
 
-/* * {
-  @apply transition-all duration-500 ease-in-out;
-} */
+/* Prevent layout jumps during animation */
+html,
+body {
+  overflow-x: hidden;
+}
 
-* {
-  @apply transition-all duration-200 ease-in-out;
+/* Optional: Add a smooth background transition */
+body {
+  background: transparent;
+  transition: background 0.3s ease;
 }
 
 /* Scrollbar styles */
