@@ -8,7 +8,7 @@ export const MainLayout = () => {
   const { darkMode, changeMode } = useApp();
 
   return (
-    <div className="w-full text-gray-800">
+    <div className="w-full text-gray-800 transition-all-custom">
       {/* Main NavBar */}
       <nav className="fixed z-10 flex items-center justify-between w-full gap-3 px-6 py-2 shadow-sm bg-inherit dark:text-gray-200">
         {/* Logo */}
@@ -35,16 +35,10 @@ export const MainLayout = () => {
         {/* Sign In and Register */}
         <div className="flex items-center gap-5">
           <Link
-            to="login"
-            className="border-indigo-900 hover:border-b dark:border-blue-300"
-          >
-            Sign In
-          </Link>
-          <Link
             to="register"
             className="border-indigo-900 hover:border-b dark:border-blue-300"
           >
-            Register
+            Join Us
           </Link>
           <Separator
             orientation="vertical"
