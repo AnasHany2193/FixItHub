@@ -5,7 +5,7 @@ import { HomePage } from "./pages/public/HomePage";
 import { AboutPage } from "./pages/public/AboutPage";
 import { MainLayout } from "./pages/public/MainLayout";
 import { LoginPage } from "./pages/auth/LoginPage";
-import { RegisterPage, RegisterPageExample } from "./pages/auth/RegisterPage";
+import { RegisterPage } from "./pages/auth/RegisterPage";
 import { AuthLayout } from "./pages/auth/AuthLayout";
 
 function App() {
@@ -25,8 +25,6 @@ function App() {
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
         </Route>
-
-        <Route path="register-example" element={<RegisterPageExample />} />
       </Routes>
     </main>
   );
