@@ -6,17 +6,17 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
       unique: true,
       minlength: 3,
       maxlength: 30,
+      required: true,
       lowercase: true,
     },
     email: {
       type: String,
+      unique: true, // Ensures email is unique
       required: true,
       lowercase: true,
-      unique: true, // Ensures email is unique
       match: [/^\S+@\S+\.\S+$/, "Please use a valid email address."], // Email format validation blabla@bla.bla
     },
     password: {
@@ -24,19 +24,50 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6, // Set a minimum length for security
     },
-    avatar: {
+    lastLogin: Date,
+    status: {
       type: String,
-      default:
-        "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
+      enum: ["active", "suspended"],
+      default: "active",
+    },
+    profile: {
+      avatar: {
+        type: String,
+        default:
+          "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
+      },
+      phone: String,
+      address: {
+        street: String,
+        city: String,
+        zip: String,
+      },
     },
     role: {
       type: String,
-      enum: ["user", "worker", "admin"], // Roles allowed
-      default: "user", // Default role is "user"
+      required: true,
+      enum: ["customer", "worker", "admin"],
+      default: "customer", // Default role is "customer"
     },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    // Worker-specific
+    workerApplication: {
+      skills: [String],
+      certifications: [String],
+      experience: String,
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
+      rating: {
+        type: Number,
+        min: 1,
+        max: 5,
+      },
     },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
