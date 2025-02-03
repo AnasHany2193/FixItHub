@@ -4,7 +4,6 @@ import createHttpError from "http-errors";
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
 import {
-  sendEmail,
   sendResendOtpEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -117,47 +116,80 @@ export const resendOTP = async (req, res, next) => {
 
 // Check the credentials, compare the password, and generate a JWT token for the session.
 export const login = async (req, res, next) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
-    // Validate request body
-    if (!username || !password) {
-      const error = new Error("Username and password are required.");
-      error.statusCode = 400; // Bad Request
-      throw error;
+    // Validate input
+    if (!email || !password) {
+      throw createHttpError(400, "Email and password are required");
     }
 
-    const user = await User.findOne({ username });
-    if (!user) {
-      const error = new Error("User is not exists!");
-      error.statusCode = 400; // Bad Request
-      throw error;
+    // Find user and validate password
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) throw createHttpError(401, "Invalid credentials");
+
+    const isPasswordValid = await user.validatePassword(password);
+    if (!isPasswordValid) throw createHttpError(401, "Invalid credentials");
+
+    // Check if email is verified
+    if (!user.isVerified) {
+      throw createHttpError(403, "Verify your email first");
     }
 
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      const error = new Error("Invalid username or password.");
-      error.statusCode = 401; // Unauthorized
-      throw error;
-    }
+    // Generate tokens
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN || "1d",
-    });
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    res.cookie("token", token, {
+    // Set refresh token in HTTP-only cookie
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict", // Protect against CSRF attacks
-      maxAge: 24 * 60 * 60 * 1000, // 1 day in milliseconds
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    const welcomeMessage =
+      user.role === "customer"
+        ? "Welcome to FixItHub! Get ready to explore our amazing products and services."
+        : "Welcome aboard, Worker! We're thrilled to have you join our dedicated team.";
+
     res.status(200).json({
-      token,
       success: true,
-      message: "Logged in successfully",
+      accessToken,
+      user: { id: user._id, email: user.email, role: user.role },
+      message: welcomeMessage,
     });
-  } catch (error) {
-    next(error); // Pass the error to the error handler middleware
+  } catch (err) {
+    next(err); // Pass the error to the error handler middleware
+  }
+};
+
+//
+export const refreshToken = async (req, res, next) => {
+  const { refreshToken } = req.cookies;
+  try {
+    if (!refreshToken) throw createHttpError(401, "Unauthorized");
+
+    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) throw createHttpError(401, "Unauthorized");
+
+    const newAccessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    res.status(200).json({ success: true, accessToken: newAccessToken });
+  } catch (err) {
+    next(err);
   }
 };
 
