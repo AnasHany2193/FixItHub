@@ -1,36 +1,48 @@
-import User from "../models/User.js";
 import jwt from "jsonwebtoken";
+import createHttpError from "http-errors";
+
+import User from "../models/User.js";
 
 // Handle new user registration, hash password, and save it to the database.
 export const register = async (req, res, next) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
 
   try {
-    // Check if the user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      const error = new Error("User already exists!");
-      error.statusCode = 400; // Bad Request
-      throw error;
-    }
+    // Check need to be admin
+    if (role === "admin") throw createHttpError(401, "Nice Try :)");
 
-    // Create a new user, password will be hashed in pre-save middleware
+    // Check if the user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }], // Check for email OR username
+    });
+    if (existingUser)
+      throw createHttpError(409, "Email or username already registered");
+
+    // Create unverified user
     const user = await User.create({
       username,
       email,
       password,
+      role: role || "customer",
+    });
+
+    // Generate OTP (example utility)
+    const otp = generateOTP();
+    // TODO: Store OTP in DB with expiration
+
+    // Send verification email
+    await sendEmail({
+      to: email,
+      subject: "Verify Your Email",
+      text: `Your OTP is ${otp}`,
     });
 
     res.status(201).json({
-      message: "User registered successfully",
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-      },
+      success: true,
+      message: "Registration successful. Check email for verification.",
     });
-  } catch (error) {
-    next(error); // Pass the error to the error handler middleware
+  } catch (err) {
+    next(err); // Pass the error to the error handler middleware
   }
 };
 

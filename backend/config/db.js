@@ -17,4 +17,7 @@ const connectDB = async () => {
   }
 };
 
+// Handle Mongoose deprecation warnings
+mongoose.set("strictQuery", true);
+
 export default connectDB;

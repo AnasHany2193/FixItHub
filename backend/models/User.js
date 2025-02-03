@@ -1,6 +1,6 @@
-// Define the User schema (username, email, password).
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
+import validator from "validator";
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,20 +16,30 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       unique: true, // Ensures email is unique
-      required: true,
       lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, "Please use a valid email address."], // Email format validation blabla@bla.bla
+      required: [true, "Email is required"],
+      validate: [validator.isEmail, "Invalid email format"],
     },
     password: {
       type: String,
+      required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters"],
+      select: false,
+    },
+    role: {
+      type: String,
       required: true,
-      minlength: 6, // Set a minimum length for security
+      enum: ["customer", "worker", "admin"],
+      default: "customer", // Default role is "customer"
     },
     lastLogin: Date,
-    status: {
-      type: String,
-      enum: ["active", "suspended"],
-      default: "active",
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
     profile: {
       avatar: {
@@ -43,16 +53,6 @@ const userSchema = new mongoose.Schema(
         city: String,
         zip: String,
       },
-    },
-    role: {
-      type: String,
-      required: true,
-      enum: ["customer", "worker", "admin"],
-      default: "customer", // Default role is "customer"
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
     },
     // Worker-specific
     workerApplication: {
@@ -77,8 +77,7 @@ const userSchema = new mongoose.Schema(
 // Hash the password before saving the user
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next(); // Skip if password is not modified
-  const salt = await bcrypt.genSalt(10); // Generate salt
-  this.password = await bcrypt.hash(this.password, salt); // Hash the password
+  this.password = await bcrypt.hash(this.password, 10); // Hash the password
   next();
 });
 

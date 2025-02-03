@@ -1,17 +1,26 @@
+import createHttpError from "http-errors";
+
 // Error handler middleware
 const errorHandler = (err, req, res, next) => {
-  console.error(err); // Log the error for debugging
+  // Log the error for debugging
+  console.error(`[${new Date().toISOString()}] Error: ${err.message}`);
 
-  // Default status and message for server errors
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
+  // Handle JWT errors
+  if (err.name === "UnauthorizedError")
+    return res.status(401).json({ error: "Invalid or expired token" });
 
-  // Respond with the error message and status code
-  res.status(statusCode).json({
-    success: false,
-    message,
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
+  // Handle Mongoose validation errors
+  if (err.name === "ValidationError") {
+    return res.status(400).json({ error: err.message });
+  }
+
+  // Handle HTTP errors
+  if (err instanceof createHttpError.HttpError) {
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+
+  // Fallback: Generic server error
+  res.status(500).json({ error: "Internal server error" });
 };
 
 export default errorHandler;

@@ -19,10 +19,13 @@ app.use(express.json()); // To parse JSON data from requests
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 // Routes
-app.use("/api/v1/auth", authRoutes);
 app.get("/", (_, res) => {
   res.send("Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀");
 });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "OK", timestamp: new Date() });
+});
+app.use("/api/v1/auth", authRoutes);
 
 // Error handling middleware should be added last
 app.use(errorHandler);
