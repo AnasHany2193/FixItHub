@@ -20,13 +20,13 @@ app.use(express.json()); // To parse JSON data from requests
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 app.use(helmet());
-app.use(helmet.permittedCrossDomainPolicies);
+app.use(helmet.permittedCrossDomainPolicies());
 
 // Routes
 app.get("/", (_, res) => {
   res.send("Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀");
 });
-app.get("/api/health", (req, res) => {
+app.get("/api/v1/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date() });
 });
 app.use("/api/v1/auth", authRoutes);

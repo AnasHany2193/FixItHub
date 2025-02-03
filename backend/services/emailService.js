@@ -1,5 +1,10 @@
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
+import {
+  resendOtpEmailTemplate,
+  verificationEmailTemplate,
+  welcomeEmailTemplate,
+} from "../utils/emailTemplates.js";
 
 dotenv.config(); // Load environment variables
 
@@ -27,4 +32,35 @@ export const sendEmail = async ({ to, subject, text, html }) => {
     console.error("Email send error:", error.message);
     throw new Error("Failed to send email");
   }
+};
+
+// Example usage for sending verification email
+export const sendVerificationEmail = async (email, otpCode) => {
+  await sendEmail({
+    to: email,
+    subject: "Verify Your FixItHub Account",
+    html: verificationEmailTemplate(otpCode),
+  });
+};
+
+// Example usage for sending resend OTP email
+export const sendResendOtpEmail = async (email, otpCode) => {
+  await sendEmail({
+    to: email,
+    subject: "New OTP for FixItHub",
+    html: resendOtpEmailTemplate(otpCode),
+  });
+};
+
+/**
+ * Sends a welcome email to the user after verification.
+ * @param {string} email - The recipient's email address.
+ * @param {string} userName - (Optional) The user's name.
+ */
+export const sendWelcomeEmail = async (email, userName) => {
+  await sendEmail({
+    to: email,
+    subject: "Welcome to FixItHub!",
+    html: welcomeEmailTemplate(userName),
+  });
 };

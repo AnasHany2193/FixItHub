@@ -7,6 +7,7 @@ import {
   login,
   logout,
   getCurrentUser,
+  resendOTP,
 } from "../controllers/auth.js";
 
 // Middlewares
@@ -19,6 +20,7 @@ const router = express.Router();
 router.post("/register", validateRegistration, register);
 
 router.post("/verify-otp", verifyOTP);
+router.post("/resend-otp", resendOTP);
 
 // Route for user login
 router.post("/login", login);

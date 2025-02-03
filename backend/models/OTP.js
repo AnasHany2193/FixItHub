@@ -13,17 +13,19 @@ const otpSchema = new mongoose.Schema({
   },
   expiresAt: {
     type: Date,
-    default: Date.now() + 10 + 60 + 100, // 10 minutes
+    default: Date.now() + 10 * 60 * 1000, // 10 minutes
   },
 });
 
+// Hash OTP before saving
 otpSchema.pre("save", async function (next) {
   if (!this.isModified("code")) return next();
   this.code = await bcrypt.hash(this.code, 10);
   next();
 });
 
-otpSchema.method.validateOTP = async function (candidateCode) {
+// Method to validate OTP
+otpSchema.methods.validateOTP = async function (candidateCode) {
   return await bcrypt.compare(candidateCode, this.code);
 };
 

@@ -3,6 +3,12 @@ import createHttpError from "http-errors";
 
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
+import {
+  sendEmail,
+  sendResendOtpEmail,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from "./../services/emailService.js";
 
 // Handle new user registration, hash password, and save it to the database.
 export const register = async (req, res, next) => {
@@ -20,7 +26,7 @@ export const register = async (req, res, next) => {
       throw createHttpError(409, "Email or username already registered");
 
     // Create unverified user
-    const user = await User.create({
+    var user = await User.create({
       username,
       email,
       password,
@@ -29,19 +35,15 @@ export const register = async (req, res, next) => {
 
     // Generate OTP (example utility)
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-
     // Save hashed OTP to DB
     const otp = await OTP.create({
       userId: user._id,
       code: otpCode,
     });
+    console.log("register", otpCode);
 
     // Send verification email
-    await sendEmail({
-      to: email,
-      subject: "Verify Your FixItHub Account",
-      html: `<p>Your OTP is <strong>${otpCode}</strong>. It expires in 10 minutes.</p>`,
-    });
+    await sendVerificationEmail(email, otpCode);
 
     res.status(201).json({
       success: true,
@@ -70,7 +72,7 @@ export const verifyOTP = async (req, res, next) => {
       throw createHttpError(400, "OTP expired or invalid");
 
     // Validate OTP
-    const isValid = await OTP.validateOTP(code);
+    const isValid = await otp.validateOTP(code);
     if (!isValid) throw createHttpError(400, "Invalid OTP");
 
     // Mark user as verified
@@ -80,12 +82,17 @@ export const verifyOTP = async (req, res, next) => {
     // Delete OTP document after successful verification
     await OTP.deleteOne({ _id: otp._id });
 
+    // Send a welcome email
+    // Optionally, pass user's name if available (e.g., existingUser.username)
+    await sendWelcomeEmail(email, existingUser.username);
+
     res.status(200).json({ success: true, message: "Email verified" });
-  } catch (error) {
+  } catch (err) {
     next(err);
   }
 };
 
+//
 export const resendOTP = async (req, res, next) => {
   const { email } = req.body;
   try {
@@ -98,15 +105,12 @@ export const resendOTP = async (req, res, next) => {
     // Generate new OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     await OTP.create({ userId: existingUser._id, code: otpCode });
-
-    await sendEmail({
-      to: email,
-      subject: "New OTP for FixItHub",
-      html: `<p>Your new OTP is <strong>${otpCode}</strong>.</p>`,
-    });
+    console.log("resendOTP", otpCode);
+    // ReSend OTP verification email
+    sendResendOtpEmail(email, otpCode);
 
     res.status(200).json({ success: true, message: "Now OTP sent" });
-  } catch (error) {
+  } catch (err) {
     next(err);
   }
 };
