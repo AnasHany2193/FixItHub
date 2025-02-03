@@ -10,13 +10,14 @@ const userSchema = new mongoose.Schema(
       unique: true, // Ensures username is unique
       minlength: 3,
       maxlength: 30,
+      required: true,
       lowercase: true,
     },
     email: {
       type: String,
+      unique: true, // Ensures email is unique
       required: true,
       lowercase: true,
-      unique: true, // Ensures email is unique
       match: [/^\S+@\S+\.\S+$/, "Please use a valid email address."], // Email format validation blabla@bla.bla
     },
     password: {
@@ -24,38 +25,35 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6, // Set a minimum length for security
     },
-    role: {
-      type: String,
-      enum: ["customer", "worker", "admin"], // Roles allowed
-      default: "customer", // Default role is "customer
-      required: true,
-    },
-    profile: {
-      phone: String,
-      avatar: {
-        type: String,
-        default:
-          "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
-      },
-      address: {
-        street: String,
-        city: String,
-        zip: String,
-      },
-    },
     lastLogin: Date,
     status: {
       type: String,
       enum: ["active", "suspended"],
       default: "active",
     },
-    // Customer-specific
-    paymentMethods: [
-      {
-        type: { enum: ["card", "paypal"] },
-        details: mongoose.Schema.Types.Mixed,
+    profile: {
+      avatar: {
+        type: String,
+        default:
+          "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
       },
-    ],
+      phone: String,
+      address: {
+        street: String,
+        city: String,
+        zip: String,
+      },
+    },
+    role: {
+      type: String,
+      required: true,
+      enum: ["customer", "worker", "admin"],
+      default: "customer", // Default role is "customer"
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
     // Worker-specific
     workerApplication: {
       skills: [String],
