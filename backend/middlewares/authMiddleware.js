@@ -6,14 +6,6 @@ export const authMiddleware = async (req, res, next) => {
   const token =
     req.cookies?.token || req.header("Authorization")?.replace("Bearer ", "");
 
-  console.log("------------------------------");
-  console.log("| req.cookies    ", req.cookies);
-  console.log("------------------------------");
-  console.log("| Authorization  ", req.header("Authorization"));
-  console.log("------------------------------");
-  console.log("| token          ", token);
-  console.log("|------------------------------");
-
   if (!token) {
     const error = new Error("No token provided. Please log in. 123");
     error.statusCode = 401;

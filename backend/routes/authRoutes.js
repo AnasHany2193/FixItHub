@@ -1,17 +1,21 @@
 import express from "express";
 
+// Controllers
 import {
   login,
   logout,
   register,
   getCurrentUser,
 } from "../controllers/auth.js";
+
+// Middlewares
 import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { validateRegistration } from "../middlewares/validateRequest.js";
 
 const router = express.Router();
 
 // Route for user registration
-router.post("/register", register);
+router.post("/register", validateRegistration, register);
 
 // Route for user login
 router.post("/login", login);
