@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
 
+import OTP from "../models/OTP";
 import User from "../models/User.js";
 
 // Handle new user registration, hash password, and save it to the database.
@@ -27,22 +28,61 @@ export const register = async (req, res, next) => {
     });
 
     // Generate OTP (example utility)
-    const otp = generateOTP();
-    // TODO: Store OTP in DB with expiration
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+
+    // Save hashed OTP to DB
+    const otp = await OTP.create({
+      userId: user._id,
+      code: otpCode,
+    });
 
     // Send verification email
     await sendEmail({
       to: email,
-      subject: "Verify Your Email",
-      text: `Your OTP is ${otp}`,
+      subject: "Verify Your FixItHub Account",
+      html: `<p>Your OTP is <strong>${otpCode}</strong>. It expires in 10 minutes.</p>`,
     });
 
     res.status(201).json({
       success: true,
-      message: "Registration successful. Check email for verification.",
+      message: "Registration successful. Check email for OTP verification.",
     });
   } catch (err) {
+    // Rollback user creation if email fails
+    if (user) await User.deleteOne({ _id: user._id });
     next(err); // Pass the error to the error handler middleware
+  }
+};
+
+//
+export const verifyOTP = async (req, res, next) => {
+  const { email, code } = req.body;
+  try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) throw createHttpError(404, "User not found");
+
+    // Find the latest OTP for the user
+    const otp = await OTP.findOne({ userId: existingUser._id }).sort({
+      expiresAt: -1,
+    });
+    if (!otp || otp.expiresAt < Date.now())
+      throw createHttpError(400, "OTP expired or invalid");
+
+    // Validate OTP
+    const isValid = await OTP.validateOTP(code);
+    if (!isValid) throw createHttpError(400, "Invalid OTP");
+
+    // Mark user as verified
+    existingUser.isVerified = true;
+    await existingUser.save();
+
+    // Delete OTP document after successful verification
+    await OTP.deleteOne({ _id: otp._id });
+
+    res.status(200).json({ success: true, message: "Email verified" });
+  } catch (error) {
+    next(err);
   }
 };
 
