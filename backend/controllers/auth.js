@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
 
-import OTP from "../models/OTP";
+import OTP from "../models/OTP.js";
 import User from "../models/User.js";
 
 // Handle new user registration, hash password, and save it to the database.
@@ -81,6 +81,31 @@ export const verifyOTP = async (req, res, next) => {
     await OTP.deleteOne({ _id: otp._id });
 
     res.status(200).json({ success: true, message: "Email verified" });
+  } catch (error) {
+    next(err);
+  }
+};
+
+export const resendOTP = async (req, res, next) => {
+  const { email } = req.body;
+  try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) throw createHttpError(404, "User not found");
+    if (existingUser.isVerified)
+      throw createHttpError(400, "User already verified");
+
+    // Generate new OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    await OTP.create({ userId: existingUser._id, code: otpCode });
+
+    await sendEmail({
+      to: email,
+      subject: "New OTP for FixItHub",
+      html: `<p>Your new OTP is <strong>${otpCode}</strong>.</p>`,
+    });
+
+    res.status(200).json({ success: true, message: "Now OTP sent" });
   } catch (error) {
     next(err);
   }

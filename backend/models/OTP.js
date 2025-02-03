@@ -1,5 +1,5 @@
 import { mongoose } from "mongoose";
-import { bcrypt } from "bcryptjs";
+import bcrypt from "bcryptjs";
 
 const otpSchema = new mongoose.Schema({
   userId: {
