@@ -14,7 +14,10 @@ import {
 } from "../controllers/auth.js";
 
 // Middlewares
-import { validateRegistration } from "../middlewares/validateRequest.js";
+import {
+  validatePassword,
+  validateRegistration,
+} from "../middlewares/validateRequest.js";
 import {
   authLimiter,
   generalLimiter,
@@ -32,7 +35,7 @@ const router = express.Router();
 router.use(generalLimiter);
 
 // Route for user registration
-router.post("/register", validateRegistration, register);
+router.post("/register", validateRegistration, validatePassword, register);
 
 router.post("/verify-otp", authLimiter, verifyOTP);
 router.post("/resend-otp", resendOTP);
@@ -47,7 +50,12 @@ router.get("/admin/dashboard", protect, roleCheck(["admin"]), (req, res) => {
 });
 
 router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", passwordResetLimiter, resetPassword);
+router.post(
+  "/reset-password",
+  validatePassword,
+  passwordResetLimiter,
+  resetPassword
+);
 
 // Route for user logout
 router.get("/logout", logout);
