@@ -155,10 +155,15 @@ export const login = async (req, res, next) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
+    // Generate a welcome message based on user role
     const welcomeMessage =
       user.role === "customer"
         ? "Welcome to FixItHub! Get ready to explore our amazing products and services."
-        : "Welcome aboard, Worker! We're thrilled to have you join our dedicated team.";
+        : user.role === "worker"
+          ? "Welcome aboard, Worker! We're thrilled to have you join our dedicated team."
+          : user.role === "admin"
+            ? "Welcome Admin! You now have full access to our powerful control panel."
+            : "WHO ARE YOU!! 😢";
 
     res.status(200).json({
       success: true,

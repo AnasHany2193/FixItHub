@@ -1,5 +1,28 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import createHttpError from "http-errors";
+
+export const protect = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer "))
+    throw createHttpError(401, "Unauthorized - No token provided");
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    throw createHttpError(401, "Unauthorized - Invalid token");
+  }
+};
+
+export const roleCheck = (roles) => (req, res, next) => {
+  if (!roles.includes(req.user.role)) {
+    throw createHttpError(403, "Forbidden - Insufficient permissions");
+  }
+  next();
+};
 
 // Middleware to authenticate the user
 export const authMiddleware = async (req, res, next) => {

@@ -8,10 +8,15 @@ import {
   logout,
   getCurrentUser,
   resendOTP,
+  refreshToken,
 } from "../controllers/auth.js";
 
 // Middlewares
-import { authMiddleware } from "../middlewares/authMiddleware.js";
+import {
+  authMiddleware,
+  protect,
+  roleCheck,
+} from "../middlewares/authMiddleware.js";
 import { validateRegistration } from "../middlewares/validateRequest.js";
 
 const router = express.Router();
@@ -24,6 +29,12 @@ router.post("/resend-otp", resendOTP);
 
 // Route for user login
 router.post("/login", login);
+router.post("/refresh-token", refreshToken);
+
+// Example protected route (admin-only)
+router.get("/admin/dashboard", protect, roleCheck(["admin"]), (req, res) => {
+  res.json({ secretData: "Admin dashboard" });
+});
 
 // Route for user logout
 router.get("/logout", logout);

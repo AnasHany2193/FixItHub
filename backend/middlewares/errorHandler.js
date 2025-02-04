@@ -5,15 +5,9 @@ const errorHandler = (err, req, res, next) => {
   // Log the error for debugging
   console.error(`[ERROR] ${err.stack}`); // Log full stack trace
 
+  console.log("err", err);
+
   if (process.env.NODE_ENV === "production") delete err.stack; // Hide stack in production
-
-  // Handle JWT errors
-  if (err.name === "UnauthorizedError")
-    return res.status(401).json({ error: "Invalid or expired token" });
-
-  // Handle Mongoose validation errors
-  if (err.name === "ValidationError")
-    return res.status(400).json({ error: err.message });
 
   // Handle HTTP errors
   if (err instanceof createHttpError.HttpError)
