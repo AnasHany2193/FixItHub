@@ -5,7 +5,7 @@ import User from "../models/User.js";
 //
 export const getCurrentUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.userId)
+    const user = await User.findById(req.user._id)
       .select("-password") // Exclude password
       .lean(); // Return plain JS object
 

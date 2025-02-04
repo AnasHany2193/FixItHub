@@ -1,5 +1,7 @@
 import express from "express";
 
+import { upload } from "../utils/imageUploadUtil.js";
+
 // Controllers
 import {
   register,
@@ -14,6 +16,7 @@ import {
 } from "../controllers/auth.js";
 
 // Middlewares
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 import {
   validatePassword,
   validateRegistration,
@@ -24,12 +27,6 @@ import {
   generalLimiter,
   passwordResetLimiter,
 } from "../middlewares/rateLimiter.js";
-import {
-  authMiddleware,
-  protect,
-  roleCheck,
-} from "../middlewares/authMiddleware.js";
-import { upload } from "../utils/imageUploadUtil.js";
 
 const router = express.Router();
 
@@ -68,8 +65,5 @@ router.post(
 
 // Route for user logout
 router.get("/logout", logout);
-
-// Route for get user data
-router.get("/me", authMiddleware, getCurrentUser);
 
 export default router;
