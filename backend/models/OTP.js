@@ -15,6 +15,11 @@ const otpSchema = new mongoose.Schema({
     type: Date,
     default: Date.now() + 10 * 60 * 1000, // 10 minutes
   },
+  type: {
+    type: String,
+    enum: ["verification", "passwordReset"],
+    default: "verification",
+  },
 });
 
 // Hash OTP before saving
