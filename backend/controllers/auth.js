@@ -4,6 +4,7 @@ import createHttpError from "http-errors";
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
 import {
+  sendPasswordResetOtpEmail,
   sendResendOtpEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -193,6 +194,32 @@ export const refreshToken = async (req, res, next) => {
     );
 
     res.status(200).json({ success: true, accessToken: newAccessToken });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//
+export const forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) throw createHttpError(404, "User not found");
+    if (!user.isVerified) throw createHttpError(403, "Verify your email first");
+
+    // Generate OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await OTP.create({
+      userId: user._id,
+      code: otpCode,
+      type: "passwordReset",
+    });
+
+    // Send OTP via email
+    sendPasswordResetOtpEmail(email, otpCode);
+
+    res.status(200).json({ success: true, message: "OTP sent to email" });
   } catch (err) {
     next(err);
   }

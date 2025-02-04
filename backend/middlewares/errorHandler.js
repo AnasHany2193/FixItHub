@@ -11,10 +11,12 @@ const errorHandler = (err, req, res, next) => {
 
   // Handle HTTP errors
   if (err instanceof createHttpError.HttpError)
-    return res.status(err.statusCode).json({ error: err.message });
+    return res
+      .status(err.statusCode)
+      .json({ success: false, error: err.message });
 
   // Fallback: Generic server error
-  res.status(500).json({ error: "Internal server error" });
+  res.status(500).json({ success: false, error: "Internal server error" });
 };
 
 export default errorHandler;

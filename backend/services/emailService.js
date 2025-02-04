@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 import {
+  passwordResetOtpEmailTemplate,
   resendOtpEmailTemplate,
   verificationEmailTemplate,
   welcomeEmailTemplate,
@@ -62,5 +63,18 @@ export const sendWelcomeEmail = async (email, userName) => {
     to: email,
     subject: "Welcome to FixItHub!",
     html: welcomeEmailTemplate(userName),
+  });
+};
+
+/**
+ * Sends a password reset OTP email.
+ * @param {string} email - The recipient's email address.
+ * @param {string} otpCode - The OTP code for resetting the password.
+ */
+export const sendPasswordResetOtpEmail = async (email, otpCode) => {
+  await sendEmail({
+    to: email,
+    subject: "Password Reset OTP",
+    html: passwordResetOtpEmailTemplate(otpCode),
   });
 };
