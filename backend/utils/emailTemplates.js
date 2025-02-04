@@ -351,3 +351,88 @@ export const passwordResetOtpEmailTemplate = (otpCode) => {
   </html>
   `;
 };
+
+// utils/emailTemplates.js
+
+/**
+ * Generates the HTML for the password reset confirmation email.
+ * @param {string} userName - (Optional) The user's name for a personalized greeting.
+ * @returns {string} - HTML string for the password reset confirmation email.
+ */
+export const resetPasswordEmailTemplate = (userName = "User") => {
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Password Reset Successful</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f4f4f4;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          padding: 20px;
+          border: 1px solid #dddddd;
+        }
+        .header {
+          text-align: center;
+          padding-bottom: 20px;
+        }
+        .separator {
+          margin: 20px auto;
+          width: 80%;
+          border-top: 1px solid #cccccc;
+          position: relative;
+          text-align: center;
+        }
+        .separator span {
+          background-color: #ffffff;
+          padding: 0 10px;
+          position: relative;
+          top: -13px;
+          font-size: 12px;
+          color: #666666;
+        }
+        .content {
+          font-size: 16px;
+          line-height: 1.5;
+          color: #333333;
+        }
+        .footer {
+          font-size: 12px;
+          text-align: center;
+          color: #777777;
+          margin-top: 30px;
+          border-top: 1px solid #dddddd;
+          padding-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>FixItHub</h2>
+          <div class="separator">
+            <span>123-465</span>
+          </div>
+        </div>
+        <div class="content">
+          <p>Hello ${userName},</p>
+          <p>Your password has been reset successfully.</p>
+          <p>If you did not perform this action, please contact our support team immediately.</p>
+          <p>Thank you for being a part of FixItHub.</p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} FixItHub. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+};

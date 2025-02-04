@@ -6,11 +6,12 @@ import User from "../models/User.js";
 import {
   sendPasswordResetOtpEmail,
   sendResendOtpEmail,
+  sendResetPasswordEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
 } from "./../services/emailService.js";
 
-// Handle new user registration, hash password, and save it to the database.
+//
 export const register = async (req, res, next) => {
   const { username, email, password, role } = req.body;
 
@@ -115,7 +116,7 @@ export const resendOTP = async (req, res, next) => {
   }
 };
 
-// Check the credentials, compare the password, and generate a JWT token for the session.
+//
 export const login = async (req, res, next) => {
   const { email, password } = req.body;
   try {
@@ -209,7 +210,6 @@ export const forgotPassword = async (req, res, next) => {
 
     // Generate OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-
     await OTP.create({
       userId: user._id,
       code: otpCode,
@@ -220,6 +220,43 @@ export const forgotPassword = async (req, res, next) => {
     sendPasswordResetOtpEmail(email, otpCode);
 
     res.status(200).json({ success: true, message: "OTP sent to email" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//
+export const resetPassword = async (req, res, next) => {
+  const { email, code, newPassword } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) throw createHttpError(404, "User not found");
+
+    // Find the latest password reset OTP
+    const otp = await OTP.findOne({
+      userId: user._id,
+      type: "passwordReset",
+    }).sort({ expiresAt: -1 });
+    if (!otp || otp.expiresAt < Date.now())
+      throw createHttpError(400, "OTP expired or invalid");
+
+    // Validate OTP
+    const isValid = await otp.validateOTP(code);
+    if (!isValid) throw createHttpError(400, "Invalid OTP");
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    // Send the password reset confirmation email
+    sendResetPasswordEmail(email, user.username);
+
+    // Delete OTP after successful reset
+    await OTP.deleteOne({ _id: otp._id });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset successful" });
   } catch (err) {
     next(err);
   }

@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import {
   passwordResetOtpEmailTemplate,
   resendOtpEmailTemplate,
+  resetPasswordEmailTemplate,
   verificationEmailTemplate,
   welcomeEmailTemplate,
 } from "../utils/emailTemplates.js";
@@ -76,5 +77,18 @@ export const sendPasswordResetOtpEmail = async (email, otpCode) => {
     to: email,
     subject: "Password Reset OTP",
     html: passwordResetOtpEmailTemplate(otpCode),
+  });
+};
+
+/**
+ * Sends a password reset confirmation email.
+ * @param {string} email - The recipient's email address.
+ * @param {string} userName - (Optional) The user's name.
+ */
+export const sendResetPasswordEmail = async (email, userName) => {
+  await sendEmail({
+    to: email,
+    subject: "Password Reset Successful",
+    html: resetPasswordEmailTemplate(userName),
   });
 };

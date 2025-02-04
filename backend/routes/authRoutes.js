@@ -10,6 +10,7 @@ import {
   resendOTP,
   refreshToken,
   forgotPassword,
+  resetPassword,
 } from "../controllers/auth.js";
 
 // Middlewares
@@ -38,6 +39,7 @@ router.get("/admin/dashboard", protect, roleCheck(["admin"]), (req, res) => {
 });
 
 router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // Route for user logout
 router.get("/logout", logout);
