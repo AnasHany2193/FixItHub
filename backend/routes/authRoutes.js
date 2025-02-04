@@ -17,6 +17,7 @@ import {
 import {
   validatePassword,
   validateRegistration,
+  validateWorkerRegistration,
 } from "../middlewares/validateRequest.js";
 import {
   authLimiter,
@@ -28,6 +29,7 @@ import {
   protect,
   roleCheck,
 } from "../middlewares/authMiddleware.js";
+import { upload } from "../utils/imageUploadUtil.js";
 
 const router = express.Router();
 
@@ -35,7 +37,14 @@ const router = express.Router();
 router.use(generalLimiter);
 
 // Route for user registration
-router.post("/register", validateRegistration, validatePassword, register);
+router.post(
+  "/register",
+  upload,
+  validateRegistration,
+  validatePassword,
+  validateWorkerRegistration,
+  register
+);
 
 router.post("/verify-otp", authLimiter, verifyOTP);
 router.post("/resend-otp", resendOTP);

@@ -4,9 +4,11 @@ import cors from "cors";
 import helmet from "helmet";
 
 import connectDB from "./config/db.js"; // Import the DB connection function
+import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
 
 import authRoutes from "./routes/authRoutes.js";
-import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
+import adminRoutes from "./routes/adminRoutes.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 dotenv.config(); // Load environment variables
 
@@ -30,6 +32,8 @@ app.get("/api/v1/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date() });
 });
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/document", uploadRoutes);
 
 // Error handling middleware should be added last
 app.use(errorHandler);

@@ -12,6 +12,14 @@ export const validateRegistration = [
   },
 ];
 
+export const validateWorkerRegistration = [
+  body("documents")
+    .if(body("role").equals("worker"))
+    .isArray({ min: 1 })
+    .withMessage("At least 1 document is required"),
+  body("documents.*").isURL().withMessage("Invalid document URL format"),
+];
+
 export const validatePassword = [
   body("password")
     .isStrongPassword({

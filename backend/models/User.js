@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import validator from "validator";
 
+import cloudinary from "../config/cloudinary.js";
+
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -56,8 +58,8 @@ const userSchema = new mongoose.Schema(
     },
     // Worker-specific
     workerApplication: {
-      skills: [String],
-      certifications: [String],
+      skills: { type: [String], default: [] },
+      certifications: { type: [String], default: [] },
       experience: String,
       status: {
         type: String,
@@ -69,6 +71,7 @@ const userSchema = new mongoose.Schema(
         min: 1,
         max: 5,
       },
+      documents: { type: [String], default: [] },
     },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
@@ -79,6 +82,14 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next(); // Skip if password is not modified
   this.password = await bcrypt.hash(this.password, 10); // Hash the password
   next();
+});
+
+userSchema.post("findOneAndUpdate", async function (doc) {
+  if (doc.workerApplication.status === "rejected") {
+    await cloudinary.api.delete_resources(
+      doc.workerApplication.documents.map((d) => d.public_id)
+    );
+  }
 });
 
 // Method to compare password

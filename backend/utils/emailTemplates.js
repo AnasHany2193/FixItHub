@@ -177,8 +177,6 @@ export const resendOtpEmailTemplate = (otpCode) => {
   `;
 };
 
-// utils/emailTemplates.js
-
 /**
  * Generates the HTML for the welcome email.
  * @param {string} userName - (Optional) The user's name to personalize the welcome message.
@@ -261,8 +259,6 @@ export const welcomeEmailTemplate = (userName = "User") => {
   </html>
   `;
 };
-
-// utils/emailTemplates.js
 
 /**
  * Generates the HTML for the password reset OTP email.
@@ -352,8 +348,6 @@ export const passwordResetOtpEmailTemplate = (otpCode) => {
   `;
 };
 
-// utils/emailTemplates.js
-
 /**
  * Generates the HTML for the password reset confirmation email.
  * @param {string} userName - (Optional) The user's name for a personalized greeting.
@@ -427,6 +421,101 @@ export const resetPasswordEmailTemplate = (userName = "User") => {
           <p>Your password has been reset successfully.</p>
           <p>If you did not perform this action, please contact our support team immediately.</p>
           <p>Thank you for being a part of FixItHub.</p>
+        </div>
+        <div class="footer">
+          <p>&copy; ${new Date().getFullYear()} FixItHub. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+};
+
+/**
+ * Generates the HTML for the worker approval email.
+ * @param {string} userName - (Optional) The worker's name for a personalized greeting.
+ * @returns {string} - HTML string for the worker approval email.
+ */
+export const workerApprovalEmailTemplate = (userName = "Worker") => {
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Worker Application Approved!</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f4;
+          margin: 0;
+          padding: 0;
+        }
+        .container {
+          max-width: 600px;
+          margin: 20px auto;
+          background-color: #ffffff;
+          padding: 20px;
+          border: 1px solid #dddddd;
+        }
+        .header {
+          text-align: center;
+          padding-bottom: 20px;
+        }
+        .separator {
+          margin: 20px auto;
+          width: 80%;
+          border-top: 1px solid #cccccc;
+          position: relative;
+          text-align: center;
+        }
+        .separator span {
+          background-color: #ffffff;
+          padding: 0 10px;
+          position: relative;
+          top: -13px;
+          font-size: 12px;
+          color: #666666;
+        }
+        .content {
+          font-size: 16px;
+          line-height: 1.5;
+          color: #333333;
+        }
+        .cta {
+          display: block;
+          width: 200px;
+          margin: 30px auto;
+          padding: 10px;
+          text-align: center;
+          background-color: #1a73e8;
+          color: #ffffff;
+          text-decoration: none;
+          border-radius: 5px;
+        }
+        .footer {
+          font-size: 12px;
+          text-align: center;
+          color: #777777;
+          margin-top: 30px;
+          border-top: 1px solid #dddddd;
+          padding-top: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h2>FixItHub</h2>
+          <div class="separator">
+            <span>123-465</span>
+          </div>
+        </div>
+        <div class="content">
+          <p>Hello ${userName},</p>
+          <p>Congratulations! Your application to become a worker has been approved.</p>
+          <p>You can now start offering repair services on FixItHub and help our community by providing your expertise.</p>
+          <a href="https://fixithub.example.com/dashboard" class="cta">Go to Dashboard</a>
+          <p>If you have any questions or need further assistance, feel free to contact our support team.</p>
         </div>
         <div class="footer">
           <p>&copy; ${new Date().getFullYear()} FixItHub. All rights reserved.</p>

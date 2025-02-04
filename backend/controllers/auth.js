@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
-import cloudinary from "cloudinary";
+import cloudinary from "../config/cloudinary.js";
 
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
@@ -14,17 +14,13 @@ import {
 
 //
 export const register = async (req, res, next) => {
-  const { username, email, password, role } = req.body;
+  const { username, email, password, role, skills, experience, documents } =
+    req.body;
   let user;
 
   try {
     // Prevent direct admin registration
     if (role === "admin") throw createHttpError(403, "Nice try 😉");
-
-    // Worker-specific validation
-    if (role === "worker" && !req.files?.documents) {
-      throw createHttpError(400, "Verification documents required");
-    }
 
     // Check if the user already exists
     const existingUser = await User.findOne({
@@ -33,38 +29,29 @@ export const register = async (req, res, next) => {
     if (existingUser)
       throw createHttpError(409, "Email or username already registered");
 
+    // Validate worker documents
+    if (role === "worker") {
+      if (!documents?.length) {
+        throw createHttpError(400, "At least 1 document is required");
+      }
+    }
+
     // Create unverified user (worker status defaults to 'pending')
     user = await User.create({
       username,
       email,
       password,
-      role,
+      role: role === "worker" ? "customer" : role, // Default to "customer" until approved
       workerApplication:
         role === "worker"
           ? {
-              skills: req.body.skills?.split(","),
-              certifications: req.body.certifications?.split(","),
-              experience: req.body.experience,
+              skills: skills?.split(","),
+              experience,
+              documents, // Expects array of Cloudinary URLs from /api/v1/upload
               status: "pending",
             }
           : undefined,
     });
-
-    // Upload documents to Cloudinary (worker only)
-    if (role === "worker") {
-      const documents = await Promise.all(
-        req.files.documents.map(async (file) => {
-          const result = await cloudinary.uploader.upload(file.path, {
-            folder: "worker_docs",
-            resource_type: "auto",
-          });
-          return { url: result.secure_url, public_id: result.public_id };
-        })
-      );
-
-      user.workerApplication.documents = documents;
-      await user.save();
-    }
 
     // Generate OTP (example utility)
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
@@ -305,7 +292,7 @@ export const resetPassword = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.clearCookie("token", {
+    res.clearCookie("accessToken", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Match original cookie settings
       sameSite: "strict",

@@ -92,3 +92,16 @@ export const sendResetPasswordEmail = async (email, userName) => {
     html: resetPasswordEmailTemplate(userName),
   });
 };
+
+/**
+ * Sends the worker approval email.
+ * @param {string} email - The recipient's email address.
+ * @param {string} userName - (Optional) The user's name.
+ */
+export const sendApprovalEmail = async (email, userName) => {
+  await sendEmail({
+    to: email,
+    subject: "Worker Application Approved!",
+    html: resetPasswordEmailTemplate(userName),
+  });
+};
