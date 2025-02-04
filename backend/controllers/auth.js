@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
+import cloudinary from "cloudinary";
 
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
@@ -14,10 +15,16 @@ import {
 //
 export const register = async (req, res, next) => {
   const { username, email, password, role } = req.body;
+  let user;
 
   try {
-    // Check need to be admin
-    if (role === "admin") throw createHttpError(401, "Nice Try :)");
+    // Prevent direct admin registration
+    if (role === "admin") throw createHttpError(403, "Nice try 😉");
+
+    // Worker-specific validation
+    if (role === "worker" && !req.files?.documents) {
+      throw createHttpError(400, "Verification documents required");
+    }
 
     // Check if the user already exists
     const existingUser = await User.findOne({
@@ -26,13 +33,38 @@ export const register = async (req, res, next) => {
     if (existingUser)
       throw createHttpError(409, "Email or username already registered");
 
-    // Create unverified user
-    var user = await User.create({
+    // Create unverified user (worker status defaults to 'pending')
+    user = await User.create({
       username,
       email,
       password,
-      role: role || "customer",
+      role,
+      workerApplication:
+        role === "worker"
+          ? {
+              skills: req.body.skills?.split(","),
+              certifications: req.body.certifications?.split(","),
+              experience: req.body.experience,
+              status: "pending",
+            }
+          : undefined,
     });
+
+    // Upload documents to Cloudinary (worker only)
+    if (role === "worker") {
+      const documents = await Promise.all(
+        req.files.documents.map(async (file) => {
+          const result = await cloudinary.uploader.upload(file.path, {
+            folder: "worker_docs",
+            resource_type: "auto",
+          });
+          return { url: result.secure_url, public_id: result.public_id };
+        })
+      );
+
+      user.workerApplication.documents = documents;
+      await user.save();
+    }
 
     // Generate OTP (example utility)
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
@@ -51,8 +83,16 @@ export const register = async (req, res, next) => {
       message: "Registration successful. Check email for OTP verification.",
     });
   } catch (err) {
+    // Cleanup uploaded files on error
+    if (user?.workerApplication?.documents) {
+      await cloudinary.api.delete_resources(
+        user.workerApplication.documents.map((doc) => doc.public_id)
+      );
+    }
+
     // Rollback user creation if email fails
     if (user) await User.deleteOne({ _id: user._id });
+
     next(err); // Pass the error to the error handler middleware
   }
 };
@@ -215,6 +255,7 @@ export const forgotPassword = async (req, res, next) => {
       code: otpCode,
       type: "passwordReset",
     });
+    console.log("forgotPassword", otpCode);
 
     // Send OTP via email
     sendPasswordResetOtpEmail(email, otpCode);
