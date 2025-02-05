@@ -25,7 +25,7 @@ export const LoginPage = () => {
       <LoginForm />
 
       {/* Footer */}
-      <CardFooter className="grid justify-center w-full grid-cols-1 gap-2 p-0 text-sm text-center text-gray-600 md:grid-cols-2 dark:text-gray-400">
+      <CardFooter className="grid w-full gap-2 p-0 text-sm text-center text-gray-600 dark:text-gray-400 md:grid-cols-3">
         <p>
           Don&apos;t have an account?{" "}
           <Link
@@ -42,6 +42,15 @@ export const LoginPage = () => {
             className="text-blue-500 hover:underline dark:text-indigo-400"
           >
             Reset it here
+          </Link>
+        </p>
+        <p>
+          Need to verify your account?{" "}
+          <Link
+            to="/verify-email"
+            className="text-blue-500 hover:underline dark:text-indigo-400"
+          >
+            Verify now
           </Link>
         </p>
       </CardFooter>

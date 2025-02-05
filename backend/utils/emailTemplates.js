@@ -75,7 +75,8 @@ export const verificationEmailTemplate = (otpCode) => {
           margin: 1rem 0;
           display: flex;
           gap: 1rem;
-          justify-content: center;
+          width: full
+          justify-content: evenly;
         }
         .note {
           color: #ef4444;
@@ -230,70 +231,138 @@ export const welcomeEmailTemplate = (userName = "User") => {
   <html>
     <head>
       <meta charset="UTF-8">
-      <title>Welcome to FixItHub!</title>
+      <title>🎉 Welcome to FixItHub, ${userName}!</title>
       <style>
         body {
-          font-family: Arial, sans-serif;
+          font-family: 'Josefin Sans', Arial, sans-serif;
           margin: 0;
           padding: 0;
-          background-color: #f4f4f4;
+          background-color: #f8fafc;
         }
         .container {
           max-width: 600px;
-          margin: 0 auto;
-          background-color: #ffffff;
-          padding: 20px;
-          border: 1px solid #dddddd;
+          margin: 2rem auto;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         .header {
-          text-align: center;
-          padding-bottom: 20px;
-        }
-        .separator {
-          margin: 20px auto;
-          width: 80%;
-          border-top: 1px solid #cccccc;
-          position: relative;
+          background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+          padding: 2rem;
           text-align: center;
         }
-        .separator span {
-          background-color: #ffffff;
-          padding: 0 10px;
-          position: relative;
-          top: -13px;
-          font-size: 12px;
-          color: #666666;
+        .logo {
+          font-size: 2.5rem;
+          color: white;
+          font-weight: 700;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
         }
         .content {
-          font-size: 16px;
-          line-height: 1.5;
-          color: #333333;
+          padding: 2rem;
+          color: #334155;
+          line-height: 1.6;
+        }
+        .cta-button {
+          display: inline-block;
+          background: #6366f1;
+          color: white !important;
+          padding: 12px 24px;
+          border-radius: 8px;
+          text-decoration: none;
+          margin: 1.5rem 0;
+          font-weight: 600;
+        }
+        .emoji {
+          font-size: 1.5rem;
+          vertical-align: middle;
         }
         .footer {
-          font-size: 12px;
+          background: #f1f5f9;
+          padding: 1.5rem;
           text-align: center;
-          color: #777777;
-          margin-top: 30px;
-          border-top: 1px solid #dddddd;
-          padding-top: 10px;
+          font-size: 0.875rem;
+          color: #64748b;
+        }
+        .social {
+          margin: 1rem 0;
+          display: flex;
+          gap: 1rem;
+          width: full
+          justify-content: evenly;
+        }
+        .features {
+          margin: 2rem 0;
+          padding: 0;
+          list-style: none;
+        }
+        .features li {
+          margin: 1rem 0;
+          padding-left: 2rem;
+          position: relative;
+        }
+        .features li::before {
+          content: '✓';
+          color: #6366f1;
+          position: absolute;
+          left: 0;
+          font-weight: bold;
+        }
+        .note {
+          color: #ef4444;
+          background: #fee2e2;
+          padding: 1rem;
+          border-radius: 6px;
+          margin: 1.5rem 0;
+          font-size: 0.875rem;
         }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h2>Welcome to FixItHub, ${userName}!</h2>
-          <div class="separator">
-          </div>
+          <h1 class="logo">
+            <span class="emoji">🔧</span>FixItHub<span class="emoji">⚙️</span>
+          </h1>
         </div>
+        
         <div class="content">
-          <p>Dear ${userName},</p>
-          <p>We're thrilled to have you join the FixItHub community. Your email has been successfully verified, and you can now take full advantage of our services.</p>
-          <p>Feel free to explore our platform, post repair requests, bid on projects, and connect with our expert team. We are here to make your experience seamless and enjoyable.</p>
-          <p>Welcome aboard!</p>
+          <p>👋 Hey ${userName},</p>
+          
+          <p>🎉 Welcome to the FixItHub family! We're excited to have you on board. Your account is all set and ready to go!</p>
+          
+          <div style="text-align: center">
+            <a href="#" class="cta-button">🚀 Start Your First Repair Request</a>
+          </div>
+
+          <p>Here's what you can do now:</p>
+          <ul class="features">
+            <li>📦 Create new repair requests in minutes</li>
+            <li>🔔 Get real-time status updates</li>
+            <li>💬 Chat directly with certified technicians</li>
+            <li>📊 Track your repair history</li>
+          </ul>
+
+          <div class="note">
+            🔒 Your security matters: We use bank-grade encryption to protect your data
+          </div>
+
+          <p>Need help getting started? Our <a href="#" style="color: #6366f1; text-decoration: none">📘 Knowledge Base</a> has everything you need!</p>
         </div>
+
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} FixItHub. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} FixItHub 🔧 | Making Repairs Simple</p>
+          <div class="social">
+          Follow us: 
+            <a href="https://github.com/AnasHany2193" style="color: #6366f1; text-decoration: none">🐦 GitHub</a>
+            <a href="https://www.linkedin.com/in/anashany219/" style="color: #6366f1; text-decoration: none">💼 LinkedIn</a>
+            <a href="https://www.facebook.com/anashany219/" style="color: #6366f1; text-decoration: none">📸 Facebook</a>
+          </div>
+          <p>Need help? Contact our friendly support team at <a href="mailto:support@fixithub.com" style="color: #6366f1; text-decoration: none">📩 support@fixithub.com</a></p>
         </div>
       </div>
     </body>
