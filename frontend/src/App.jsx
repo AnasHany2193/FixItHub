@@ -1,17 +1,24 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import { useApp } from "./contexts/AppContext";
+import { useUser } from "./contexts/UserContext";
+
+import { ProtectedRoute } from "./components/shared/ProtectedRoute";
+
+import { MainLayout } from "./layout/MainLayout";
+import { AuthLayout } from "./layout/AuthLayout";
 
 import { HomePage } from "./pages/public/HomePage";
 import { AboutPage } from "./pages/public/AboutPage";
-import { MainLayout } from "./layout/MainLayout";
 
-import { AuthLayout } from "./layout/AuthLayout";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
-import { AuthRoute } from "./components/shared/AuthRoute";
-import { ProtectedRoute } from "./components/shared/ProtectedRoute";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { WorkerDashboard } from "./pages/worker/WorkerDashboard";
+import { CustomerDashboard } from "./pages/customer/CustomerDashboard";
 
 function App() {
+  const { user } = useUser();
   const { darkMode } = useApp();
 
   return (
@@ -24,53 +31,44 @@ function App() {
         </Route>
 
         {/* Auth Routes: accessible only if NOT authenticated */}
-        <Route element={<AuthRoute />}>
+        {!user ? (
           <Route element={<AuthLayout />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
           </Route>
-        </Route>
+        ) : (
+          <Route path="*" element={<Navigate to="/" />} />
+        )}
 
         {/* Protected Routes: requires authentication and may be role-specific */}
         {/* Admin protected routes */}
         <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
           {/* Admin protected routes */}
-          <Route
-            path="admin/dashboard"
-            element={
-              <div className="w-full m-6 font-bold text-center">
-                Admin Dashboard
-              </div>
-            }
-          />
+          <Route path="admin/dashboard" element={<AdminDashboard />} />
           {/* other admin routes */}
         </Route>
 
         {/* Worker protected routes */}
         <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
-          <Route
-            path="worker/dashboard"
-            element={
-              <div className="w-full m-6 font-bold text-center">
-                Worker Dashboard
-              </div>
-            }
-          />
+          <Route path="worker/dashboard" element={<WorkerDashboard />} />
           {/* other worker routes */}
         </Route>
 
         {/* Customer protected routes */}
         <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
-          <Route
-            path="customer/dashboard"
-            element={
-              <div className="w-full m-6 font-bold text-center">
-                Customer Dashboard
-              </div>
-            }
-          />
+          <Route path="customer/dashboard" element={<CustomerDashboard />} />
           {/* other customer routes */}
         </Route>
+
+        {/* Catch-All Route */}
+        <Route
+          path="*"
+          element={
+            <div className="w-full p-6 font-bold text-center text-red-600">
+              Not Found
+            </div>
+          }
+        />
       </Routes>
     </main>
   );
