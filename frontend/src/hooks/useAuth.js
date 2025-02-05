@@ -1,6 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   forgotPassword,
+  getCurrentUser,
   loginUser,
   registerUser,
   resetPassword,
@@ -96,6 +97,16 @@ export const useResetPasswordMutation = () => {
     },
     onError: (error) => {
       console.error("Reset Password error:", error.message);
+    },
+  });
+};
+
+// Hook to fetch current user data
+export const useCurrentUserQuery = () => {
+  return useQuery(["currentUser"], getCurrentUser, {
+    staleTime: 5 * 60 * 1000, // 5 minutes cache time
+    onError: (error) => {
+      console.error("Error fetching current user:", error.message);
     },
   });
 };

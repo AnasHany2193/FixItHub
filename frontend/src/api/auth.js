@@ -46,3 +46,9 @@ export const resetPassword = async (data) => {
   const response = await axiosClient.post("/auth/reset-password", data);
   return response.data;
 };
+
+// Get Current User
+export const getCurrentUser = async () => {
+  const response = await axiosClient.get("/users/me");
+  return response.data;
+};
