@@ -21,6 +21,13 @@ function App() {
           <Route path="about" element={<AboutPage />} />
         </Route>
 
+        <Route
+          path="dashboard"
+          element={
+            <div className="w-full m-6 font-bold text-center">dashboard</div>
+          }
+        />
+
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>
           <Route path="login" element={<LoginPage />} />

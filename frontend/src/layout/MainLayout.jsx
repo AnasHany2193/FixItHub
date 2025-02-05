@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

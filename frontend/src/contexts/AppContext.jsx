@@ -9,11 +9,18 @@ import {
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    JSON.parse(localStorage.getItem("darkMode")) || false
+  );
 
   const changeMode = useCallback(() => {
     setDarkMode((prev) => !prev);
   }, []);
+
+  // Add useEffect to update localStorage
+  useEffect(() => {
+    localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  }, [darkMode]);
 
   const values = useMemo(
     () => ({

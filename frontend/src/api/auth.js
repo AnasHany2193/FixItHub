@@ -18,3 +18,17 @@ export const uploadImage = async (file) => {
   });
   return response.data;
 };
+
+// OTP Verification
+export const verifyOtp = async (data) => {
+  // data should be { email, code }
+  const response = await axiosClient.post("/auth/verify-otp", data);
+  return response.data;
+};
+
+// Login function
+export const loginUser = async (data) => {
+  // data should be { email, password }
+  const response = await axiosClient.post("/auth/login", data);
+  return response.data;
+};
