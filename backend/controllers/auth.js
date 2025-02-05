@@ -45,7 +45,9 @@ export const register = async (req, res, next) => {
       workerApplication:
         role === "worker"
           ? {
-              skills: skills?.split(","),
+              skills: Array.isArray(skills)
+                ? skills
+                : skills?.split(",").map((s) => s.trim()),
               experience,
               documents, // Expects array of Cloudinary URLs from /api/v1/upload
               status: "pending",

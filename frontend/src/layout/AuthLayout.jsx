@@ -16,7 +16,7 @@ export const AuthLayout = () => {
       {/* Back Button */}
       <Link
         to="/"
-        className="absolute z-20 hidden text-sm text-blue-500 top-4 left-4 hover:text-blue-600 dark:text-indigo-400 dark:hover:text-indigo-300 md:block"
+        className="fixed z-20 text-base text-blue-500 rounded-full md:text-xl top-4 left-4 hover:text-blue-600 dark:text-indigo-400 dark:hover:text-indigo-300 md:block"
       >
         ← Back to Home Page
       </Link>
@@ -24,7 +24,7 @@ export const AuthLayout = () => {
       {/* Animated Auth Card */}
       <AnimatePresence mode="wait">
         <PageTransition key={location.key}>
-          <Card className="relative w-full max-w-md p-8 m-4 mx-auto border border-blue-200 backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
+          <Card className="relative w-full max-w-md px-8 m-4 mx-auto border border-blue-200 backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
             {/* Decorative Light */}
             <div className="absolute w-24 h-24 bg-blue-400 rounded-full opacity-50 -top-6 -left-6 blur-xl dark:bg-indigo-600" />
 

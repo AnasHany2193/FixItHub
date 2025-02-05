@@ -16,4 +16,17 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to parse errors globally
+axiosClient.interceptors.response.use(
+  (response) => response, // Simply return the response for successful requests
+  (error) => {
+    // Use optional chaining to safely access error.response.data.error
+    const errorMessage =
+      error.response?.data?.error || "An unexpected error occurred";
+
+    // Reject a new Error instance
+    return Promise.reject(new Error(errorMessage));
+  }
+);
+
 export default axiosClient;
