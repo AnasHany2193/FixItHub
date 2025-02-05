@@ -16,6 +16,7 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { WorkerDashboard } from "./pages/worker/WorkerDashboard";
 import { CustomerDashboard } from "./pages/customer/CustomerDashboard";
 import LoginPage from "./pages/auth/LoginPage";
+import VerifyOtpPage from "./pages/auth/VerifyOtpPage";
 
 function App() {
   const { user } = useUser();
@@ -35,6 +36,7 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+            <Route path="verify-email" element={<VerifyOtpPage />} />
           </Route>
         ) : (
           <Route path="*" element={<Navigate to="/" />} />

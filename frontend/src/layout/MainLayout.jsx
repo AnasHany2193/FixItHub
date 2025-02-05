@@ -1,12 +1,10 @@
 import { Outlet } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 import { useApp } from "@/contexts/AppContext";
-import PageTransition from "@/components/shared/PageTransition";
 
 export const MainLayout = () => {
   const location = useLocation(); // Get current route location
@@ -65,11 +63,7 @@ export const MainLayout = () => {
       </nav>
 
       {/* Animated Content Area */}
-      <AnimatePresence mode="wait">
-        <PageTransition key={location.key}>
-          <Outlet />
-        </PageTransition>
-      </AnimatePresence>
+      <Outlet />
     </div>
   );
 };

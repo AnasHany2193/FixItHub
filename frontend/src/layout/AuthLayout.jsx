@@ -1,14 +1,11 @@
-import { AnimatePresence } from "framer-motion";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { useApp } from "@/contexts/AppContext";
-import PageTransition from "@/components/shared/PageTransition";
 
 export const AuthLayout = () => {
-  const location = useLocation();
   const { darkMode, changeMode } = useApp();
 
   return (

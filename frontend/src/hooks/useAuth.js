@@ -20,7 +20,7 @@ export const useRegisterMutation = () => {
     mutationFn: registerUser,
     onSuccess: (data) => {
       showToast("success", data.message);
-      navigate("/login");
+      navigate("/verify-email");
     },
     onError: (error) => {
       showToast("error", error.message);
@@ -41,17 +41,17 @@ export const useUploadMutation = () => {
 
 export const useVerifyOtpMutation = () => {
   const navigate = useNavigate();
+  const { showToast } = useCustomToast();
 
   return useMutation({
     mutationFn: verifyOtp,
     onSuccess: (data) => {
-      console.log("OTP verification successful", data);
       // Optionally, redirect the user to the login page or show a success message
-      // For example:
+      showToast("success", data.message);
       navigate("/login");
     },
     onError: (error) => {
-      console.error("OTP verification error:", error.message);
+      showToast("error", error.message);
     },
   });
 };
@@ -77,7 +77,6 @@ export const useLoginMutation = () => {
       navigate("/");
     },
     onError: (error) => {
-      console.error("Login error:", error.message);
       showToast("error", error.message);
     },
   });
