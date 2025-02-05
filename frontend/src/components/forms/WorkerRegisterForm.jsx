@@ -20,13 +20,20 @@ import {
 import { useForm } from "react-hook-form";
 import { Link } from "react-router";
 import { Label } from "../ui/label";
-const workerSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  skills: z.string().min(3, "List at least one skill"),
-  experience: z.string().min(10, "Describe your experience"),
-});
+
+const workerSchema = z
+  .object({
+    username: z.string().min(3, "Username must be at least 3 characters"),
+    email: z.string().email("Enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirm: z.string().min(6, "Please confirm your password"),
+    skills: z.string().min(3, "List at least one skill"),
+    experience: z.string().min(10, "Describe your experience"),
+  })
+  .refine((data) => data.password === data.confirm, {
+    message: "Passwords do not match",
+    path: ["confirm"],
+  });
 
 // Strong of the Password
 const calculatePasswordStrength = (password) => {
@@ -65,6 +72,14 @@ const WorkerRegisterForm = ({ onBack }) => {
       experience: "",
     },
   });
+
+  const {
+    formState: { errors },
+  } = form;
+  useEffect(() => {
+    if (errors.username || errors.email || errors.password || errors.confirm)
+      setStep(1);
+  }, [errors.username, errors.email, errors.password, errors.confirm]);
 
   const handleFileUpload = (file) => {
     uploadImage(file, {

@@ -14,7 +14,7 @@ export const RegisterPage = () => {
   const [selectedRole, setSelectedRole] = useState(null);
 
   return (
-    <div className="relative z-10 max-w-md py-6 space-y-6">
+    <div className="relative max-w-md py-6 space-y-4">
       {/* Register Header */}
       <CardHeader className="p-0 text-center">
         <CardTitle className="text-2xl font-bold text-blue-900 sm:text-3xl dark:text-indigo-300">

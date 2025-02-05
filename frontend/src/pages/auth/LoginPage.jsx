@@ -26,6 +26,7 @@ import {
 
 // Icons
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useLoginMutation } from "@/hooks/useAuth";
 
 // Schema validation
 const formSchema = z.object({
@@ -34,9 +35,8 @@ const formSchema = z.object({
 });
 
 export const LoginPage = () => {
+  const { mutate: loginUser, isPending, error } = useLoginMutation();
   const [showPassword, setShowPassword] = useState(false);
-  const error = false;
-  const isPending = false;
 
   // 1. Define your form.
   const form = useForm({
@@ -51,7 +51,7 @@ export const LoginPage = () => {
   function onSubmit(values) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
-    console.log("values", values);
+    loginUser(values);
   }
 
   return (

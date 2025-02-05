@@ -15,10 +15,15 @@ export const UserProvider = ({ children }) => {
   // If React Query successfully returns user data, update both state and localStorage.
   useEffect(() => {
     if (isSuccess && data) {
-      setUser(data);
-      localStorage.setItem("user", JSON.stringify(data));
+      setUser(data.data);
+      localStorage.setItem("user", JSON.stringify(data.data));
     }
   }, [isSuccess, data]);
+
+  const updateUser = (newUser) => {
+    setUser(newUser);
+    localStorage.setItem("user", JSON.stringify(newUser));
+  };
 
   // Might also want to handle errors, e.g., if the token is expired.
   // For simplicity, this example does not include a full error handling mechanism.
@@ -30,7 +35,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, logout, error }}>
+    <UserContext.Provider value={{ user, updateUser, logout, error }}>
       {children}
     </UserContext.Provider>
   );

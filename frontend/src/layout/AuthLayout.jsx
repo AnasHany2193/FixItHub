@@ -22,17 +22,13 @@ export const AuthLayout = () => {
       </Link>
 
       {/* Animated Auth Card */}
-      <AnimatePresence mode="wait">
-        <PageTransition key={location.key}>
-          <Card className="relative w-full max-w-md px-8 m-4 mx-auto border border-blue-200 backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
-            {/* Decorative Light */}
-            <div className="absolute w-24 h-24 bg-blue-400 rounded-full opacity-50 -top-6 -left-6 blur-xl dark:bg-indigo-600" />
+      <Card className="relative w-full max-w-md px-8 mx-auto overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
+        {/* Decorative Light */}
+        <div className="absolute w-24 h-24 bg-blue-400 rounded-full opacity-50 -top-6 -left-6 blur-xl dark:bg-indigo-600" />
 
-            {/* Animated Content Area */}
-            <Outlet />
-          </Card>
-        </PageTransition>
-      </AnimatePresence>
+        {/* Animated Content Area */}
+        <Outlet />
+      </Card>
 
       <Button
         onClick={changeMode}

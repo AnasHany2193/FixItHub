@@ -9,30 +9,32 @@ import {
   verifyOtp,
 } from "../api/auth";
 import { useNavigate } from "react-router-dom";
+import { useCustomToast } from "./useCustomToast";
+import { useUser } from "@/contexts/UserContext";
 
 export const useRegisterMutation = () => {
   const navigate = useNavigate();
+  const { showToast } = useCustomToast();
 
   return useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
-      console.log("Registration successful", data);
+      showToast("success", data.message);
       navigate("/login");
     },
     onError: (error) => {
-      console.error("Registration error:", error.message);
+      showToast("error", error.message);
     },
   });
 };
 
 export const useUploadMutation = () => {
+  const { showToast } = useCustomToast();
+
   return useMutation({
     mutationFn: uploadImage,
-    onSuccess: (data) => {
-      console.log("Upload successful", data);
-    },
     onError: (error) => {
-      console.error("Upload error:", error);
+      showToast("error", error.message);
     },
   });
 };
@@ -56,19 +58,27 @@ export const useVerifyOtpMutation = () => {
 
 export const useLoginMutation = () => {
   const navigate = useNavigate();
+
+  const { updateUser } = useUser();
+  const { showToast } = useCustomToast();
+
   return useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      console.log("Login successful", data);
+      showToast("success", data.message);
 
       // Store the access token in localStorage (or in your global state)
       localStorage.setItem("accessToken", data.accessToken);
+
       // Optionally, you can update your user context with the returned user data
+      updateUser(data.user);
+
       // Redirect the user to the home page
-      navigate("/dashboard");
+      navigate("/");
     },
     onError: (error) => {
       console.error("Login error:", error.message);
+      showToast("error", error.message);
     },
   });
 };

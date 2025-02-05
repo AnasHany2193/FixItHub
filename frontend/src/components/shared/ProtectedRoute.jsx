@@ -3,6 +3,7 @@ import { Navigate, Outlet } from "react-router-dom";
 
 export const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { user } = useUser(); // Get the logged-in user
+  console.log("user", user);
 
   // If no user data is available, the user is not authenticated.
   if (!user) {
