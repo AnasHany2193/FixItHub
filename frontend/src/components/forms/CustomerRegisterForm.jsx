@@ -218,24 +218,26 @@ const CustomerRegisterForm = ({ onBack }) => {
           />
 
           {/* Password Strength */}
-          <div className="sm:col-span-2">
-            <div className="grid grid-cols-4 gap-2 mt-1">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-2 transition-all duration-300 rounded-full ${
-                    passwordStrength > i
-                      ? "bg-blue-500 dark:bg-indigo-400"
-                      : "bg-gray-200 dark:bg-gray-600"
-                  }`}
-                />
-              ))}
+          {password && (
+            <div className="sm:col-span-2">
+              <div className="grid grid-cols-4 gap-2 mt-1">
+                {[...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-2 transition-all duration-300 rounded-full ${
+                      passwordStrength > i
+                        ? "bg-blue-500 dark:bg-indigo-400"
+                        : "bg-gray-200 dark:bg-gray-600"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                Password strength:{" "}
+                {["Weak", "Fair", "Good", "Strong"][passwordStrength - 1]}
+              </p>
             </div>
-            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Password strength:{" "}
-              {["Weak", "Fair", "Good", "Strong"][passwordStrength - 1]}
-            </p>
-          </div>
+          )}
         </div>
 
         {/* Login Button */}

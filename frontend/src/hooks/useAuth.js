@@ -84,28 +84,37 @@ export const useLoginMutation = () => {
 
 // Forgot Password Mutation
 export const useForgotPasswordMutation = () => {
+  const navigate = useNavigate();
+  const { showToast } = useCustomToast();
+
   return useMutation({
     mutationFn: forgotPassword,
     onSuccess: (data) => {
-      console.log("OTP sent for password reset", data);
       // Optionally notify the user that an OTP has been sent
+      showToast("success", data.message);
+
+      navigate("/reset-password");
     },
     onError: (error) => {
-      console.error("Forgot Password error:", error.message);
+      showToast("error", error.message);
     },
   });
 };
 
 // Reset Password Mutation
 export const useResetPasswordMutation = () => {
+  const navigate = useNavigate();
+  const { showToast } = useCustomToast();
+
   return useMutation({
     mutationFn: resetPassword,
     onSuccess: (data) => {
-      console.log("Password reset successful", data);
       // Optionally redirect to login page after success
+      showToast("success", data.message);
+      navigate("/login");
     },
     onError: (error) => {
-      console.error("Reset Password error:", error.message);
+      showToast("error", error.message);
     },
   });
 };

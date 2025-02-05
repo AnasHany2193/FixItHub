@@ -25,17 +25,26 @@ export const LoginPage = () => {
       <LoginForm />
 
       {/* Footer */}
-      <CardFooter className="flex justify-center w-full gap-2 p-0 text-sm text-center text-gray-600 dark:text-gray-400">
-        <p>Don&apos;t have an account?</p>
-        <Link
-          to="/register"
-          className="text-blue-500 hover:underline dark:text-indigo-400"
-        >
-          Register
-        </Link>
+      <CardFooter className="grid justify-center w-full grid-cols-1 gap-2 p-0 text-sm text-center text-gray-600 md:grid-cols-2 dark:text-gray-400">
+        <p>
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/register"
+            className="text-blue-500 hover:underline dark:text-indigo-400"
+          >
+            Register
+          </Link>
+        </p>
+        <p>
+          Forgot your password?{" "}
+          <Link
+            to="/forget-password"
+            className="text-blue-500 hover:underline dark:text-indigo-400"
+          >
+            Reset it here
+          </Link>
+        </p>
       </CardFooter>
     </div>
   );
 };
-
-export default LoginPage;

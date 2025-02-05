@@ -18,12 +18,10 @@ export const AuthLayout = () => {
         ← Back to Home Page
       </Link>
 
-      {/* Animated Auth Card */}
-      <Card className="relative w-full max-w-md px-8 mx-auto overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80">
+      {/* Auth Card */}
+      <Card className="relative w-full max-w-md px-8 mx-auto overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly">
         {/* Decorative Light */}
         <div className="absolute w-24 h-24 bg-blue-400 rounded-full opacity-50 -top-6 -left-6 blur-xl dark:bg-indigo-600" />
-
-        {/* Animated Content Area */}
         <Outlet />
       </Card>
 

@@ -11,12 +11,15 @@ import { AuthLayout } from "./layout/AuthLayout";
 import { HomePage } from "./pages/public/HomePage";
 import { AboutPage } from "./pages/public/AboutPage";
 
+import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
+import { VerifyOtpPage } from "./pages/auth/VerifyOtpPage";
+import { ResetPasswordPage } from "./pages/auth/ResetPasswordPage";
+
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { WorkerDashboard } from "./pages/worker/WorkerDashboard";
 import { CustomerDashboard } from "./pages/customer/CustomerDashboard";
-import LoginPage from "./pages/auth/LoginPage";
-import VerifyOtpPage from "./pages/auth/VerifyOtpPage";
+import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 
 function App() {
   const { user } = useUser();
@@ -37,6 +40,8 @@ function App() {
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="verify-email" element={<VerifyOtpPage />} />
+            <Route path="forget-password" element={<ForgetPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
         ) : (
           <Route path="*" element={<Navigate to="/" />} />
