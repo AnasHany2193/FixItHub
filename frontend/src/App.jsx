@@ -11,11 +11,11 @@ import { AuthLayout } from "./layout/AuthLayout";
 import { HomePage } from "./pages/public/HomePage";
 import { AboutPage } from "./pages/public/AboutPage";
 
-import { LoginPage } from "./pages/auth/LoginPage";
 import { RegisterPage } from "./pages/auth/RegisterPage";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { WorkerDashboard } from "./pages/worker/WorkerDashboard";
 import { CustomerDashboard } from "./pages/customer/CustomerDashboard";
+import LoginPage from "./pages/auth/LoginPage";
 
 function App() {
   const { user } = useUser();

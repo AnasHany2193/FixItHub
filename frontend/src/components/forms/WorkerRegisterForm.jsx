@@ -47,7 +47,7 @@ const calculatePasswordStrength = (password) => {
 };
 
 const WorkerRegisterForm = ({ onBack }) => {
-  const { mutate: registerUser, isPending, error } = useRegisterMutation();
+  const { mutate: registerUser, isPending } = useRegisterMutation();
   const { mutate: uploadImage, isPending: isUploading } = useUploadMutation();
 
   // Local state to control which step of the form is shown
@@ -368,13 +368,6 @@ const WorkerRegisterForm = ({ onBack }) => {
                 </div>
               </div>
             </div>
-
-            {/* Error Message */}
-            {error && (
-              <p className="text-sm text-red-500 dark:text-blue-400">
-                {error.message}
-              </p>
-            )}
 
             {/* Navigation Buttons for Step 2 */}
             <div className="flex justify-between gap-2">

@@ -45,7 +45,7 @@ const calculatePasswordStrength = (password) => {
 };
 
 const CustomerRegisterForm = ({ onBack }) => {
-  const { mutate: registerUser, isPending, error } = useRegisterMutation();
+  const { mutate: registerUser, isPending } = useRegisterMutation();
 
   // Password States
   const [showPassword, setShowPassword] = useState(false);
@@ -237,13 +237,6 @@ const CustomerRegisterForm = ({ onBack }) => {
             </p>
           </div>
         </div>
-
-        {/* Error Message */}
-        {error && (
-          <p className="text-sm text-red-500 dark:text-blue-400">
-            {error.message}
-          </p>
-        )}
 
         {/* Login Button */}
         <Button
