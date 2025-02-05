@@ -2,9 +2,11 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
 } from "react";
+import { UserProvider } from "./UserContext";
 
 const AppContext = createContext();
 
@@ -30,7 +32,11 @@ export const AppProvider = ({ children }) => {
     [darkMode, changeMode]
   );
 
-  return <AppContext.Provider value={values}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider value={values}>
+      <UserProvider>{children}</UserProvider>
+    </AppContext.Provider>
+  );
 };
 
 export const useApp = (selector) => {
