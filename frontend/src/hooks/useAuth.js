@@ -1,5 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { loginUser, registerUser, uploadImage, verifyOtp } from "../api/auth";
+import {
+  forgotPassword,
+  loginUser,
+  registerUser,
+  resetPassword,
+  uploadImage,
+  verifyOtp,
+} from "../api/auth";
 import { useNavigate } from "react-router-dom";
 
 export const useRegisterMutation = () => {
@@ -61,6 +68,34 @@ export const useLoginMutation = () => {
     },
     onError: (error) => {
       console.error("Login error:", error.message);
+    },
+  });
+};
+
+// Forgot Password Mutation
+export const useForgotPasswordMutation = () => {
+  return useMutation({
+    mutationFn: forgotPassword,
+    onSuccess: (data) => {
+      console.log("OTP sent for password reset", data);
+      // Optionally notify the user that an OTP has been sent
+    },
+    onError: (error) => {
+      console.error("Forgot Password error:", error.message);
+    },
+  });
+};
+
+// Reset Password Mutation
+export const useResetPasswordMutation = () => {
+  return useMutation({
+    mutationFn: resetPassword,
+    onSuccess: (data) => {
+      console.log("Password reset successful", data);
+      // Optionally redirect to login page after success
+    },
+    onError: (error) => {
+      console.error("Reset Password error:", error.message);
     },
   });
 };

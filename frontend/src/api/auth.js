@@ -32,3 +32,17 @@ export const loginUser = async (data) => {
   const response = await axiosClient.post("/auth/login", data);
   return response.data;
 };
+
+// Forgot Password – Request OTP
+export const forgotPassword = async (data) => {
+  // data: { email }
+  const response = await axiosClient.post("/auth/forgot-password", data);
+  return response.data;
+};
+
+// Reset Password – Submit OTP and new password
+export const resetPassword = async (data) => {
+  // data: { email, code, newPassword }
+  const response = await axiosClient.post("/auth/reset-password", data);
+  return response.data;
+};
