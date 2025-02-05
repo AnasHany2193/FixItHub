@@ -25,14 +25,25 @@ export const ResetPasswordPage = () => {
       <ResetPasswordForm />
 
       {/* Footer */}
-      <CardFooter className="flex justify-center w-full gap-2 p-0 text-sm text-center text-gray-600 dark:text-gray-400">
-        <p>Remember your password?</p>
-        <Link
-          to="/login"
-          className="text-blue-500 hover:underline dark:text-indigo-400"
-        >
-          Login
-        </Link>
+      <CardFooter className="grid justify-center w-full grid-cols-1 gap-2 p-0 text-sm text-center text-gray-600 md:grid-cols-2 dark:text-gray-400">
+        <p>
+          Didn&apos;t receive an OTP?{" "}
+          <Link
+            to="/forget-password"
+            className="text-blue-500 hover:underline dark:text-indigo-400"
+          >
+            Request a new one
+          </Link>
+        </p>
+        <p>
+          Forgot your password?{" "}
+          <Link
+            to="/forget-password"
+            className="text-blue-500 hover:underline dark:text-indigo-400"
+          >
+            Reset it here
+          </Link>
+        </p>
       </CardFooter>
     </div>
   );

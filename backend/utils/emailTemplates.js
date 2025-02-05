@@ -11,77 +11,120 @@ export const verificationEmailTemplate = (otpCode) => {
   <html>
     <head>
       <meta charset="UTF-8">
-      <title>Verify Your FixItHub Account</title>
+      <title>🔧 Verify Your FixItHub Account</title>
       <style>
         body {
-          font-family: Arial, sans-serif;
+          font-family: 'Josefin Sans', Arial, sans-serif;
           margin: 0;
           padding: 0;
-          background-color: #f4f4f4;
+          background-color: #f8fafc;
         }
         .container {
           max-width: 600px;
-          margin: 0 auto;
-          background-color: #ffffff;
-          padding: 20px;
-          border: 1px solid #dddddd;
+          margin: 2rem auto;
+          background: white;
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         .header {
-          text-align: center;
-          padding-bottom: 20px;
-        }
-        .separator {
-          margin: 20px auto;
-          width: 80%;
-          border-top: 1px solid #cccccc;
-          position: relative;
+          background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);
+          padding: 2rem;
           text-align: center;
         }
-        .separator span {
-          background-color: #ffffff;
-          padding: 0 10px;
-          position: relative;
-          top: -13px;
-          font-size: 12px;
-          color: #666666;
+        .logo {
+          font-size: 2.5rem;
+          color: white;
+          font-weight: 700;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
         }
         .content {
-          font-size: 16px;
-          line-height: 1.5;
-          color: #333333;
+          padding: 2rem;
+          color: #334155;
+        }
+        .otp-container {
+          background: #f1f5f9;
+          border-radius: 8px;
+          padding: 1.5rem;
+          margin: 2rem 0;
+          text-align: center;
         }
         .otp {
-          font-size: 24px;
-          font-weight: bold;
-          color: #1a73e8;
+          font-size: 2.5rem;
+          letter-spacing: 0.5rem;
+          color: #6366f1;
+          font-weight: 700;
+          margin: 1rem 0;
+        }
+        .emoji {
+          font-size: 1.5rem;
+          vertical-align: middle;
         }
         .footer {
-          font-size: 12px;
+          background: #f1f5f9;
+          padding: 1.5rem;
           text-align: center;
-          color: #777777;
-          margin-top: 30px;
-          border-top: 1px solid #dddddd;
-          padding-top: 10px;
+          font-size: 0.875rem;
+          color: #64748b;
+        }
+        .social {
+          margin: 1rem 0;
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+        }
+        .note {
+          color: #ef4444;
+          background: #fee2e2;
+          padding: 1rem;
+          border-radius: 6px;
+          margin: 1.5rem 0;
+          font-size: 0.875rem;
         }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <h2>FixItHub</h2>
-          <div class="separator">
-            <span>123-465</span>
-          </div>
+          <h1 class="logo">
+            <span class="emoji">🔧</span>FixItHub<span class="emoji">⚙️</span>
+          </h1>
         </div>
+        
         <div class="content">
-          <p>Hello,</p>
-          <p>Thank you for registering with FixItHub. Please use the following One Time Password (OTP) to verify your account. This OTP is valid for <strong>10 minutes</strong>.</p>
-          <p>Your OTP is:</p>
-          <p class="otp">${otpCode}</p>
-          <p>If you did not initiate this request, please ignore this email.</p>
+          <p>👋 Hello FixItHubber!</p>
+          
+          <p>🚀 Welcome to the ultimate repair management platform! Let's get you verified:</p>
+          
+          <div class="otp-container">
+            <p class="otp">${otpCode}</p>
+            <p>⏳ Valid for 10 minutes</p>
+          </div>
+
+          <div class="note">
+            🔒 Security Note: Never share this code with anyone. Our team will never ask for your OTP.
+          </div>
+
+          <p>🎉 Once verified, you'll get access to:</p>
+          <ul>
+            <li>📦 Manage repair orders</li>
+            <li>🔔 Real-time status updates</li>
+            <li>💬 Technician communication</li>
+          </ul>
         </div>
+
         <div class="footer">
-          <p>&copy; ${new Date().getFullYear()} FixItHub. All rights reserved.</p>
+          <div class="social">
+            <a href="https://github.com/AnasHany2193" style="color: #6366f1; text-decoration: none">🐦 GitHub</a>
+            <a href="https://www.linkedin.com/in/anashany219/" style="color: #6366f1; text-decoration: none">💼 LinkedIn</a>
+            <a href="https://www.facebook.com/anashany219/" style="color: #6366f1; text-decoration: none">📸 Facebook</a>
+          </div>
+          <p>© ${new Date().getFullYear()} FixItHub 🔧 | Building Better Repairs</p>
+          <p>Need help? Reply to this email or contact support@fixithub.com</p>
         </div>
       </div>
     </body>
@@ -159,7 +202,6 @@ export const resendOtpEmailTemplate = (otpCode) => {
         <div class="header">
           <h2>FixItHub</h2>
           <div class="separator">
-            <span>123-465</span>
           </div>
         </div>
         <div class="content">
@@ -242,7 +284,6 @@ export const welcomeEmailTemplate = (userName = "User") => {
         <div class="header">
           <h2>Welcome to FixItHub, ${userName}!</h2>
           <div class="separator">
-            <span>123-465</span>
           </div>
         </div>
         <div class="content">
@@ -330,7 +371,6 @@ export const passwordResetOtpEmailTemplate = (otpCode) => {
         <div class="header">
           <h2>FixItHub</h2>
           <div class="separator">
-            <span>123-465</span>
           </div>
         </div>
         <div class="content">
@@ -413,7 +453,6 @@ export const resetPasswordEmailTemplate = (userName = "User") => {
         <div class="header">
           <h2>FixItHub</h2>
           <div class="separator">
-            <span>123-465</span>
           </div>
         </div>
         <div class="content">
@@ -507,7 +546,6 @@ export const workerApprovalEmailTemplate = (userName = "Worker") => {
         <div class="header">
           <h2>FixItHub</h2>
           <div class="separator">
-            <span>123-465</span>
           </div>
         </div>
         <div class="content">
