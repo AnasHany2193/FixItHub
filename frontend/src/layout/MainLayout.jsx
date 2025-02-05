@@ -12,7 +12,6 @@ export const MainLayout = () => {
   const location = useLocation(); // Get current route location
   const { darkMode, changeMode } = useApp();
 
-  console.log("location", location.pathname);
   return (
     <div className="w-full min-h-screen text-gray-800 bg-gradient-to-br from-blue-300 via-gray-300 to-gray-800 dark:from-indigo-900 dark:via-gray-700 dark:to-black dark:text-gray-200">
       {/* Main NavBar */}

@@ -1,5 +1,7 @@
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import { sendApprovalEmail } from "../services/emailService.js";
+import createHttpError from "http-errors";
 
 //
 export const getWorkerApplications = async (req, res, next) => {
@@ -19,6 +21,9 @@ export const updateWorkerStatus = async (req, res, next) => {
   const { userId } = req.params;
   const { status } = req.body;
   try {
+    if (!mongoose.isValidObjectId(userId))
+      throw createHttpError(404, "Invalid User ID");
+
     const user = await User.findById(userId);
     if (!user || user.role !== "customer") {
       throw createHttpError(404, "Worker application not found");

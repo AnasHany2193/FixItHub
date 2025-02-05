@@ -4,20 +4,21 @@ import createHttpError from "http-errors";
 
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
+
   if (!authHeader?.startsWith("Bearer "))
-    throw createHttpError(401, "Unauthorized - No token provided");
+    return next(createHttpError(401, "Unauthorized - No token provided"));
 
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId).select("-password");
 
-    if (!user) throw createHttpError(401, "User not found");
+    if (!user) return next(createHttpError(401, "User not found"));
 
     req.user = user;
     next();
   } catch (err) {
-    throw createHttpError(401, "Unauthorized - Invalid token");
+    return next(err);
   }
 };
 

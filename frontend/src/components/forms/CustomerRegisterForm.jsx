@@ -65,7 +65,6 @@ const CustomerRegisterForm = ({ onBack }) => {
 
   // 2. Define a submit handler.
   const onSubmit = (values) => {
-    // console.log("values", values);
     registerUser({ ...values, role: "customer" });
   };
 

@@ -103,8 +103,10 @@ export const useResetPasswordMutation = () => {
 
 // Hook to fetch current user data
 export const useCurrentUserQuery = () => {
-  return useQuery(["currentUser"], getCurrentUser, {
-    staleTime: 5 * 60 * 1000, // 5 minutes cache time
+  return useQuery({
+    queryKey: ["currentUser"],
+    queryFn: getCurrentUser,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     onError: (error) => {
       console.error("Error fetching current user:", error.message);
     },

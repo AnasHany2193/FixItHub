@@ -5,8 +5,6 @@ const errorHandler = (err, req, res, next) => {
   // Log the error for debugging
   console.error(`[ERROR] ${err.stack}`); // Log full stack trace
 
-  console.log("err", err);
-
   if (process.env.NODE_ENV === "production") delete err.stack; // Hide stack in production
 
   // Handle HTTP errors
