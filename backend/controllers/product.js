@@ -40,3 +40,62 @@ export const createProduct = async (req, res, next) => {
     next(err);
   }
 };
+
+export const listProducts = async (req, res, next) => {
+  try {
+    const {
+      category,
+      minPrice,
+      maxPrice,
+      condition,
+      search,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    // Build filter object
+    const filter = { status: "available" }; // Only show available products
+
+    // Category filter
+    if (category) filter.category = category;
+
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Condition filter
+    if (condition) filter.condition = condition;
+
+    // Text search (title/description)
+    if (search) filter.$text = { $search: search };
+
+    // Pagination
+    const skip = (Number(page) - 1) * Number(limit);
+
+    // Fetch products with filters
+    const products = await Product.find(filter)
+      .populate("seller", "username profile.avatar")
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 }); // Newest first
+
+    // Count total matching products
+    const total = await Product.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      message: "Products retrieved successfully",
+      data: products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
