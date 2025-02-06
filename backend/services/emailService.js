@@ -6,6 +6,7 @@ import {
   resetPasswordEmailTemplate,
   verificationEmailTemplate,
   welcomeEmailTemplate,
+  workerApprovalEmailTemplate,
 } from "../utils/emailTemplates.js";
 
 dotenv.config(); // Load environment variables
@@ -101,6 +102,6 @@ export const sendApprovalEmail = async (email, userName) => {
   await sendEmail({
     to: email,
     subject: "Worker Application Approved!",
-    html: resetPasswordEmailTemplate(userName),
+    html: workerApprovalEmailTemplate(userName),
   });
 };
