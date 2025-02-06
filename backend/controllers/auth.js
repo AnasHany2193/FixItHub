@@ -300,10 +300,9 @@ export const logout = async (req, res, next) => {
       sameSite: "strict",
     });
 
-    res.status(200).json({
-      success: true,
-      message: "Logged out successfully ツ",
-    });
+    res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully ツ" });
   } catch (error) {
     next(error); // Pass the error to the centralized error handler
   }

@@ -54,6 +54,12 @@ export const resendOtp = async (data) => {
   return response.data;
 };
 
+// Logout API call
+export const logoutUser = async () => {
+  const response = await axiosClient.post("/auth/logout");
+  return response.data;
+};
+
 // Get Current User
 export const getCurrentUser = async () => {
   const response = await axiosClient.get("/users/me");

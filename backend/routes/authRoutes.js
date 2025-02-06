@@ -64,6 +64,6 @@ router.post(
 );
 
 // Route for user logout
-router.get("/logout", logout);
+router.post("/logout", protect, logout);
 
 export default router;

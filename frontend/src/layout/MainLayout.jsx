@@ -1,16 +1,21 @@
+import { Loader2 } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+import { useLogoutMutation } from "@/hooks/useAuth";
+
 import { useApp } from "@/contexts/AppContext";
 import { useUser } from "@/contexts/UserContext";
 
 export const MainLayout = () => {
   const location = useLocation();
+
+  const { user } = useUser();
   const { darkMode, changeMode } = useApp();
-  const { user, logout } = useUser();
+  const { mutate: logout, isPending } = useLogoutMutation();
 
   return (
     <div className="w-full min-h-screen text-gray-800 bg-gradient-to-br from-blue-300 via-gray-300 to-gray-800 dark:from-indigo-900 dark:via-gray-700 dark:to-black dark:text-gray-200">
@@ -63,15 +68,17 @@ export const MainLayout = () => {
         {/* Sign In and Register */}
         <div className="flex items-center gap-5">
           {user ? (
-            <>
-              <Button
-                onClick={logout}
-                variant="outline"
-                className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white dark:border-red-300 dark:text-red-300 dark:hover:bg-red-300 dark:hover:text-black"
-              >
-                Logout
-              </Button>
-            </>
+            <Button
+              onClick={logout}
+              variant="outline"
+              className="text-red-500 border-red-500 hover:bg-red-500 hover:text-white dark:border-red-300 dark:text-red-300 dark:hover:bg-red-300 dark:hover:text-black"
+            >
+              {isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                "Logout"
+              )}
+            </Button>
           ) : (
             <>
               <Link
