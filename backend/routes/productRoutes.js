@@ -1,6 +1,10 @@
 import express from "express";
 import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
-import { createProduct, listProducts } from "../controllers/product.js";
+import {
+  createProduct,
+  getProductDetails,
+  listProducts,
+} from "../controllers/product.js";
 
 const router = express.Router();
 
@@ -10,5 +14,7 @@ router
   .route("/")
   .post(protect, roleCheck(["customer"]), createProduct) // Only customer
   .get(listProducts); // Public access;
+
+router.get("/:id", getProductDetails);
 
 export default router;

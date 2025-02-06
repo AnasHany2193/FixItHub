@@ -99,3 +99,28 @@ export const listProducts = async (req, res, next) => {
     next(err);
   }
 };
+
+// controllers/product.js
+export const getProductDetails = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate("seller", "username profile.avatar") // Include seller details
+      .lean(); // Convert to plain JS object
+
+    if (!product) {
+      throw createHttpError(404, "Product not found.");
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Product retrieved successfully",
+      data: product,
+    });
+  } catch (err) {
+    // Handle invalid ObjectId format (e.g., "123" instead of valid 24-character ID)
+    if (err.name === "CastError") {
+      return next(createHttpError(400, "Invalid product ID format."));
+    }
+    next(err);
+  }
+};
