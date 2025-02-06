@@ -3,7 +3,6 @@ import { Navigate, Outlet } from "react-router-dom";
 
 export const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { user } = useUser(); // Get the logged-in user
-  console.log("user", user);
 
   // If no user data is available, the user is not authenticated.
   if (!user) {
@@ -15,11 +14,11 @@ export const ProtectedRoute = ({ allowedRoles = [] }) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
       case "admin":
-        return <Navigate to="/admin/dashboard" replace />;
+        return <Navigate to="/dashboard/admin" replace />;
       case "customer":
-        return <Navigate to="/customer/dashboard" replace />;
+        return <Navigate to="/dashboard/customer" replace />;
       case "worker":
-        return <Navigate to="/worker/dashboard" replace />;
+        return <Navigate to="/dashboard/worker" replace />;
       default:
         return <Navigate to="/" replace />;
     }
