@@ -14,12 +14,12 @@ import App from "./App.jsx";
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <QueryProvider>
-      <UserProvider>
-        <AppProvider>
+      <AppProvider>
+        <UserProvider>
           <App />
           <Toaster />
-        </AppProvider>
-      </UserProvider>
+        </UserProvider>
+      </AppProvider>
     </QueryProvider>
   </BrowserRouter>
 );

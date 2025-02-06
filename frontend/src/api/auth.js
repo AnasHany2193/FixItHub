@@ -47,6 +47,13 @@ export const resetPassword = async (data) => {
   return response.data;
 };
 
+// Resend OTP
+export const resendOtp = async (data) => {
+  // data: { email }
+  const response = await axiosClient.post("/auth/resend-otp", data);
+  return response.data;
+};
+
 // Get Current User
 export const getCurrentUser = async () => {
   const response = await axiosClient.get("/users/me");

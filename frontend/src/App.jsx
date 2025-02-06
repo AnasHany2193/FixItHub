@@ -20,6 +20,7 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { WorkerDashboard } from "./pages/worker/WorkerDashboard";
 import { CustomerDashboard } from "./pages/customer/CustomerDashboard";
 import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
+import ResendOtpPage from "./pages/auth/ResendOtpPage";
 
 function App() {
   const { user } = useUser();
@@ -37,9 +38,15 @@ function App() {
         {/* Auth Routes: accessible only if NOT authenticated */}
         {!user ? (
           <Route element={<AuthLayout />}>
+            {/* Join in */}
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
+
+            {/* verify email */}
             <Route path="verify-email" element={<VerifyOtpPage />} />
+            <Route path="/resend-otp" element={<ResendOtpPage />} />
+
+            {/* reset Password */}
             <Route path="forget-password" element={<ForgetPasswordPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>

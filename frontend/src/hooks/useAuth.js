@@ -4,6 +4,7 @@ import {
   getCurrentUser,
   loginUser,
   registerUser,
+  resendOtp,
   resetPassword,
   uploadImage,
   verifyOtp,
@@ -114,6 +115,24 @@ export const useResetPasswordMutation = () => {
       navigate("/login");
     },
     onError: (error) => {
+      showToast("error", error.message);
+    },
+  });
+};
+
+export const useResendOtpMutation = () => {
+  const navigate = useNavigate();
+  const { showToast } = useCustomToast();
+
+  return useMutation({
+    mutationFn: resendOtp,
+    onSuccess: (data) => {
+      // Optionally, show a success toast or message here.
+      showToast("success", data.message);
+      navigate("/verify-email");
+    },
+    onError: (error) => {
+      // Optionally, show an error toast or message here.
       showToast("error", error.message);
     },
   });

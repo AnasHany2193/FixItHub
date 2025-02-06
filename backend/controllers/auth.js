@@ -139,7 +139,7 @@ export const resendOTP = async (req, res, next) => {
     // ReSend OTP verification email
     sendResendOtpEmail(email, otpCode);
 
-    res.status(200).json({ success: true, message: "Now OTP sent" });
+    res.status(200).json({ success: true, message: "New OTP sent" });
   } catch (err) {
     next(err);
   }
