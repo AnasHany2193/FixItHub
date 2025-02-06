@@ -7,6 +7,20 @@ const errorHandler = (err, req, res, next) => {
 
   if (process.env.NODE_ENV === "production") delete err.stack; // Hide stack in production
 
+  // Handle Mongoose ValidationError
+  if (err.name === "ValidationError") {
+    const errorMessages = Object.values(err.errors).map(
+      (error) => error.message
+    );
+    // Send each error message separately
+    errorMessages.forEach((message) => {
+      return res.status(400).json({
+        success: false,
+        error: `Validation failed: ${message}`,
+      });
+    });
+  }
+
   // Handle HTTP errors
   if (err instanceof createHttpError.HttpError)
     return res

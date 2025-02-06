@@ -18,7 +18,7 @@ export const protect = async (req, res, next) => {
     req.user = user;
     next();
   } catch (err) {
-    return next(err);
+    next(createHttpError(401, "Invalid token, please log in again"));
   }
 };
 

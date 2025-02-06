@@ -10,6 +10,8 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config(); // Load environment variables
 
@@ -19,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(express.json()); // To parse JSON data from requests
+app.use(cookieParser());
 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
@@ -35,6 +38,7 @@ app.get("/api/v1/health", (req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/document", uploadRoutes);
 
 // Error handling middleware should be added last

@@ -209,8 +209,8 @@ export const login = async (req, res, next) => {
 
 //
 export const refreshToken = async (req, res, next) => {
-  const { refreshToken } = req.cookies;
   try {
+    const { refreshToken } = req.cookies;
     if (!refreshToken) throw createHttpError(401, "Unauthorized");
 
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);

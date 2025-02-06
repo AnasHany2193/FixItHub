@@ -26,9 +26,13 @@ const productSchema = new mongoose.Schema(
     },
     condition: {
       type: String,
-      required: true,
+      required: [true, "Product condition is required"],
       default: "used",
-      enum: ["new", "used", "refurbished"],
+      enum: {
+        values: ["new", "used", "refurbished"],
+        message:
+          "Condition must be one of the following: new, used, refurbished",
+      },
     },
     images: [
       {
@@ -45,9 +49,21 @@ const productSchema = new mongoose.Schema(
       type: {
         type: String,
         default: "Point",
-        enum: ["Point"],
+        enum: {
+          values: ["Point"],
+          message: "Location type must be 'Point'",
+        },
       },
-      coordinates: [Number], // [longitude, latitude]
+      coordinates: {
+        type: [Number],
+        required: [true, "Coordinates are required"],
+        validate: {
+          validator: (v) =>
+            Array.isArray(v) && v.length === 2 && !isNaN(v[0]) && !isNaN(v[1]),
+          message:
+            "Coordinates must be an array of two numbers [longitude, latitude]", // Custom error message
+        },
+      }, // [longitude, latitude]
       address: String,
     },
     status: {
