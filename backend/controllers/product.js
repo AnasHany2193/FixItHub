@@ -1,5 +1,13 @@
 import createHttpError from "http-errors";
+
 import Product from "../models/Product.js";
+import cloudinary from "../config/cloudinary.js";
+
+import {
+  allowedCategories,
+  allowedConditions,
+  allowedStatuses,
+} from "../utils/constants.js";
 
 // POST /products - Create a new product (only customers allowed)
 export const createProduct = async (req, res, next) => {
@@ -100,7 +108,6 @@ export const listProducts = async (req, res, next) => {
   }
 };
 
-// controllers/product.js
 export const getProductDetails = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -121,6 +128,130 @@ export const getProductDetails = async (req, res, next) => {
     if (err.name === "CastError") {
       return next(createHttpError(400, "Invalid product ID format."));
     }
+    next(err);
+  }
+};
+
+export const updateProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+    const {
+      title,
+      description,
+      price,
+      category,
+      condition,
+      images,
+      location,
+      status,
+    } = req.body;
+
+    // 1. Fetch product and validate ownership
+    const product = await Product.findById(id);
+    if (!product) throw createHttpError(404, "Product not found.");
+    if (product.seller.toString() !== userId.toString())
+      throw createHttpError(403, "You are not the seller of this product.");
+
+    // 2. Destructure and validate updates
+    const updates = {};
+
+    if (title) {
+      if (title.length < 3 || title.length > 100)
+        throw createHttpError(400, "Title must be 3-100 characters.");
+
+      updates.title = title;
+    }
+
+    if (description) {
+      if (description.length > 1000)
+        throw createHttpError(
+          400,
+          "Description cannot exceed 1000 characters."
+        );
+
+      updates.description = description;
+    }
+
+    if (price) {
+      if (typeof price !== "number" || price <= 0)
+        throw createHttpError(400, "Price must be a positive number.");
+
+      updates.price = price;
+    }
+
+    if (category) {
+      if (!allowedCategories.includes(category)) {
+        throw createHttpError(400, "Invalid product category.");
+      }
+      updates.category = category;
+    }
+
+    if (condition) {
+      if (!allowedConditions.includes(condition))
+        throw createHttpError(400, "Invalid product condition.");
+
+      updates.condition = condition;
+    }
+
+    if (images) {
+      if (!Array.isArray(images) || images.length === 0)
+        throw createHttpError(400, "Images must be a non-empty array.");
+
+      // Validate image URLs and public_ids
+      images.forEach((img) => {
+        if (!img.url || !img.public_id)
+          throw createHttpError(400, "Image URL and public_id are required.");
+      });
+      updates.images = images;
+    }
+
+    if (location) {
+      if (
+        !location.coordinates ||
+        !Array.isArray(location.coordinates) ||
+        location.coordinates.length !== 2
+      )
+        throw createHttpError(400, "Invalid coordinates format.");
+
+      updates.location = location;
+    }
+
+    if (status) {
+      if (!allowedStatuses.includes(status))
+        throw createHttpError(400, "Invalid product status.");
+
+      updates.status = status;
+    }
+
+    // 3. Delete old images if updated
+    if (updates.images) {
+      const oldPublicIds = product.images.map((img) => img.public_id);
+      const newPublicIds = updates.images.map((img) => img.public_id);
+      const deletedPublicIds = oldPublicIds.filter(
+        (id) => !newPublicIds.includes(id)
+      );
+
+      // Delete from Cloudinary
+      await Promise.all(
+        deletedPublicIds.map((publicId) =>
+          cloudinary.uploader.destroy(publicId)
+        )
+      );
+    }
+
+    // 4. Update product
+    const updatedProduct = await Product.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    }).populate("seller", "username profile.avatar");
+
+    res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      data: updatedProduct,
+    });
+  } catch (err) {
     next(err);
   }
 };

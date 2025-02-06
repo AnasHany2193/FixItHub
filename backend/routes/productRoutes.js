@@ -4,17 +4,19 @@ import {
   createProduct,
   getProductDetails,
   listProducts,
+  updateProduct,
 } from "../controllers/product.js";
 
 const router = express.Router();
 
-// Protected routes: Only authenticated users can create, update, or delete products
-// Only customers can create a product
 router
   .route("/")
   .post(protect, roleCheck(["customer"]), createProduct) // Only customer
   .get(listProducts); // Public access;
 
-router.get("/:id", getProductDetails);
+router
+  .route("/:id")
+  .get(getProductDetails) // Public access;
+  .put(protect, roleCheck(["customer"]), updateProduct); // Only sellers (registered as "customers") can update
 
 export default router;
