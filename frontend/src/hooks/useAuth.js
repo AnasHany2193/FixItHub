@@ -98,7 +98,7 @@ export const useLogoutMutation = () => {
       showToast("success", data.message);
 
       // Redirect to the login page
-      navigate("/login");
+      navigate("/");
     },
     onError: (error) => {
       console.error("Logout error:", error.message);

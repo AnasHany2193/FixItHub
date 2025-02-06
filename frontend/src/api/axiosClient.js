@@ -5,16 +5,63 @@ const axiosClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Always send cookies for authentication
 });
 
-// Optionally, you can add interceptors for request/response logging or to attach the JWT token.
-axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Function to refresh token
+const refreshAccessToken = async () => {
+  try {
+    // Call the refresh token endpoint
+    const response = await axios.post(
+      "/auth/refresh-token",
+      {},
+      { withCredentials: true }
+    );
+
+    // Assuming the new access token is returned in response.data.accessToken:
+    const newAccessToken = response.data.accessToken;
+    localStorage.setItem("accessToken", newAccessToken);
+
+    return newAccessToken;
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    throw error;
   }
-  return config;
-});
+};
+
+// Request Interceptor - Attach Access Token
+axiosClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response Interceptor - Handle 401 Errors & Refresh Token
+axiosClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Check if error status is 401 and retry flag is not set to avoid infinite loop.
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const newAccessToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return axiosClient(originalRequest); // Retry request with new token
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Response interceptor to parse errors globally
 axiosClient.interceptors.response.use(
@@ -23,8 +70,6 @@ axiosClient.interceptors.response.use(
     // Use optional chaining to safely access error.response.data.error
     const errorMessage =
       error.response?.data?.error || "An unexpected error occurred";
-
-    // Reject a new Error instance
     return Promise.reject(new Error(errorMessage));
   }
 );
