@@ -21,6 +21,14 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // Handle invalid ObjectId format (e.g., "123" instead of valid 24-character ID)
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid product ID format.",
+    });
+  }
+
   // Handle HTTP errors
   if (err instanceof createHttpError.HttpError)
     return res

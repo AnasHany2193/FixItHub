@@ -2,6 +2,7 @@ import express from "express";
 import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   createProduct,
+  deleteProduct,
   getProductDetails,
   listProducts,
   updateProduct,
@@ -17,6 +18,7 @@ router
 router
   .route("/:id")
   .get(getProductDetails) // Public access;
-  .put(protect, roleCheck(["customer"]), updateProduct); // Only sellers (registered as "customers") can update
+  .put(protect, roleCheck(["customer"]), updateProduct) // Only sellers (registered as "customers") can update
+  .delete(protect, roleCheck(["customer"]), deleteProduct); // Only sellers can delete
 
 export default router;

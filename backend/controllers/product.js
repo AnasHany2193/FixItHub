@@ -124,10 +124,6 @@ export const getProductDetails = async (req, res, next) => {
       data: product,
     });
   } catch (err) {
-    // Handle invalid ObjectId format (e.g., "123" instead of valid 24-character ID)
-    if (err.name === "CastError") {
-      return next(createHttpError(400, "Invalid product ID format."));
-    }
     next(err);
   }
 };
@@ -250,6 +246,35 @@ export const updateProduct = async (req, res, next) => {
       success: true,
       message: "Product updated successfully",
       data: updatedProduct,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    // 1. Find product and validate ownership
+    const product = await Product.findById(id);
+    if (!product) throw createHttpError(404, "Product not found.");
+    if (product.seller.toString() !== userId.toString())
+      throw createHttpError(403, "You are not the seller of this product.");
+
+    // 2. Delete images from Cloudinary
+    const publicIds = product.images.map((img) => img.public_id);
+    await Promise.all(
+      publicIds.map((publicId) => cloudinary.uploader.destroy(publicId))
+    );
+
+    // 3. Delete product from database
+    await Product.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
     });
   } catch (err) {
     next(err);
