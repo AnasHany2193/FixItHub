@@ -43,31 +43,23 @@ function App() {
             element={<Navigate to={`/dashboard/${user.role}`} replace />}
           />
         ) : (
-          <>
-            <Route element={<AuthLayout />}>
-              {/* Join */}
-              <Route path="login" element={<LoginPage />} />
-              <Route path="register" element={<RegisterPage />} />
+          <Route element={<AuthLayout />}>
+            {/* Join */}
+            <Route path="login" element={<LoginPage />} />
+            <Route path="register" element={<RegisterPage />} />
 
-              {/* verify email */}
-              <Route path="verify-email" element={<VerifyOtpPage />} />
-              <Route path="/resend-otp" element={<ResendOtpPage />} />
+            {/* verify email */}
+            <Route path="verify-email" element={<VerifyOtpPage />} />
+            <Route path="/resend-otp" element={<ResendOtpPage />} />
 
-              {/* reset Password */}
-              <Route path="forget-password" element={<ForgetPasswordPage />} />
-              <Route path="reset-password" element={<ResetPasswordPage />} />
-            </Route>
-          </>
+            {/* reset Password */}
+            <Route path="forget-password" element={<ForgetPasswordPage />} />
+            <Route path="reset-password" element={<ResetPasswordPage />} />
+          </Route>
         )}
 
         {/* Protected Dashboard Routes Inside Layout */}
-        <Route
-          element={
-            // <ProtectedRoute allowedRoles={["customer", "worker", "admin"]}>
-            <DashboardLayout />
-            // </ProtectedRoute>
-          }
-        >
+        <Route element={<DashboardLayout />}>
           {/* Customer Routes */}
           <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
             <Route path="/dashboard/customer" element={<CustomerDashboard />} />
