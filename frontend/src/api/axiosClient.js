@@ -8,33 +8,49 @@ const axiosClient = axios.create({
   withCredentials: true, // Always send cookies for authentication
 });
 
-// Add access token to requests
+// axiosClient.js (request interceptor)
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else {
+    // If no token, skip retry and reject immediately
+    config._skipRetry = true;
+  }
   return config;
 });
-
 // Handle 401 errors (expired access token)
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Skip retry for logout or auth-related requests
+    if (
+      originalRequest.url.includes("/auth/logout") ||
+      originalRequest._skipRetry
+    ) {
+      return Promise.reject(error);
+    }
+
+    // Only retry if the error is 401 (Unauthorized) and not already retried
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+
       try {
-        // Refresh access token
+        // Attempt to refresh the access token
         const { data } = await axiosClient.post("/auth/refresh-token", {});
-        localStorage.setItem("accessToken", data.accessToken); // Store new access token
-        return axiosClient(originalRequest); // Retry original request
+        localStorage.setItem("accessToken", data.accessToken); // Store new token
+        return axiosClient(originalRequest); // Retry the original request
       } catch (refreshError) {
-        // Refresh token expired/invalid → logout user
+        // If refresh fails, force logout and redirect
         localStorage.removeItem("accessToken");
-        window.location.href = "/login";
+        localStorage.removeItem("user");
+        window.location.href = "/login"; // Hard redirect to break loops
         return Promise.reject(refreshError);
       }
     }
+    // For all other errors, reject immediately
     return Promise.reject(error);
   }
 );

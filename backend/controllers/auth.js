@@ -149,7 +149,6 @@ export const resendOTP = async (req, res, next) => {
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
     // Validate input
     if (!email || !password)
       throw createHttpError(400, "Email and password are required");
@@ -223,7 +222,6 @@ export const refreshToken = async (req, res, next) => {
       { expiresIn: "15m" }
     );
 
-    console.log("New Access Token");
     res.status(200).json({ success: true, accessToken: newAccessToken });
   } catch (err) {
     // Handle specific JWT errors
@@ -304,9 +302,10 @@ export const resetPassword = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
+    // Atomic update to increment tokenVersion
     await User.findByIdAndUpdate(
       req.user.userId,
-      { $inc: { tokenVersion: 1 } },
+      { $inc: { tokenVersion: 1 } }, // Atomic increment
       { new: true }
     );
 
