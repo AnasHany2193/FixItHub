@@ -33,7 +33,6 @@ export const ForgetPasswordForm = () => {
 
   // Submit handler for requesting password reset.
   const onSubmit = (values) => {
-    console.log("values", values);
     forgotPassword(values);
   };
 

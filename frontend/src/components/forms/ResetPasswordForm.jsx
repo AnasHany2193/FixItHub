@@ -67,7 +67,6 @@ export const ResetPasswordForm = () => {
 
   const onSubmit = (values) => {
     // Extract newPassword from the values; confirmNewPassword is only for validation
-    console.log("values", values);
     const { email, code, newPassword } = values;
     resetPassword({ email, code, newPassword });
   };

@@ -101,7 +101,7 @@ export const useLogoutMutation = () => {
       navigate("/");
     },
     onError: (error) => {
-      console.error("Logout error:", error.message);
+      showToast("error", error.message);
     },
   });
 };

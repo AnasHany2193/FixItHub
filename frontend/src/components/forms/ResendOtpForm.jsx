@@ -32,7 +32,6 @@ export const ResendOtpForm = () => {
   });
 
   const onSubmit = (values) => {
-    console.log("values", values);
     resendOtp(values);
   };
 

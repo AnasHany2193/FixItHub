@@ -56,23 +56,18 @@ function App() {
         )}
 
         {/* Protected Routes: requires authentication and may be role-specific*/}
-        <Route
-          element={
-            <ProtectedRoute allowedRoles={["admin", "worker", "customer"]} />
-          }
-        >
-          <Route path="dashboard" element={<DashboardLayout />}>
-            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-              <Route path="admin" element={<AdminDashboard />} />
-            </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
-              <Route path="worker" element={<WorkerDashboard />} />
-            </Route>
+        <Route path="dashboard" element={<DashboardLayout />}>
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="admin" element={<AdminDashboard />} />
+          </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
-              <Route path="customer" element={<CustomerDashboard />} />
-            </Route>
+          <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
+            <Route path="worker" element={<WorkerDashboard />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
+            <Route path="customer" element={<CustomerDashboard />} />
           </Route>
         </Route>
 

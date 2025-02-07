@@ -1,19 +1,27 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
+
+// Import the icons you need from lucide-react:
+import { useUser } from "@/contexts/UserContext";
+import { useEffect } from "react";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/shared/AppSidebar";
 
 export const DashboardLayout = () => {
-  return (
-    <div className="flex min-h-screen">
-      {/* Sidebar (You can add navigation for different roles here) */}
-      <aside className="w-64 p-4 text-white bg-gray-800">
-        <h2 className="text-xl font-bold">Dashboard</h2>
-        {/* Navigation can be role-based */}
-      </aside>
+  const { user } = useUser();
+  const navigate = useNavigate();
 
-      {/* Main Content */}
-      <main className="flex-1 p-6">
+  useEffect(() => {
+    navigate(`/dashboard/${user.role}`);
+  }, [user, navigate]);
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="flex-1 p-4 bg-gray-50">
+        <SidebarTrigger />
         <Outlet />
       </main>
-    </div>
+    </SidebarProvider>
   );
 };
 

@@ -13,7 +13,7 @@ const refreshAccessToken = async () => {
   try {
     // Call the refresh token endpoint
     const response = await axios.post(
-      "/auth/refresh-token",
+      "http://localhost:5000/api/v1/auth/refresh-token",
       {},
       { withCredentials: true }
     );
@@ -47,7 +47,7 @@ axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
+    console.log("axiosClient.interceptors.response.use");
     // Check if error status is 401 and retry flag is not set to avoid infinite loop.
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
