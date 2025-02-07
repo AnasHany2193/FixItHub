@@ -1,5 +1,10 @@
 import { useUser } from "@/contexts/UserContext";
-import { SheetContent, SheetHeader, SheetTitle } from "../ui/sheet";
+import {
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "../ui/sheet";
 import { useApp } from "@/contexts/AppContext";
 import { useLogoutMutation } from "@/hooks/useAuth";
 import { customerNavigationItems } from "@/lib/constants";
@@ -9,7 +14,7 @@ import { Loader2, LogOut, Moon, Sun } from "lucide-react";
 import { Separator } from "../ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-export const DashboardSidebar = () => {
+export const DashboardSidebar = ({ setIsOpen }) => {
   const { pathname } = useLocation();
   const { user } = useUser();
   const { darkMode, changeMode } = useApp();
@@ -20,17 +25,28 @@ export const DashboardSidebar = () => {
       side="left"
       className={`w-64 p-4 overflow-auto transition-all border-r ${
         darkMode
-          ? "bg-gray-800 text-gray-100 border-gray-700"
-          : "bg-white text-gray-800 border-gray-200"
+          ? "bg-indigo-900/30 border-indigo-700 text-indigo-200"
+          : "bg-blue-50 border-blue-200 text-blue-900"
       }`}
     >
       {/* App Name */}
       <SheetHeader>
         <SheetTitle
-          className={`text-xl font-bold ${darkMode ? "text-indigo-300" : "text-blue-700"}`}
+          className={`text-lg font-semibold tracking-wide ${
+            darkMode ? "text-indigo-300" : "text-blue-700"
+          }`}
         >
           FixItHub
         </SheetTitle>
+        <SheetDescription
+          className={`text-sm px-3 py-1.5 rounded-md border shadow-sm ${
+            darkMode
+              ? "bg-indigo-900/30 border-indigo-700 text-indigo-200 shadow-indigo-950/50"
+              : "bg-blue-50 border-blue-200 text-blue-900 shadow-blue-100/50"
+          }`}
+        >
+          Customer Service Dashboard - Manage your requests and account
+        </SheetDescription>
       </SheetHeader>
 
       {/* Navigation Menu */}
@@ -38,7 +54,9 @@ export const DashboardSidebar = () => {
         {customerNavigationItems.map((section) => (
           <div key={section.category}>
             <h3
-              className={`px-2 text-xs font-medium uppercase tracking-wide ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+              className={`px-2 text-xs font-medium uppercase tracking-wide ${
+                darkMode ? "text-indigo-400" : "text-blue-600"
+              }`}
             >
               {section.category}
             </h3>
@@ -47,14 +65,15 @@ export const DashboardSidebar = () => {
                 <li key={item.name}>
                   <NavLink
                     to={item.path}
-                    className={`flex items-center gap-2 px-3 py-1 rounded transition-all text-sm font-medium ${
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all text-sm font-medium ${
                       pathname === item.path
                         ? darkMode
-                          ? "bg-indigo-800 text-indigo-300"
-                          : "bg-indigo-100 text-indigo-900"
+                          ? "bg-indigo-800/40 text-indigo-100 shadow-sm"
+                          : "bg-blue-100 text-blue-900 shadow-sm"
                         : darkMode
-                          ? "hover:bg-gray-700"
-                          : "hover:bg-gray-100"
+                          ? "hover:bg-indigo-800/30 text-indigo-200"
+                          : "hover:bg-blue-100 text-blue-800"
                     }`}
                   >
                     <item.icon className="w-4 h-4" />
@@ -68,13 +87,15 @@ export const DashboardSidebar = () => {
       </nav>
 
       <Separator
-        className={`my-4 ${darkMode ? "bg-gray-600" : "bg-gray-300"}`}
+        className={`my-4 ${darkMode ? "bg-indigo-700" : "bg-blue-200"}`}
       />
 
       {/* User Profile Section */}
       {user && (
         <div
-          className={`flex items-center gap-3 p-2 rounded shadow-sm text-sm ${darkMode ? "bg-gray-700" : "bg-gray-50"}`}
+          className={`flex items-center gap-3 p-2 rounded-md shadow-sm text-sm ${
+            darkMode ? "bg-indigo-800/40" : "bg-blue-100"
+          }`}
         >
           <Avatar className="w-8 h-8">
             <AvatarImage src={user.profile.avatar} alt={user.username} />
