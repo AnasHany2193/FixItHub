@@ -222,7 +222,7 @@ export const refreshToken = async (req, res, next) => {
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
-
+    console.log("New Access Token");
     res.status(200).json({ success: true, accessToken: newAccessToken });
   } catch (err) {
     next(err);

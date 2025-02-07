@@ -37,42 +37,54 @@ function App() {
         </Route>
 
         {/* Auth Routes: accessible only if NOT authenticated */}
-        {!user ? (
-          <Route element={<AuthLayout />}>
-            {/* Join in */}
-            <Route path="login" element={<LoginPage />} />
-            <Route path="register" element={<RegisterPage />} />
-
-            {/* verify email */}
-            <Route path="verify-email" element={<VerifyOtpPage />} />
-            <Route path="/resend-otp" element={<ResendOtpPage />} />
-
-            {/* reset Password */}
-            <Route path="forget-password" element={<ForgetPasswordPage />} />
-            <Route path="reset-password" element={<ResetPasswordPage />} />
-          </Route>
+        {user ? (
+          <Route
+            path="*"
+            element={<Navigate to={`/dashboard/${user.role}`} replace />}
+          />
         ) : (
-          <Route path="*" element={<Navigate to="/" />} />
+          <>
+            <Route element={<AuthLayout />}>
+              {/* Join */}
+              <Route path="login" element={<LoginPage />} />
+              <Route path="register" element={<RegisterPage />} />
+
+              {/* verify email */}
+              <Route path="verify-email" element={<VerifyOtpPage />} />
+              <Route path="/resend-otp" element={<ResendOtpPage />} />
+
+              {/* reset Password */}
+              <Route path="forget-password" element={<ForgetPasswordPage />} />
+              <Route path="reset-password" element={<ResetPasswordPage />} />
+            </Route>
+          </>
         )}
 
-        {/* Protected Routes: requires authentication and may be role-specific*/}
+        {/* Protected Dashboard Routes Inside Layout */}
         <Route
           element={
-            <ProtectedRoute allowedRoles={["admin", "worker", "customer"]} />
+            // <ProtectedRoute allowedRoles={["customer", "worker", "admin"]}>
+            <DashboardLayout />
+            // </ProtectedRoute>
           }
         >
-          <Route path="dashboard" element={<DashboardLayout />}>
-            <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-              <Route path="admin" element={<AdminDashboard />} />
-            </Route>
+          {/* Customer Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
+            <Route path="/dashboard/customer" element={<CustomerDashboard />} />
+            <Route
+              path="/dashboard/customer/products"
+              element={<div>Customer Products</div>}
+            />
+          </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
-              <Route path="worker" element={<WorkerDashboard />} />
-            </Route>
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+          </Route>
 
-            <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
-              <Route path="customer" element={<CustomerDashboard />} />
-            </Route>
+          {/* Worker Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
+            <Route path="/dashboard/worker" element={<WorkerDashboard />} />
           </Route>
         </Route>
 

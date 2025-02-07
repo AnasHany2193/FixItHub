@@ -4,26 +4,9 @@ import { Navigate, Outlet } from "react-router-dom";
 export const ProtectedRoute = ({ allowedRoles = [] }) => {
   const { user } = useUser(); // Get the logged-in user
 
-  // If no user data is available, the user is not authenticated.
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/" replace />; // Redirect if not logged in
 
-  // If allowedRoles is specified and user role is not included, redirect (could be to an unauthorized page)
-  // If user role does not match allowed roles, redirect to their dashboard
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    switch (user.role) {
-      case "admin":
-        return <Navigate to="/dashboard/admin" replace />;
-      case "customer":
-        return <Navigate to="/dashboard/customer" replace />;
-      case "worker":
-        return <Navigate to="/dashboard/worker" replace />;
-      default:
-        return <Navigate to="/" replace />;
-    }
-  }
+  if (!allowedRoles.includes(user.role)) return <Navigate to="/" replace />; // Redirect if role is unauthorized
 
-  // All checks passed – render the protected content.
-  return <Outlet />;
+  return <Outlet />; // Render child routes
 };
