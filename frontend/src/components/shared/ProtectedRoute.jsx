@@ -1,28 +1,23 @@
-import { useUser } from "@/contexts/UserContext";
-import { Navigate, Outlet, useNavigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 
-export const ProtectedRoute = ({ allowedRoles = [] }) => {
-  const { user } = useUser(); // Get the logged-in user
-  const navigate = useNavigate();
+import DashboardLayout from "@/layout/DashboardLayout";
+import { useUser } from "@/contexts/UserContext";
+
+export const ProtectedRoute = ({ allowedRoles }) => {
+  const { user } = useUser();
 
   // If no user data is available, the user is not authenticated.
-  if (!user) return navigate("/");
+  if (!user) return <Navigate to="/login" replace />;
 
-  // If allowedRoles is specified and user role is not included, redirect (could be to an unauthorized page)
-  // If user role does not match allowed roles, redirect to their dashboard
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    switch (user?.role) {
-      case "admin":
-        return <Navigate to="/dashboard/admin" replace />;
-      case "customer":
-        return <Navigate to="/dashboard/customer" replace />;
-      case "worker":
-        return <Navigate to="/dashboard/worker" replace />;
-      default:
-        return <Navigate to="/" replace />;
-    }
+  // If user role is not in allowedRoles, redirect to home "/"
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
 
-  // All checks passed – render the protected content.
-  return <Outlet />;
+  // If authorized, render the DashboardLayout and nested routes
+  return (
+    <DashboardLayout>
+      <Outlet />
+    </DashboardLayout>
+  );
 };

@@ -47,14 +47,18 @@ axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    console.log("axiosClient.interceptors.response.use");
+
+    // If no access token is present, do not try to refresh; simply reject.
+    if (!localStorage.getItem("accessToken")) return Promise.reject(error);
+
     // Check if error status is 401 and retry flag is not set to avoid infinite loop.
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
         const newAccessToken = await refreshAccessToken();
+        // Update the Authorization header for the original request
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return axiosClient(originalRequest); // Retry request with new token
+        return axiosClient(originalRequest); // Retry the request with the new token
       } catch (refreshError) {
         return Promise.reject(refreshError);
       }

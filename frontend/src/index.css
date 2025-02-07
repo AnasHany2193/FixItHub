@@ -58,20 +58,20 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Light Background & Foreground */
+    --sidebar-background: 240 5.9% 98%; /* Nearly white with a cool hint */
+    --sidebar-foreground: 240 4.8% 10%; /* Very dark text for readability */
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Primary Color (Accent Blue) remains consistent */
+    --sidebar-primary: 224.3 76.3% 48%; /* Vibrant blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* White text on primary */
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Accent Colors (A bit darker than the light background for subtle contrast) */
+    --sidebar-accent: 240 3.7% 90%; /* A soft, light-toned accent */
+    --sidebar-accent-foreground: 240 4.8% 10%; /* Dark text on accent elements */
 
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
+    /* Border & Ring adjusted to complement the lighter background */
+    --sidebar-border: 240 3.7% 85%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
@@ -123,20 +123,20 @@
 
     --chart-5: 340 75% 55%;
 
-    --sidebar-background: 240 5.9% 10%;
+    /* Dark Background & Foreground */
+    --sidebar-background: 240 5.9% 10%; /* Very dark, cool tone */
+    --sidebar-foreground: 240 4.8% 95.9%; /* Almost white for text */
 
-    --sidebar-foreground: 240 4.8% 95.9%;
+    /* Primary Color (Accent Blue) */
+    --sidebar-primary: 224.3 76.3% 48%; /* Vibrant blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* White text on primary */
 
-    --sidebar-primary: 224.3 76.3% 48%;
-
-    --sidebar-primary-foreground: 0 0% 100%;
-
+    /* Accent Colors (Slightly lighter than background for subtle contrast) */
     --sidebar-accent: 240 3.7% 15.9%;
-
     --sidebar-accent-foreground: 240 4.8% 95.9%;
 
+    /* Border & Ring for focus/outline effects */
     --sidebar-border: 240 3.7% 15.9%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }

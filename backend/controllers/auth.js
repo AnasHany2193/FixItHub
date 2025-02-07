@@ -199,7 +199,7 @@ export const login = async (req, res, next) => {
     res.status(200).json({
       success: true,
       accessToken,
-      user: { id: user._id, email: user.email, role: user.role },
+      user,
       message: welcomeMessage,
     });
   } catch (err) {
@@ -222,7 +222,7 @@ export const refreshToken = async (req, res, next) => {
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
-
+    console.log("New Access Token Done!");
     res.status(200).json({ success: true, accessToken: newAccessToken });
   } catch (err) {
     next(err);

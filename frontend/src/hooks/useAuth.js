@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   forgotPassword,
   getCurrentUser,
@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useCustomToast } from "./useCustomToast";
 import { useUser } from "@/contexts/UserContext";
+import axiosClient from "@/api/axiosClient";
 
 export const useRegisterMutation = () => {
   const navigate = useNavigate();
@@ -88,12 +89,20 @@ export const useLogoutMutation = () => {
   const navigate = useNavigate();
   const { logout } = useUser(); // or use logout() if defined in your context
   const { showToast } = useCustomToast();
+  const queryClient = useQueryClient(); // get the query client
 
   return useMutation({
     mutationFn: logoutUser,
     onSuccess: (data) => {
       // Clear user data from context and localStorage
       logout();
+      localStorage.removeItem("accessToken");
+
+      delete axiosClient.defaults.headers.common["Authorization"];
+
+      // Cancel or clear any pending queries (like currentUser)
+      queryClient.cancelQueries(["currentUser"]);
+      queryClient.clear(); // or use invalidateQueries if you prefer
 
       showToast("success", data.message);
 
