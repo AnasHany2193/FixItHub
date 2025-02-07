@@ -23,10 +23,10 @@ export const DashboardSidebar = ({ setIsOpen }) => {
   return (
     <SheetContent
       side="left"
-      className={`w-64 p-4 overflow-auto transition-all border-r ${
+      className={`w-64 p-4 overflow-auto transition-all border-r duration-300 ease-in-out bg-gradient-to-b from-slate-50 to-slate-100 ${
         darkMode
-          ? "bg-indigo-900/30 border-indigo-700 text-indigo-200"
-          : "bg-blue-50 border-blue-200 text-blue-900"
+          ? "border-indigo-700 text-indigo-200 from-slate-900 to-slate-950"
+          : "from-slate-50 to-slate-100 border-blue-200 text-blue-900"
       }`}
     >
       {/* App Name */}
@@ -70,10 +70,10 @@ export const DashboardSidebar = ({ setIsOpen }) => {
                       pathname === item.path
                         ? darkMode
                           ? "bg-indigo-800/40 text-indigo-100 shadow-sm"
-                          : "bg-blue-100 text-blue-900 shadow-sm"
+                          : "bg-blue-300 text-blue-900 shadow-sm"
                         : darkMode
                           ? "hover:bg-indigo-800/30 text-indigo-200"
-                          : "hover:bg-blue-100 text-blue-800"
+                          : "hover:bg-blue-200 text-blue-800"
                     }`}
                   >
                     <item.icon className="w-4 h-4" />

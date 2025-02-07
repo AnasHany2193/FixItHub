@@ -65,7 +65,7 @@ function App() {
             <Route path="/dashboard/customer" element={<CustomerDashboard />} />
             <Route
               path="/dashboard/customer/products"
-              element={<div>Customer Products</div>}
+              element={<div>ProductsPage</div>}
             />
           </Route>
 
