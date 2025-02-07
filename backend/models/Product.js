@@ -76,9 +76,8 @@ const productSchema = new mongoose.Schema(
 );
 
 // Geospatial index for location-based searches
-productSchema.index({ price: 1 }); // For sorting by price
 productSchema.index({ location: "2dsphere" });
-productSchema.index({ category: 1, condition: 1 }); // Compound index
+productSchema.index({ price: 1, category: 1, condition: 1 }); // Compound index
 productSchema.index({ title: "text", description: "text" }); // Text search
 
 const Product = mongoose.model("Product", productSchema);
