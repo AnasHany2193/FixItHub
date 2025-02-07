@@ -57,6 +57,7 @@ export const resendOtp = async (data) => {
 // Logout API call
 export const logoutUser = async () => {
   const response = await axiosClient.post("/auth/logout");
+  localStorage.removeItem("accessToken"); // Clear access token
   return response.data;
 };
 

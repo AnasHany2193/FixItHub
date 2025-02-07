@@ -56,6 +56,10 @@ const userSchema = new mongoose.Schema(
         zip: String,
       },
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     // Worker-specific
     workerApplication: {
       skills: { type: [String], default: [] },

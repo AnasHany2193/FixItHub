@@ -8,54 +8,30 @@ const axiosClient = axios.create({
   withCredentials: true, // Always send cookies for authentication
 });
 
-// Function to refresh token
-const refreshAccessToken = async () => {
-  try {
-    // Call the refresh token endpoint
-    const response = await axios.post(
-      "/auth/refresh-token",
-      {},
-      { withCredentials: true }
-    );
+// Add access token to requests
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    // Assuming the new access token is returned in response.data.accessToken:
-    const newAccessToken = response.data.accessToken;
-    localStorage.setItem("accessToken", newAccessToken);
+  return config;
+});
 
-    return newAccessToken;
-  } catch (error) {
-    console.error("Refresh token error:", error);
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    throw error;
-  }
-};
-
-// Request Interceptor - Attach Access Token
-axiosClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Response Interceptor - Handle 401 Errors & Refresh Token
+// Handle 401 errors (expired access token)
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
-    // Check if error status is 401 and retry flag is not set to avoid infinite loop.
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const newAccessToken = await refreshAccessToken();
-        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-        return axiosClient(originalRequest); // Retry request with new token
+        // Refresh access token
+        const { data } = await axiosClient.post("/auth/refresh-token", {});
+        localStorage.setItem("accessToken", data.accessToken); // Store new access token
+        return axiosClient(originalRequest); // Retry original request
       } catch (refreshError) {
+        // Refresh token expired/invalid → logout user
+        localStorage.removeItem("accessToken");
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }

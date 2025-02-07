@@ -147,24 +147,20 @@ export const resendOTP = async (req, res, next) => {
 
 //
 export const login = async (req, res, next) => {
-  const { email, password } = req.body;
   try {
+    const { email, password } = req.body;
+
     // Validate input
-    if (!email || !password) {
+    if (!email || !password)
       throw createHttpError(400, "Email and password are required");
-    }
 
     // Find user and validate password
     const user = await User.findOne({ email }).select("+password");
-    if (!user) throw createHttpError(401, "Invalid credentials");
-
-    const isPasswordValid = await user.validatePassword(password);
-    if (!isPasswordValid) throw createHttpError(401, "Invalid credentials");
+    if (!user || !(await user.validatePassword(password)))
+      throw createHttpError(401, "Invalid credentials");
 
     // Check if email is verified
-    if (!user.isVerified) {
-      throw createHttpError(403, "Verify your email first");
-    }
+    if (!user.isVerified) throw createHttpError(403, "Verify your email first");
 
     // Generate tokens
     const accessToken = jwt.sign(
@@ -174,7 +170,7 @@ export const login = async (req, res, next) => {
     );
 
     const refreshToken = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, tokenVersion: user.tokenVersion },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -183,6 +179,7 @@ export const login = async (req, res, next) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
@@ -211,20 +208,33 @@ export const login = async (req, res, next) => {
 export const refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
-    if (!refreshToken) throw createHttpError(401, "Unauthorized");
+    if (!refreshToken) throw createHttpError(401, "Unauthorized - No token");
 
+    // Verify token and check token version
     const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
-    if (!user) throw createHttpError(401, "Unauthorized");
+    if (!user || !user.isVerified || decoded.tokenVersion !== user.tokenVersion)
+      throw createHttpError(401, "Unauthorized");
 
+    // Generate new access token
     const newAccessToken = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
+
     console.log("New Access Token");
     res.status(200).json({ success: true, accessToken: newAccessToken });
   } catch (err) {
+    // Handle specific JWT errors
+    if (err.name === "TokenExpiredError")
+      return next(
+        createHttpError(401, "Session expired. Please log in again.")
+      );
+
+    if (err.name === "JsonWebTokenError")
+      return next(createHttpError(401, "Invalid token."));
+
     next(err);
   }
 };
@@ -294,16 +304,23 @@ export const resetPassword = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    res.clearCookie("accessToken", {
+    await User.findByIdAndUpdate(
+      req.user.userId,
+      { $inc: { tokenVersion: 1 } },
+      { new: true }
+    );
+
+    // Clear refresh token cookie
+    res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Match original cookie settings
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
     });
 
     res
       .status(200)
       .json({ success: true, message: "Logged out successfully ツ" });
-  } catch (error) {
-    next(error); // Pass the error to the centralized error handler
+  } catch (err) {
+    next(err); // Pass the error to the centralized error handler
   }
 };

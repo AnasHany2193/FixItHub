@@ -94,7 +94,6 @@ export const useLogoutMutation = () => {
     onSuccess: (data) => {
       // Clear user data from context and localStorage
       logout();
-
       showToast("success", data.message);
 
       // Redirect to the login page
