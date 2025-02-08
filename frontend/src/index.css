@@ -164,8 +164,8 @@ body {
 
 /* Scrollbar styles */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0px;
+  /* height: 8px; */
 }
 
 /* Light Mode Scrollbar */

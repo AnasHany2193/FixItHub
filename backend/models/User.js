@@ -12,7 +12,6 @@ const userSchema = new mongoose.Schema(
       unique: true, // Ensures username is unique
       minlength: 3,
       maxlength: 30,
-      required: true,
       lowercase: true,
     },
     email: {
@@ -56,6 +55,10 @@ const userSchema = new mongoose.Schema(
         zip: String,
       },
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+    },
     // Worker-specific
     workerApplication: {
       skills: { type: [String], default: [] },
@@ -66,12 +69,12 @@ const userSchema = new mongoose.Schema(
         enum: ["pending", "approved", "rejected"],
         default: "pending",
       },
-      rating: {
-        type: Number,
-        min: 1,
-        max: 5,
-      },
       documents: { type: [String], default: [] },
+    },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
     },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
@@ -85,16 +88,38 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.post("findOneAndUpdate", async function (doc) {
-  if (doc.workerApplication.status === "rejected") {
+  if (
+    doc.workerApplication.status === "rejected" &&
+    doc.workerApplication.documents?.length
+  ) {
     await cloudinary.api.delete_resources(
       doc.workerApplication.documents.map((d) => d.public_id)
     );
   }
 });
 
+// In User model - Add worker approval check middleware
+userSchema.pre("save", function (next) {
+  if (this.role === "worker" && this.workerApplication?.status !== "approved")
+    throw new Error("Worker must be approved to perform this action");
+
+  next();
+});
+
 // Method to compare password
 userSchema.methods.validatePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password); // Compare the input password with the hashed password
+};
+
+userSchema.methods.incrementTokenVersion = function () {
+  this.tokenVersion += 1;
+  return this.save();
+};
+
+userSchema.methods.isApprovedWorker = function () {
+  return (
+    this.role === "worker" && this.workerApplication?.status === "approved"
+  );
 };
 
 const User = mongoose.model("User", userSchema);

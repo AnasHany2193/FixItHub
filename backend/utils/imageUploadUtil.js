@@ -12,7 +12,7 @@ export const imageUploadUtil = async (file) => {
 
     return result;
   } catch (error) {
-    throw new Error("Failed to upload image.");
+    throw new Error(`Image upload failed: ${error.message}`);
   }
 };
 
@@ -20,4 +20,4 @@ const storage = new multer.memoryStorage();
 export const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 },
-}).single("image");
+}).array("images", 5); // Allow 5 files

@@ -22,9 +22,6 @@ import { CustomerDashboard } from "./pages/customer/CustomerDashboard";
 import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 import ResendOtpPage from "./pages/auth/ResendOtpPage";
 import DashboardLayout from "./layout/DashboardLayout";
-import CustomerProducts from "./pages/customer/Products";
-import DashboardRedirect from "./components/shared/DashboardRedirect";
-import RoleProtectedRoute from "./components/shared/RoleProtectedRoute";
 
 function App() {
   const { user } = useUser();
@@ -40,9 +37,14 @@ function App() {
         </Route>
 
         {/* Auth Routes: accessible only if NOT authenticated */}
-        {!user ? (
+        {user ? (
+          <Route
+            path="*"
+            element={<Navigate to={`/dashboard/${user.role}`} replace />}
+          />
+        ) : (
           <Route element={<AuthLayout />}>
-            {/* Join in */}
+            {/* Join */}
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
 
@@ -54,73 +56,28 @@ function App() {
             <Route path="forget-password" element={<ForgetPasswordPage />} />
             <Route path="reset-password" element={<ResetPasswordPage />} />
           </Route>
-        ) : (
-          <Route path="*" element={<Navigate to="/" />} />
         )}
 
-        {/* Protected Routes: requires authentication and may be role-specific*/}
-        {/* <Route path="dashboard" element={<DashboardLayout />}>
-          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-            <Route path="admin" element={<AdminDashboard />} />
-          </Route>
-
-          <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
-            <Route path="worker" element={<WorkerDashboard />} />
-          </Route>
-
+        {/* Protected Dashboard Routes Inside Layout */}
+        <Route element={<DashboardLayout />}>
+          {/* Customer Routes */}
           <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
-            <Route path="customer" element={<CustomerDashboard />} />
-            <Route path="products" element={<CustomerProducts />} />
+            <Route path="/dashboard/customer" element={<CustomerDashboard />} />
+            <Route
+              path="/dashboard/customer/products"
+              element={<div>ProductsPage</div>}
+            />
           </Route>
-        </Route> */}
 
-        {/* Protected Dashboard Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={["admin", "worker", "customer"]} />
-          }
-        >
-          {/* Redirect to appropriate dashboard if needed */}
-          <Route index element={<DashboardRedirect />} />
+          {/* Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/dashboard/admin" element={<AdminDashboard />} />
+          </Route>
 
-          {/* Customer Dashboard Route */}
-          <Route
-            path="customer"
-            element={
-              <RoleProtectedRoute requiredRole="customer">
-                <CustomerDashboard />
-              </RoleProtectedRoute>
-            }
-          />
-
-          {/* Standalone Customer Products Route */}
-          <Route
-            path="customer/products"
-            element={
-              <RoleProtectedRoute requiredRole="customer">
-                <CustomerProducts />
-              </RoleProtectedRoute>
-            }
-          />
-
-          {/* Other Dashboard Routes */}
-          <Route
-            path="worker"
-            element={
-              <RoleProtectedRoute requiredRole="worker">
-                <WorkerDashboard />
-              </RoleProtectedRoute>
-            }
-          />
-          <Route
-            path="admin"
-            element={
-              <RoleProtectedRoute requiredRole="admin">
-                <AdminDashboard />
-              </RoleProtectedRoute>
-            }
-          />
+          {/* Worker Routes */}
+          <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
+            <Route path="/dashboard/worker" element={<WorkerDashboard />} />
+          </Route>
         </Route>
 
         {/* Catch-All Route */}

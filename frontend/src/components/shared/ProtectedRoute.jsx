@@ -1,23 +1,12 @@
+import { useUser } from "@/contexts/UserContext";
 import { Navigate, Outlet } from "react-router-dom";
 
-import DashboardLayout from "@/layout/DashboardLayout";
-import { useUser } from "@/contexts/UserContext";
+export const ProtectedRoute = ({ allowedRoles = [] }) => {
+  const { user } = useUser(); // Get the logged-in user
 
-export const ProtectedRoute = ({ allowedRoles }) => {
-  const { user } = useUser();
+  if (!user) return <Navigate to="/" replace />; // Redirect if not logged in
 
-  // If no user data is available, the user is not authenticated.
-  if (!user) return <Navigate to="/login" replace />;
+  if (!allowedRoles.includes(user.role)) return <Navigate to="/" replace />; // Redirect if role is unauthorized
 
-  // If user role is not in allowedRoles, redirect to home "/"
-  if (!allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
-
-  // If authorized, render the DashboardLayout and nested routes
-  return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
-  );
+  return <Outlet />; // Render child routes
 };

@@ -9,7 +9,7 @@ import {
   allowedStatuses,
 } from "../utils/constants.js";
 
-// POST /products - Create a new product (only customers allowed)
+// POST /products - Create product (customers/approved workers)
 export const createProduct = async (req, res, next) => {
   try {
     const { title, description, price, category, condition, images, location } =
