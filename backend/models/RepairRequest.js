@@ -63,6 +63,8 @@ const RepairRequestSchema = new mongoose.Schema(
 );
 
 RepairRequestSchema.index({ worker: 1 });
+RepairRequestSchema.index({ status: 1 });
+RepairRequestSchema.index({ createdAt: -1 });
 RepairRequestSchema.index({ paymentIntentId: 1 });
 RepairRequestSchema.index({ issueDescription: "text" });
 
@@ -95,7 +97,8 @@ RepairRequestSchema.pre("save", async function (next) {
     // Automatically close associated auction
     await Auction.findOneAndUpdate(
       { repairRequest: this._id },
-      { status: "closed" }
+      { status: "closed" },
+      { new: true }
     );
   }
   next();

@@ -51,7 +51,7 @@ export const getRepairRequest = async (req, res, next) => {
   try {
     const repairRequest = await RepairRequest.findById(req.params.id).populate(
       "customer",
-      "username email profile"
+      "username email profile.avatar"
     );
 
     if (!repairRequest) throw createHttpError(404, "Repair request not found");
@@ -151,7 +151,7 @@ export const updateRepairRequest = async (req, res, next) => {
       updates.photos = photos;
     }
 
-    if (shippingRequired !== undefined)
+    if (typeof shippingRequired !== "undefined")
       updates.shippingRequired = shippingRequired;
 
     // Delete old photos if updated
