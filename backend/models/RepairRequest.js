@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+import User from "./User.js";
+import Auction from "./Auction.js";
+
 // Notifications
 import { sendEmail } from "../services/emailService.js";
 import { repairStatusEmailTemplate } from "../utils/emailTemplates.js";
