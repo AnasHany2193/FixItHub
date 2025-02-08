@@ -8,6 +8,7 @@ import RepairRequest from "../models/RepairRequest.js";
 // Notifications
 import { sendEmail } from "./../services/emailService.js";
 import { bidAcceptedEmailTemplate } from "../utils/emailTemplates.js";
+import mongoose from "mongoose";
 
 // POST: Create auction for a repair request
 export const createAuction = async (req, res, next) => {
@@ -74,49 +75,78 @@ export const listBids = async (req, res, next) => {
 // PUT: Accept a bid (customer-only)
 export const acceptBid = async (req, res, next) => {
   const { bidId } = req.body;
+  const session = await mongoose.startSession(); // For transactions
+  session.startTransaction();
 
   try {
+    // 1. Validate Auction and Bid
     const auction = await Auction.findOne({
       _id: req.params.id,
       status: "open",
-    });
+    }).session(session);
     if (!auction) throw createHttpError(404, "Auction not found or closed");
 
     // Find the bid and mark it as accepted
     const bid = auction.bids.id(bidId);
     if (!bid) throw createHttpError(404, "Bid not found");
+    if (bid.status !== "pending")
+      throw createHttpError(400, "Bid already processed");
 
+    // 2. Validate Worker Status
+    const worker = await User.findById(bid.worker).session(session);
+    if (!worker?.isApprovedWorker())
+      throw createHttpError(403, "Worker not approved");
+
+    // 3. Update Auction
     bid.status = "accepted";
     auction.status = "closed";
-    await auction.save();
+    await auction.save({ session });
 
-    const worker = await User.findById(bid.worker);
-    const repairRequest = await RepairRequest.findById(
-      auction.repairRequest
-    ).populate("customer", "username");
+    // 4. Update Repair Request (with transaction)
+    const repairRequest = await RepairRequest.findOneAndUpdate(
+      { _id: auction.repairRequest, customer: req.user._id }, // Security: Ensure customer owns request
+      {
+        worker: bid.worker,
+        paymentAmount: bid.price,
+        status: "in_progress",
+        $push: { trackingUpdates: { status: "worker_assigned" } },
+      },
+      { new: true, session }
+    ).populate("customer", "username email");
+    if (!repairRequest) throw createHttpError(404, "Repair request not found");
 
-    repairRequest.worker = bid.worker;
-    repairRequest.paymentAmount = bid.price;
-    repairRequest.status = "in_progress";
-    await repairRequest.save();
+    // 5. Send Notifications (fire-and-forget)
+    try {
+      await sendEmail({
+        to: worker.email,
+        subject: `🎉 Bid Accepted for ${repairRequest.itemType}`,
+        html: bidAcceptedEmailTemplate(
+          repairRequest.itemType,
+          bid.price,
+          repairRequest.customer.username
+        ),
+      });
+    } catch (emailErr) {
+      console.error("Failed to send worker email:", emailErr);
+    }
 
-    // Send notification to worker
-    await sendEmail({
-      to: worker.email,
-      subject: `🎉 Bid Accepted for ${repairRequest.itemType}`,
-      html: bidAcceptedEmailTemplate(
-        repairRequest.itemType,
-        bid.price,
-        repairRequest.customer.username
-      ),
-    });
+    // 6. Commit Transaction
+    await session.commitTransaction();
 
     res.status(200).json({
       success: true,
       message: "Bid accepted. Repair in progress!",
+      data: {
+        repairRequestId: repairRequest._id,
+        acceptedBid: bid.price,
+        workerId: worker._id,
+      },
     });
   } catch (err) {
+    await session.abortTransaction();
     next(err);
+  } finally {
+    session.endSession();
   }
 };
 
