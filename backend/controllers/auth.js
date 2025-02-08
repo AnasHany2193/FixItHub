@@ -163,6 +163,9 @@ export const login = async (req, res, next) => {
     // Check if email is verified
     if (!user.isVerified) throw createHttpError(403, "Verify your email first");
 
+    user.tokenVersion += 1;
+    await user.save();
+
     // Generate tokens
     const accessToken = jwt.sign(
       {
