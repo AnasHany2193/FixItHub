@@ -42,6 +42,8 @@ const RepairRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+RepairRequestSchema.index({ issueDescription: "text" });
+
 const RepairRequest = mongoose.model("RepairRequest", RepairRequestSchema);
 
 export default RepairRequest;

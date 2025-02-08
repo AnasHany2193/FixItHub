@@ -12,9 +12,7 @@ export const protect = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("decoded", decoded);
     const user = await User.findById(decoded.userId).select("+tokenVersion"); // ✅ Include tokenVersion
-
     if (!user) return next(createHttpError(401, "User not found"));
 
     if (decoded.tokenVersion !== user.tokenVersion)

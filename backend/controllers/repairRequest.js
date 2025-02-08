@@ -72,18 +72,32 @@ export const getRepairRequest = async (req, res, next) => {
 // GET: List all repair requests for the customer (with filters)
 export const listRepairRequests = async (req, res, next) => {
   try {
-    const { status, itemType, sortBy, page = 1, limit = 10 } = req.query;
+    const {
+      status,
+      itemType,
+      search,
+      sortBy = "newest",
+      page = 1,
+      limit = 10,
+    } = req.query;
     const filter = { customer: req.user._id };
 
     // Apply filters
     if (status) filter.status = status;
     if (itemType) filter.itemType = itemType;
 
+    // Add text search for issue description
+    if (search) filter.$text = { $search: search }; // MongoDB text search
+
+    // Sorting logic
+    let sortCriteria = { createdAt: -1 }; // Default: newest first
+    if (sortBy === "oldest") sortCriteria = { createdAt: 1 };
+
     // Pagination
     const skip = (Number(page) - 1) * Number(limit);
 
     const repairRequests = await RepairRequest.find(filter)
-      .sort(sortBy === "oldest" ? { createdAt: 1 } : { createdAt: -1 })
+      .sort(sortCriteria)
       .skip(skip)
       .limit(Number(limit))
       .lean();

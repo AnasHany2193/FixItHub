@@ -308,7 +308,7 @@ export const logout = async (req, res, next) => {
   try {
     // Atomic update to increment tokenVersion
     await User.findByIdAndUpdate(
-      req.user.userId,
+      req.user._id,
       { $inc: { tokenVersion: 1 } }, // Atomic increment
       { new: true }
     );
