@@ -12,13 +12,13 @@ const router = express.Router();
 
 router
   .route("/")
-  .post(protect, roleCheck(["customer"]), createProduct) // Only customer
+  .post(protect, roleCheck(["customer", "worker"]), createProduct) // Allow workers to sell
   .get(listProducts); // Public access;
 
 router
   .route("/:id")
   .get(getProductDetails) // Public access;
-  .put(protect, roleCheck(["customer"]), updateProduct) // Only sellers (registered as "customers") can update
-  .delete(protect, roleCheck(["customer"]), deleteProduct); // Only sellers can delete
+  .put(protect, roleCheck(["customer", "worker"]), updateProduct) // Workers can edit
+  .delete(protect, roleCheck(["customer", "worker"]), deleteProduct);
 
 export default router;
