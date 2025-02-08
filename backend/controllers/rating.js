@@ -23,6 +23,9 @@ export const submitRating = async (req, res, next) => {
     if (!repairRequest)
       throw createHttpError(404, "Completed repair request not found");
 
+    if (repairRequest.worker.toString() === req.user._id.toString())
+      throw createHttpError(403, "You cannot rate yourself");
+
     // Check if rating already exists
     const existingRating = await Rating.findOne({
       repairRequest: repairRequestId,
@@ -45,11 +48,26 @@ export const submitRating = async (req, res, next) => {
     );
 
     // Update worker's average rating
-    const worker = await User.findById(repairRequest.worker).session(session);
-    const newTotal = worker.rating.average * worker.rating.count + score;
-    worker.rating.count += 1;
-    worker.rating.average = newTotal / worker.rating.count;
-    await worker.save({ session });
+    const updatedWorker = await User.findByIdAndUpdate(
+      repairRequest.worker,
+      {
+        $inc: { "rating.count": 1, "rating.total": score },
+        $set: {
+          "rating.average": {
+            $divide: [
+              {
+                $add: [
+                  { $multiply: ["$rating.average", "$rating.count"] },
+                  score,
+                ],
+              },
+              { $add: ["$rating.count", 1] },
+            ],
+          },
+        },
+      },
+      { new: true, session }
+    );
 
     await session.commitTransaction();
 
