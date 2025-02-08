@@ -16,7 +16,7 @@ export const createRepairRequest = async (req, res, next) => {
       );
 
     // Validate photos (at least 1 image)
-    if (!photos?.length)
+    if (photos?.length < 1)
       throw createHttpError(400, "At least one photo is required");
 
     // Validate photo structure
@@ -132,6 +132,9 @@ export const updateRepairRequest = async (req, res, next) => {
 
     if (repairRequest.customer.toString() !== req.user._id.toString())
       throw createHttpError(403, "You can only update your own requests");
+
+    if (photos?.length < 1)
+      throw createHttpError(400, "At least one photo is required");
 
     // Validate updates
     const updates = {};
