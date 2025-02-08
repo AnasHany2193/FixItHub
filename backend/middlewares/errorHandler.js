@@ -12,7 +12,7 @@ const errorHandler = (err, req, res, next) => {
     return res.status(400).json({
       success: false,
       error: "Validation failed",
-      details: errorMessages,
+      details: err.message,
     });
 
   // Handle invalid ObjectId format (e.g., "123" instead of valid 24-character ID)

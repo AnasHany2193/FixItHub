@@ -72,9 +72,8 @@ const userSchema = new mongoose.Schema(
       documents: { type: [String], default: [] },
     },
     rating: {
-      type: Number,
-      min: 1,
-      max: 5,
+      average: { type: Number, default: 0, min: 0, max: 5 },
+      count: { type: Number, default: 0 },
     },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
