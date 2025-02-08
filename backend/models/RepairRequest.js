@@ -31,7 +31,12 @@ const RepairRequestSchema = new mongoose.Schema(
       enum: ["pending", "in_progress", "completed"],
       default: "pending",
     },
-
+    paymentIntentId: String,
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed"],
+      default: "pending",
+    },
     trackingUpdates: [
       {
         status: { type: String, required: true }, // e.g., "Received", "Diagnosing", "Shipped Back"
