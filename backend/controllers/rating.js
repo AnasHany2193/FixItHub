@@ -16,7 +16,8 @@ export const submitRating = async (req, res, next) => {
     const repairRequest = await RepairRequest.findOne({
       _id: repairRequestId,
       customer: req.user._id,
-      status: "completed",
+      status: "completed", // Ensure repair is completed
+      paymentStatus: "paid", // Optional: Ensure payment succeeded
     }).session(session);
 
     if (!repairRequest)

@@ -87,6 +87,17 @@ RepairRequestSchema.pre("save", async function (next) {
   next();
 });
 
+RepairRequestSchema.pre("save", async function (next) {
+  if (this.isModified("status") && this.status === "completed") {
+    // Automatically close associated auction
+    await Auction.findOneAndUpdate(
+      { repairRequest: this._id },
+      { status: "closed" }
+    );
+  }
+  next();
+});
+
 const RepairRequest = mongoose.model("RepairRequest", RepairRequestSchema);
 
 export default RepairRequest;
