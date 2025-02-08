@@ -88,13 +88,19 @@ userSchema.pre("save", async function (next) {
 });
 
 userSchema.post("findOneAndUpdate", async function (doc) {
-  if (
-    doc.workerApplication.status === "rejected" &&
-    doc.workerApplication.documents?.length
-  ) {
-    await cloudinary.api.delete_resources(
-      doc.workerApplication.documents.map((d) => d.public_id)
-    );
+  try {
+    if (
+      doc.workerApplication?.status === "rejected" &&
+      doc.workerApplication.documents?.length
+    ) {
+      const publicIds = doc.workerApplication.documents
+        .filter((doc) => doc.public_id)
+        .map((doc) => doc.public_id);
+
+      if (publicIds.length) await cloudinary.api.delete_resources(publicIds);
+    }
+  } catch (error) {
+    console.error("Document cleanup failed:", error);
   }
 });
 
