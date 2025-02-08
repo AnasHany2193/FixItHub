@@ -251,7 +251,12 @@ export const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) throw createHttpError(404, "User not found");
+    if (!user)
+      return res.status(200).json({
+        success: true,
+        message: "If the email exists, OTP will be sent",
+      });
+
     if (!user.isVerified) throw createHttpError(403, "Verify your email first");
 
     // Generate OTP
