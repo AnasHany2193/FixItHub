@@ -1,5 +1,7 @@
+import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
+
 import cloudinary from "../config/cloudinary.js";
 
 import OTP from "../models/OTP.js";
@@ -56,12 +58,10 @@ export const register = async (req, res, next) => {
     });
 
     // Generate OTP (example utility)
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+    const otpCode = crypto.randomInt(100000, 999999).toString(); // Secure 6-digit OTP
+
     // Save hashed OTP to DB
-    const otp = await OTP.create({
-      userId: user._id,
-      code: otpCode,
-    });
+    await OTP.create({ userId: user._id, code: otpCode });
     console.log("register", otpCode);
 
     // Send verification email
@@ -133,11 +133,13 @@ export const resendOTP = async (req, res, next) => {
       throw createHttpError(400, "User already verified");
 
     // Generate new OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = crypto.randomInt(100000, 999999).toString(); // Secure 6-digit OTP
+
     await OTP.create({ userId: existingUser._id, code: otpCode });
     console.log("resendOTP", otpCode);
+
     // ReSend OTP verification email
-    sendResendOtpEmail(email, otpCode);
+    await sendResendOtpEmail(email, otpCode);
 
     res.status(200).json({ success: true, message: "New OTP sent" });
   } catch (err) {
@@ -250,7 +252,8 @@ export const forgotPassword = async (req, res, next) => {
     if (!user.isVerified) throw createHttpError(403, "Verify your email first");
 
     // Generate OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpCode = crypto.randomInt(100000, 999999).toString(); // Secure 6-digit OTP
+
     await OTP.create({
       userId: user._id,
       code: otpCode,
@@ -259,7 +262,7 @@ export const forgotPassword = async (req, res, next) => {
     console.log("forgotPassword", otpCode);
 
     // Send OTP via email
-    sendPasswordResetOtpEmail(email, otpCode);
+    await sendPasswordResetOtpEmail(email, otpCode);
 
     res.status(200).json({ success: true, message: "OTP sent to email" });
   } catch (err) {
