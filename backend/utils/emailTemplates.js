@@ -996,3 +996,108 @@ export const auctionExpiredEmailTemplate = (
   </html>
   `;
 };
+
+// Bid Accepted Notification (Worker)
+export const bidAcceptedEmailTemplate = (itemType, price, customerName) => {
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>🎉 Bid Accepted! - FixItHub</title>
+      <style>
+        /* Existing styles */
+        .celebrate { font-size: 48px; margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="emoji">🔧💰</div>
+          <h1 class="logo">FixItHub</h1>
+        </div>
+        
+        <div class="content">
+          <div class="celebrate">🎉 Congratulations!</div>
+          <p>Your bid for <span class="highlight">${itemType}</span> has been accepted by <strong>${customerName}</strong>!</p>
+          
+          <div class="status-box">
+            <p>💵 Accepted Price: $${price}</p>
+            <p>⏱️ Start repair within 24 hours</p>
+          </div>
+
+          <p>Next steps:</p>
+          <ol>
+            <li>Contact customer via repair chat 💬</li>
+            <li>Confirm repair details 📝</li>
+            <li>Update repair progress regularly 📈</li>
+          </ol>
+
+          <div class="social-links">
+            <a href="${process.env.CLIENT_URL}/dashboard/repairs" 
+               class="social-link" 
+               style="background: #4f46e5; color: white;">
+              Go to Repair Dashboard 🛠️
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Questions? Reply to this email! 📩</p>
+          <p>© ${new Date().getFullYear()} FixItHub | Your repair partner</p>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+};
+
+// Repair Status Update (Customer)
+export const repairStatusEmailTemplate = (itemType, status, updates) => {
+  const statusEmoji =
+    {
+      pending: "⏳",
+      in_progress: "🚧",
+      completed: "🎉",
+    }[status] || "📦";
+
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>${statusEmoji} Repair Update - FixItHub</title>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="emoji">${statusEmoji}</div>
+          <h1 class="logo">FixItHub</h1>
+        </div>
+        
+        <div class="content">
+          <p>Hi there! 👋 Your <span class="highlight">${itemType}</span> repair status has changed:</p>
+          
+          <div class="status-box">
+            <p style="font-size: 24px;">${statusEmoji} ${status.replace("_", " ").toUpperCase()}</p>
+            ${updates ? `<p>📝 Latest update: ${updates[updates.length - 1]?.status || ""}</p>` : ""}
+          </div>
+
+          <div class="social-links">
+            <a href="${process.env.CLIENT_URL}/dashboard/repairs" 
+               class="social-link" 
+               style="background: #4f46e5; color: white;">
+              Track Repair Progress 🚚
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Need assistance? We're here to help! 💬</p>
+          <p>© ${new Date().getFullYear()} FixItHub | 24/7 Support</p>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+};

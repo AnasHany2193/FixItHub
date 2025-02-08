@@ -1,8 +1,13 @@
 import createHttpError from "http-errors";
 
+// Models
 import User from "../models/User.js";
 import Auction from "../models/Auction.js";
-import RepairRequest from "./../models/RepairRequest.js";
+import RepairRequest from "../models/RepairRequest.js";
+
+// Notifications
+import { sendEmail } from "./../services/emailService.js";
+import { bidAcceptedEmailTemplate } from "../utils/emailTemplates.js";
 
 // POST: Create auction for a repair request
 export const createAuction = async (req, res, next) => {
@@ -88,6 +93,22 @@ export const acceptBid = async (req, res, next) => {
     // Update repair request status
     await RepairRequest.findByIdAndUpdate(auction.repairRequest, {
       status: "in_progress",
+    });
+
+    const worker = await User.findById(bid.worker);
+    const repairRequest = await RepairRequest.findById(
+      auction.repairRequest
+    ).populate("customer", "username email");
+
+    // Send notification to worker
+    await sendEmail({
+      to: worker.email,
+      subject: `🎉 Bid Accepted for ${repairRequest.itemType}`,
+      html: bidAcceptedEmailTemplate(
+        repairRequest.itemType,
+        bid.price,
+        repairRequest.customer.username
+      ),
     });
 
     res.status(200).json({

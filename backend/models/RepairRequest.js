@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// Notifications
+import { sendEmail } from "../services/emailService.js";
+import { repairStatusEmailTemplate } from "../utils/emailTemplates.js";
+
 const RepairRequestSchema = new mongoose.Schema(
   {
     customer: {
@@ -43,6 +47,26 @@ const RepairRequestSchema = new mongoose.Schema(
 );
 
 RepairRequestSchema.index({ issueDescription: "text" });
+
+RepairRequestSchema.pre("save", async function (next) {
+  if (this.isModified("status")) {
+    const customer = await User.findById(this.customer);
+
+    // Send email only for specific status changes
+    if (["in_progress", "completed"].includes(this.status)) {
+      await sendEmail({
+        to: customer.email,
+        subject: `🔧 Repair Update: ${this.itemType}`,
+        html: repairStatusEmailTemplate(
+          this.itemType,
+          this.status,
+          this.trackingUpdates
+        ),
+      });
+    }
+  }
+  next();
+});
 
 const RepairRequest = mongoose.model("RepairRequest", RepairRequestSchema);
 
