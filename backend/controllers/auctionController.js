@@ -1,11 +1,12 @@
 import createHttpError from "http-errors";
 
+import User from "../models/User.js";
 import Auction from "../models/Auction.js";
 import RepairRequest from "./../models/RepairRequest.js";
 
 // POST: Create auction for a repair request
 export const createAuction = async (req, res, next) => {
-  const { repairRequestId, auctionDurationHours } = req.body;
+  const { repairRequestId, auctionDurationHours, maxBidPrice } = req.body;
 
   try {
     // Validate repair request exists and belongs to the customer
@@ -15,20 +16,21 @@ export const createAuction = async (req, res, next) => {
     });
     if (!repairRequest) throw createHttpError(404, "Repair request not found");
 
+    // Validate maxBidPrice
+    if (maxBidPrice <= 0)
+      throw createHttpError(400, "Maximum bid price must be a positive number");
+
     // Prevent duplicate auctions
     const existingAuction = await Auction.findOne({
       repairRequest: repairRequestId,
     });
     if (existingAuction) throw createHttpError(400, "Auction already exists");
 
-    // Calculate expiration time
-    const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + Number(auctionDurationHours));
-
     // Create auction
     const auction = await Auction.create({
       repairRequest: repairRequestId,
-      expiresAt,
+      maxBidPrice, // ✅ Added
+      expiresAt: new Date(Date.now() + auctionDurationHours * 60 * 60 * 1000),
     });
 
     res.status(201).json({
@@ -50,10 +52,14 @@ export const listBids = async (req, res, next) => {
 
     if (!auction) throw createHttpError(404, "Auction not found");
 
+    // Sort bids by price (lowest first)
+    const sortedBids = auction.bids.sort((a, b) => a.price - b.price);
+
     res.status(200).json({
       success: true,
+      data: sortedBids,
       message: "Bids retrieved",
-      data: auction.bids,
+      maxBidPrice: auction.maxBidPrice,
     });
   } catch (err) {
     next(err);
@@ -87,6 +93,51 @@ export const acceptBid = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Bid accepted. Repair in progress!",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST: Submit a bid (worker-only)
+export const submitBid = async (req, res, next) => {
+  const { price, estimatedTimeDays } = req.body;
+  const { id: auctionId } = req.params;
+
+  try {
+    // Validate worker is approved
+    const worker = await User.findById(req.user._id);
+    if (!worker.isApprovedWorker())
+      throw createHttpError(403, "Only approved workers can bid");
+
+    // Validate auction exists and is open
+    const auction = await Auction.findOne({
+      _id: auctionId,
+      status: "open",
+      expiresAt: { $gt: new Date() }, // Auction hasn't expired
+    });
+    if (!auction) throw createHttpError(400, "Auction closed or invalid");
+
+    // Validate bid price ≤ maxBidPrice
+    if (price > auction.maxBidPrice) {
+      throw createHttpError(
+        400,
+        `Bid exceeds maximum allowed price ($${auction.maxBidPrice})`
+      );
+    }
+
+    // Add bid
+    auction.bids.push({
+      worker: worker._id,
+      price,
+      estimatedTimeDays,
+    });
+    await auction.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Bid submitted",
+      data: auction.bids[auction.bids.length - 1], // Return the new bid
     });
   } catch (err) {
     next(err);

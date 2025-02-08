@@ -98,14 +98,6 @@ userSchema.post("findOneAndUpdate", async function (doc) {
   }
 });
 
-// In User model - Add worker approval check middleware
-userSchema.pre("save", function (next) {
-  if (this.role === "worker" && this.workerApplication?.status !== "approved")
-    throw new Error("Worker must be approved to perform this action");
-
-  next();
-});
-
 // Method to compare password
 userSchema.methods.validatePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password); // Compare the input password with the hashed password

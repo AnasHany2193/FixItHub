@@ -8,6 +8,11 @@ const AuctionSchema = new mongoose.Schema(
       required: true,
       unique: true, // One auction per repair request
     },
+    maxBidPrice: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
     bids: [
       {
         worker: {
@@ -15,7 +20,7 @@ const AuctionSchema = new mongoose.Schema(
           ref: "User",
           required: true,
         },
-        price: { type: Number, required: true },
+        price: { type: Number, required: true, min: 1 },
         estimatedTimeDays: { type: Number, required: true },
         status: {
           type: String,
@@ -34,6 +39,21 @@ const AuctionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+AuctionSchema.pre("save", function (next) {
+  const auction = this;
+
+  // Check for duplicate worker bids
+  const workerIds = new Set();
+  for (const bid of auction.bids) {
+    if (workerIds.has(bid.worker.toString()))
+      return next(new Error("Worker can only bid once per auction"));
+
+    workerIds.add(bid.worker.toString());
+  }
+
+  next();
+});
 
 const Auction = mongoose.model("Auction", AuctionSchema);
 export default Auction;

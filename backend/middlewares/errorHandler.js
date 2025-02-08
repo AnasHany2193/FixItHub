@@ -22,6 +22,12 @@ const errorHandler = (err, req, res, next) => {
       error: "Invalid product ID format.",
     });
 
+  if (err.name === "Error")
+    return res.status(400).json({
+      success: false,
+      error: err.message,
+    });
+
   // Handle HTTP errors
   if (err instanceof createHttpError.HttpError)
     return res
