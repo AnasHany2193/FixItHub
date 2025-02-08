@@ -11,7 +11,12 @@ export const protect = async (req, res, next) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select("-password");
+    const user = await User.findById(decoded.userId).select(
+      "-password tokenVersion"
+    );
+
+    if (decoded.tokenVersion !== user.tokenVersion)
+      throw createHttpError(401, "Token revoked");
 
     if (!user) return next(createHttpError(401, "User not found"));
 
@@ -23,8 +28,8 @@ export const protect = async (req, res, next) => {
 };
 
 export const roleCheck = (roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
-    throw createHttpError(403, "Forbidden - Insufficient permissions");
-  }
+  if (!roles.includes(req.user.role))
+    return next(createHttpError(403, "Forbidden - Insufficient permissions"));
+
   next();
 };
