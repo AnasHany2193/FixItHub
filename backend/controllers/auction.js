@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import createHttpError from "http-errors";
 
 // Models
@@ -7,8 +8,10 @@ import RepairRequest from "../models/RepairRequest.js";
 
 // Notifications
 import { sendEmail } from "./../services/emailService.js";
-import { bidAcceptedEmailTemplate } from "../utils/emailTemplates.js";
-import mongoose from "mongoose";
+import {
+  bidAcceptedEmailTemplate,
+  bidRejectedEmailTemplate,
+} from "../utils/emailTemplates.js";
 
 // POST: Create auction for a repair request
 export const createAuction = async (req, res, next) => {
@@ -97,9 +100,12 @@ export const acceptBid = async (req, res, next) => {
     if (!worker?.isApprovedWorker())
       throw createHttpError(403, "Worker not approved");
 
-    // 3. Update Auction
+    // 3. Update Auction (reject other bids)
     bid.status = "accepted";
     auction.status = "closed";
+    auction.bids.forEach((otherBid) => {
+      if (otherBid._id.toString() !== bidId) otherBid.status = "rejected";
+    });
     await auction.save({ session });
 
     // 4. Update Repair Request (with transaction)
@@ -130,7 +136,26 @@ export const acceptBid = async (req, res, next) => {
       console.error("Failed to send worker email:", emailErr);
     }
 
-    // 6. Commit Transaction
+    // 6. Send rejection emails (optional)
+    try {
+      const rejectedBids = auction.bids.filter((b) => b.status === "rejected");
+      await Promise.all(
+        rejectedBids.map(async (rejectedBid) => {
+          const worker = await User.findById(rejectedBid.worker).session(
+            session
+          );
+          await sendEmail({
+            to: worker.email,
+            subject: `🚫 Bid Rejected for ${repairRequest.itemType}`,
+            html: bidRejectedEmailTemplate(repairRequest.itemType),
+          });
+        })
+      );
+    } catch (emailErr) {
+      console.error("Failed to send rejection emails:", emailErr);
+    }
+
+    // 7. Commit Transaction
     await session.commitTransaction();
 
     res.status(200).json({

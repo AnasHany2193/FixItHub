@@ -1119,6 +1119,26 @@ export const paymentSuccessEmailTemplate = (itemType, amount, repairId) => `
 </div>
 `;
 
+export const bidRejectedEmailTemplate = (itemType) => `
+<div class="container">
+  <div class="header">
+    <div class="emoji">🚫🔧</div>
+    <h1 class="logo">FixItHub</h1>
+  </div>
+  <div class="content">
+    <p>Your bid for <strong>${itemType}</strong> repair was not selected.</p>
+    <div class="status-box">
+      <p>💡 Tips for next time:</p>
+      <ul>
+        <li>Offer competitive pricing</li>
+        <li>Highlight your expertise</li>
+        <li>Provide faster turnaround estimates</li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
 // Payment Failed (Customer)
 export const paymentFailedEmailTemplate = (itemType, amount) => `
 <div class="container">
