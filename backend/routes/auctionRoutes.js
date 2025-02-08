@@ -1,5 +1,6 @@
 import express from "express";
 
+import { bidLimiter } from "../middlewares/rateLimiter.js";
 import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   listBids,
@@ -18,6 +19,6 @@ router.put("/:id/accept-bid", protect, roleCheck(["customer"]), acceptBid);
 router
   .route("/:id/bids")
   .get(protect, roleCheck(["customer", "worker"]), listBids)
-  .post(protect, roleCheck(["worker"]), submitBid);
+  .post(protect, roleCheck(["worker"]), bidLimiter, submitBid);
 
 export default router;

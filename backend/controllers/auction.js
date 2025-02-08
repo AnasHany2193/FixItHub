@@ -25,6 +25,14 @@ export const createAuction = async (req, res, next) => {
     });
     if (!repairRequest) throw createHttpError(404, "Repair request not found");
 
+    // Add this check after fetching repairRequest
+    if (repairRequest.status !== "pending") {
+      throw createHttpError(
+        400,
+        "Auction can only be created for pending repair requests"
+      );
+    }
+
     // Validate maxBidPrice
     if (maxBidPrice <= 0)
       throw createHttpError(400, "Maximum bid price must be a positive number");
@@ -194,13 +202,20 @@ export const submitBid = async (req, res, next) => {
     });
     if (!auction) throw createHttpError(400, "Auction closed or invalid");
 
+    if (price < 1) throw createHttpError(400, "Bid must be at least $1");
+
     // Validate bid price ≤ maxBidPrice
-    if (price > auction.maxBidPrice) {
+    if (price > auction.maxBidPrice)
       throw createHttpError(
         400,
         `Bid exceeds maximum allowed price ($${auction.maxBidPrice})`
       );
-    }
+
+    if (auctionDurationHours < 1 || auctionDurationHours > 168)
+      throw createHttpError(
+        400,
+        "Auction duration must be 1 hour : 7 days (168h)"
+      );
 
     // Add bid
     auction.bids.push({

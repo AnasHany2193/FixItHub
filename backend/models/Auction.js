@@ -40,24 +40,21 @@ const AuctionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+AuctionSchema.index({ status: 1, expiresAt: -1 }); // For active auction queries
+AuctionSchema.index({ "bids.worker": 1 }); // For bid uniqueness enforcement
+
 AuctionSchema.virtual("isExpired").get(function () {
   return this.expiresAt <= new Date();
 });
 
-AuctionSchema.pre("save", function (next) {
-  const auction = this;
-
-  // Check for duplicate worker bids
-  const workerIds = new Set();
-  for (const bid of auction.bids) {
-    if (workerIds.has(bid.worker.toString()))
-      return next(new Error("Worker can only bid once per auction"));
-
-    workerIds.add(bid.worker.toString());
+// Replace the pre-save hook with this DB-level constraint
+AuctionSchema.index(
+  { repairRequest: 1, "bids.worker": 1 },
+  {
+    unique: true,
+    partialFilterExpression: { "bids.worker": { $exists: true } },
   }
-
-  next();
-});
+);
 
 const Auction = mongoose.model("Auction", AuctionSchema);
 export default Auction;

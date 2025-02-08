@@ -29,3 +29,12 @@ export const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: true,
 });
+
+// Add bid submission limiter
+export const bidLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 bids per worker per auction
+  keyGenerator: (req) => `${req.user._id}-${req.params.id}`,
+  message: "Too many bid attempts. Try again later.",
+  standardHeaders: true,
+});
