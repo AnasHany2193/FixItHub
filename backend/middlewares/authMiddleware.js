@@ -15,6 +15,8 @@ export const protect = async (req, res, next) => {
     const user = await User.findById(decoded.userId).select("+tokenVersion"); // ✅ Include tokenVersion
     if (!user) return next(createHttpError(401, "User not found"));
 
+    if (!user.status) return next(createHttpError(403, "Account deactivated"));
+
     if (decoded.tokenVersion !== user.tokenVersion)
       throw createHttpError(401, "Token revoked");
 
