@@ -38,7 +38,7 @@ export const createRepairPaymentIntent = async (req, res) => {
 
     // Link payment intent to repair request
     repairRequest.paymentIntentId = paymentIntent.id;
-    repairRequest.paymentAmount = amount; // Store the amount in dollars
+    repairRequest.paymentAmount = paymentIntent.amount / 100; // Store USD amount
 
     await repairRequest.save();
 
@@ -58,7 +58,7 @@ export const handleStripeWebhook = async (req, res) => {
 
   try {
     event = stripe.webhooks.constructEvent(
-      req.rawBody,
+      req.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
