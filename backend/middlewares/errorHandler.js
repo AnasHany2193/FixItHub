@@ -1,3 +1,4 @@
+import multer from "multer";
 import createHttpError from "http-errors";
 
 // Error handler middleware
@@ -6,6 +7,23 @@ const errorHandler = (err, req, res, next) => {
   console.error(`[ERROR] ${err.stack}`); // Log full stack trace
 
   if (process.env.NODE_ENV === "production") delete err.stack; // Hide stack in production
+
+  // MongoDB duplicate key
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern)[0];
+    return res.status(409).json({
+      success: false,
+      error: `${field} already exists`,
+    });
+  }
+
+  // Invalid JSON body
+  if (err.type === "entity.parse.failed") {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid JSON payload",
+    });
+  }
 
   // Handle Mongoose ValidationError
   if (err.name === "ValidationError")
@@ -27,6 +45,14 @@ const errorHandler = (err, req, res, next) => {
       success: false,
       error: err.message,
     });
+
+  if (err instanceof multer.MulterError) {
+    // File upload errors
+    return res.status(400).json({
+      success: false,
+      error: `File upload error: ${err.message}`,
+    });
+  }
 
   // Handle HTTP errors
   if (err instanceof createHttpError.HttpError)
