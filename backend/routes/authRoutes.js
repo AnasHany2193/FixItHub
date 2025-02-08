@@ -28,7 +28,7 @@ const router = express.Router();
 router.use(generalLimiter);
 
 // Route for user registration
-router.post("/register", upload, register);
+router.post("/register", authLimiter, upload, register);
 
 router.post("/verify-otp", authLimiter, verifyOTP);
 router.post("/resend-otp", resendOTP);

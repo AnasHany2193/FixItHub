@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
 export const sendEmail = async ({ to, subject, text, html }) => {
   try {
     await transporter.sendMail({
-      from: `FixItHub <${process.env.EMAIL_USER}>`,
+      from: `FixItHub <${process.env.FIXITHUB_GMAIL_USER}>`,
       to,
       subject,
       text,

@@ -41,7 +41,7 @@ export const register = async (req, res, next) => {
       username,
       email,
       password,
-      role: role === "worker" ? "customer" : role, // Default to "customer" until approved
+      role,
       workerApplication:
         role === "worker"
           ? {
@@ -163,7 +163,7 @@ export const login = async (req, res, next) => {
 
     // Generate tokens
     const accessToken = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
