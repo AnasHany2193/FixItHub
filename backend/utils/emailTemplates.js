@@ -929,3 +929,70 @@ export const workerApprovalEmailTemplate = (userName = "Worker") => {
   </html>
   `;
 };
+
+export const auctionExpiredEmailTemplate = (
+  itemType,
+  auctionId,
+  userName = "Dear"
+) => {
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>⏰ Auction Expired - FixItHub</title>
+      <style>
+        /* Keep existing styles from verification template */
+        .status-box {
+          background: #e0f2fe;
+          border-radius: 12px;
+          padding: 25px;
+          margin: 30px 0;
+          text-align: center;
+        }
+        .highlight {
+          color: #4f46e5;
+          font-weight: 700;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="emoji">⏰🔧</div>
+          <h1 class="logo">FixItHub</h1>
+        </div>
+        
+        <div class="content">
+           <p>🌟 Congratulations ${userName}! 👋!</p>
+          <p>Your auction for <span class="highlight">${itemType}</span> has officially ended.</p>
+          
+          <div class="status-box">
+            <p style="font-size: 24px;">🛑 Auction ID: ${auctionId}</p>
+            <p>🔍 Check your dashboard to review bids and select a repair provider!</p>
+          </div>
+
+          <p>Next steps:</p>
+          <ol>
+            <li>Review worker bids & ratings ⭐</li>
+            <li>Select your preferred provider ✅</li>
+            <li>Track repair progress in real-time 🚚</li>
+          </ol>
+
+          <div class="social-links">
+            <a href="https://fixithub.com/dashboard" class="social-link" 
+               style="background: #4f46e5; color: white;">
+              Go to Dashboard 📊
+            </a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Need help choosing? Reply to this email! 📩</p>
+          <p>© ${new Date().getFullYear()} FixItHub | Repair with confidence</p>
+        </div>
+      </div>
+    </body>
+  </html>
+  `;
+};
