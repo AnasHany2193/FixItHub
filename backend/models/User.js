@@ -38,9 +38,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    isActive: {
-      type: Boolean,
-      default: true,
+    status: {
+      type: String,
+      enum: ["active", "banned", "pending", "deactivated"],
+      default: "active",
     },
     profile: {
       avatar: {
