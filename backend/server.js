@@ -3,6 +3,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import express from "express";
+import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db.js"; // Import the DB connection function
 import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
@@ -12,7 +13,7 @@ import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
-import cookieParser from "cookie-parser";
+import repairRequestRoutes from "./routes/repairRequestRoutes.js";
 
 dotenv.config(); // Load environment variables
 
@@ -44,6 +45,7 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/document", uploadRoutes);
+app.use("/api/v1/repair-requests", repairRequestRoutes);
 
 // Error handling middleware should be added last
 app.use(errorHandler);

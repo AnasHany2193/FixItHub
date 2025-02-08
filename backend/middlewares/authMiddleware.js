@@ -9,16 +9,15 @@ export const protect = async (req, res, next) => {
     return next(createHttpError(401, "Unauthorized - No token provided"));
 
   const token = authHeader.split(" ")[1];
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select(
-      "-password tokenVersion"
-    );
+    const user = await User.findById(decoded.userId).select("+tokenVersion"); // ✅ Include tokenVersion
+
+    if (!user) return next(createHttpError(401, "User not found"));
 
     if (decoded.tokenVersion !== user.tokenVersion)
       throw createHttpError(401, "Token revoked");
-
-    if (!user) return next(createHttpError(401, "User not found"));
 
     req.user = user;
     next();

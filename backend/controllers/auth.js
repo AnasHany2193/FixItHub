@@ -163,7 +163,11 @@ export const login = async (req, res, next) => {
 
     // Generate tokens
     const accessToken = jwt.sign(
-      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
+      {
+        userId: user._id,
+        role: user.role,
+        tokenVersion: user.tokenVersion,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "15m" }
     );
