@@ -1,5 +1,6 @@
 import cors from "cors";
 import helmet from "helmet";
+import morgan from "morgan";
 import dotenv from "dotenv";
 import express from "express";
 
@@ -27,6 +28,9 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 app.use(helmet());
 app.use(helmet.permittedCrossDomainPolicies());
+
+// Add logging for debugging
+app.use(morgan("dev")); // 📝 Log requests
 
 // Routes
 app.get("/", (_, res) => {
