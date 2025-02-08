@@ -8,6 +8,8 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js"; // Import the DB connection function
 import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
 
+import "./utils/auctionScheduler.js";
+
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";

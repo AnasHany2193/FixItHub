@@ -40,6 +40,10 @@ const AuctionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+AuctionSchema.virtual("isExpired").get(function () {
+  return this.expiresAt <= new Date();
+});
+
 AuctionSchema.pre("save", function (next) {
   const auction = this;
 
