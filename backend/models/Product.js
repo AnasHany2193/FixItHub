@@ -9,6 +9,12 @@ const productSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: [100, "Title cannot exceed 100 characters"],
     },
+    type: {
+      type: String,
+      enum: ["product", "spare_part"],
+      default: "product",
+      required: true,
+    },
     description: {
       type: String,
       required: [true, "Product description is required"],

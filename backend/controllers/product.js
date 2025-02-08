@@ -27,6 +27,12 @@ export const createProduct = async (req, res, next) => {
     if (!images || images.length === 0)
       throw createHttpError(400, "At least one image is required.");
 
+    if (req.user.role === "worker" && !condition)
+      updates.condition = "refurbished"; // Auto-set for workers
+
+    if (location.address?.length > 100)
+      throw createHttpError(400, "Address too long");
+
     // Create product
     const product = await Product.create({
       title,
