@@ -90,15 +90,15 @@ export const acceptBid = async (req, res, next) => {
     auction.status = "closed";
     await auction.save();
 
-    // Update repair request status
-    await RepairRequest.findByIdAndUpdate(auction.repairRequest, {
-      status: "in_progress",
-    });
-
     const worker = await User.findById(bid.worker);
     const repairRequest = await RepairRequest.findById(
       auction.repairRequest
-    ).populate("customer", "username email");
+    ).populate("customer", "username");
+
+    repairRequest.worker = bid.worker;
+    repairRequest.paymentAmount = bid.price;
+    repairRequest.status = "in_progress";
+    await repairRequest.save();
 
     // Send notification to worker
     await sendEmail({

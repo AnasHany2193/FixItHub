@@ -1101,3 +1101,55 @@ export const repairStatusEmailTemplate = (itemType, status, updates) => {
   </html>
   `;
 };
+
+// Payment Success (Customer)
+export const paymentSuccessEmailTemplate = (itemType, amount, repairId) => `
+<div class="container">
+  <div class="header">
+    <div class="emoji">✅💰</div>
+    <h1 class="logo">FixItHub</h1>
+  </div>
+  <div class="content">
+    <p>Payment of $${amount} for <strong>${itemType}</strong> repair was successful!</p>
+    <div class="status-box">
+      <p>🔧 Repair ID: ${repairId}</p>
+      <p>📅 Expected completion: 3-5 business days</p>
+    </div>
+  </div>
+</div>
+`;
+
+// Payment Failed (Customer)
+export const paymentFailedEmailTemplate = (itemType, amount) => `
+<div class="container">
+  <div class="header">
+    <div class="emoji">⚠️❌</div>
+    <h1 class="logo">FixItHub</h1>
+  </div>
+  <div class="content">
+    <p>Payment of $${amount} for <strong>${itemType}</strong> failed to process.</p>
+    <div class="warning">
+      <p>Please update your payment method to avoid service delays:</p>
+      <a href="${process.env.CLIENT_URL}/dashboard/payment" class="social-link">
+        Update Payment Method 💳
+      </a>
+    </div>
+  </div>
+</div>
+`;
+
+// Worker Payment Notification
+export const workerPaymentReceivedEmailTemplate = (itemType, amount) => `
+<div class="container">
+  <div class="header">
+    <div class="emoji">💸🛠️</div>
+    <h1 class="logo">FixItHub</h1>
+  </div>
+  <div class="content">
+    <p>Payment of $${amount} for <strong>${itemType}</strong> repair has been secured!</p>
+    <div class="status-box">
+      <p>💰 Funds will be released after repair completion</p>
+    </div>
+  </div>
+</div>
+`;

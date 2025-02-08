@@ -11,6 +11,10 @@ const RepairRequestSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    worker: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     itemType: {
       type: String,
       required: [true, "Item type is required"], // e.g., "Laptop", "Refrigerator"
@@ -37,6 +41,10 @@ const RepairRequestSchema = new mongoose.Schema(
       enum: ["pending", "paid", "failed"],
       default: "pending",
     },
+    paymentAmount: {
+      type: Number,
+      min: 0,
+    },
     trackingUpdates: [
       {
         status: { type: String, required: true }, // e.g., "Received", "Diagnosing", "Shipped Back"
@@ -51,23 +59,29 @@ const RepairRequestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+RepairRequestSchema.index({ worker: 1 });
+RepairRequestSchema.index({ paymentIntentId: 1 });
 RepairRequestSchema.index({ issueDescription: "text" });
 
 RepairRequestSchema.pre("save", async function (next) {
   if (this.isModified("status")) {
-    const customer = await User.findById(this.customer);
+    try {
+      const customer = await User.findById(this.customer);
 
-    // Send email only for specific status changes
-    if (["in_progress", "completed"].includes(this.status)) {
-      await sendEmail({
-        to: customer.email,
-        subject: `🔧 Repair Update: ${this.itemType}`,
-        html: repairStatusEmailTemplate(
-          this.itemType,
-          this.status,
-          this.trackingUpdates
-        ),
-      });
+      // Send email only for specific status changes
+      if (["in_progress", "completed"].includes(this.status)) {
+        await sendEmail({
+          to: customer.email,
+          subject: `🔧 Repair Update: ${this.itemType}`,
+          html: repairStatusEmailTemplate(
+            this.itemType,
+            this.status,
+            this.trackingUpdates
+          ),
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send status email:", err);
     }
   }
   next();

@@ -18,6 +18,7 @@ import auctionRoutes from "./routes/auctionRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import repairRequestRoutes from "./routes/repairRequestRoutes.js";
+import { handleStripeWebhook } from "./controllers/payment.js";
 
 dotenv.config(); // Load environment variables
 
@@ -25,8 +26,16 @@ dotenv.config(); // Load environment variables
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.post(
+  "/api/v1/payment/webhook",
+  express.raw({ type: "application/json" }),
+  handleStripeWebhook
+);
+
 // Middleware
 app.use(express.json()); // To parse JSON data from requests
+app.use(express.urlencoded({ extended: true }));
+
 app.use(cookieParser());
 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));

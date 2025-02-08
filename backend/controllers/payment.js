@@ -2,13 +2,18 @@ import Stripe from "stripe";
 import createHttpError from "http-errors";
 
 import RepairRequest from "./../models/RepairRequest.js";
+import {
+  paymentFailedEmailTemplate,
+  paymentSuccessEmailTemplate,
+  workerPaymentReceivedEmailTemplate,
+} from "../utils/emailTemplates.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Create payment intent for a repair request
 export const createRepairPaymentIntent = async (req, res) => {
   try {
-    const { repairRequestId, amount } = req.body;
+    const { repairRequestId } = req.body;
 
     // Validate repair request exists and belongs to customer
     const repairRequest = await RepairRequest.findOne({
@@ -17,16 +22,24 @@ export const createRepairPaymentIntent = async (req, res) => {
     });
     if (!repairRequest) throw createHttpError(404, "Repair request not found");
 
+    // Validate payment amount exists (set during bid acceptance)
+    if (!repairRequest.paymentAmount) {
+      throw createHttpError(400, "No accepted bid found for this repair");
+    }
+
     // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100, // Convert to cents
+      amount: repairRequest.paymentAmount * 100,
       currency: "usd",
       metadata: { repairRequestId: repairRequestId.toString() },
       automatic_payment_methods: { enabled: true },
+      idempotencyKey: repairRequestId.toString() + Date.now(), // Prevent duplicates
     });
 
     // Link payment intent to repair request
     repairRequest.paymentIntentId = paymentIntent.id;
+    repairRequest.paymentAmount = amount; // Store the amount in dollars
+
     await repairRequest.save();
 
     res.status(200).json({
@@ -50,6 +63,7 @@ export const handleStripeWebhook = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
+    console.error("⚠️ Webhook signature verification failed:", err);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -80,4 +94,52 @@ const handleSuccessfulPayment = async (paymentIntent) => {
 
   // Send confirmation emails
   await sendPaymentConfirmationEmails(repairRequest);
+};
+
+// Add these helper functions
+const handleFailedPayment = async (paymentIntent) => {
+  const repairRequest = await RepairRequest.findOneAndUpdate(
+    { paymentIntentId: paymentIntent.id },
+    {
+      paymentStatus: "failed",
+      $push: { trackingUpdates: { status: "payment_failed" } },
+    },
+    { new: true }
+  ).populate("customer");
+
+  if (repairRequest?.customer?.email) {
+    await sendEmail({
+      to: repairRequest.customer.email,
+      subject: "⚠️ Payment Failed - FixItHub",
+      html: paymentFailedEmailTemplate(
+        repairRequest.itemType,
+        paymentIntent.amount / 100
+      ),
+    });
+  }
+};
+
+const sendPaymentConfirmationEmails = async (repairRequest) => {
+  // Customer confirmation
+  await sendEmail({
+    to: repairRequest.customer.email,
+    subject: "✅ Payment Confirmed - FixItHub",
+    html: paymentSuccessEmailTemplate(
+      repairRequest.itemType,
+      repairRequest.paymentAmount,
+      repairRequest._id
+    ),
+  });
+
+  // Worker notification
+  if (repairRequest.worker?.email) {
+    await sendEmail({
+      to: repairRequest.worker.email,
+      subject: "💰 Payment Received - FixItHub",
+      html: workerPaymentReceivedEmailTemplate(
+        repairRequest.itemType,
+        repairRequest.paymentAmount
+      ),
+    });
+  }
 };
