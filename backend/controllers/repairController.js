@@ -194,3 +194,33 @@ export const updateShippingStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getWorkerRepairs = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    const filter = {
+      worker: req.user._id,
+      status: { $in: ["in_progress", "completed"] },
+    };
+
+    if (status) filter.status = status;
+
+    const repairs = await RepairRequest.find(filter)
+      .populate({
+        path: "customer",
+        select: "username profile.phone profile.address",
+      })
+      .sort("-updatedAt");
+
+    if (!repairs.length) throw createHttpError(404, "No repairs found");
+
+    res.status(200).json({
+      success: true,
+      count: repairs.length,
+      message: "Worker repairs retrieved",
+      data: repairs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

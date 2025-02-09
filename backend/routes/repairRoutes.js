@@ -3,6 +3,7 @@ import {
   completeRepair,
   createRepairRequest,
   getRepairRequests,
+  getWorkerRepairs,
   startRepair,
   updateRepairStatus,
   updateShippingStatus,
@@ -27,5 +28,7 @@ router.patch(
   roleCheck("worker"),
   updateShippingStatus
 );
+
+router.get("/worker", protect, roleCheck("worker"), getWorkerRepairs);
 
 export default router;
