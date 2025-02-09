@@ -102,3 +102,37 @@ export const updateRepairStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+export const startRepair = async (req, res, next) => {
+  try {
+    const repairRequest = await RepairRequest.findOne({
+      _id: req.params.id,
+      worker: req.user._id,
+    });
+
+    if (!repairRequest)
+      throw createHttpError(404, "Repair request not found or unauthorized");
+
+    if (repairRequest.status !== "auction_open")
+      throw createHttpError(
+        400,
+        "Repair must be in auction_open status to start"
+      );
+
+    repairRequest.status = "in_progress";
+    repairRequest.trackingUpdates.push({
+      status: "diagnosing",
+      location: "Workshop",
+    });
+
+    await repairRequest.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Repair started successfully",
+      data: repairRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
