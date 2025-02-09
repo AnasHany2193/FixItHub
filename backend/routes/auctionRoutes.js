@@ -4,13 +4,14 @@ import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   acceptBid,
   getAuctionBids,
+  getAvailableRepairs,
   getOpenAuctions,
   submitBid,
 } from "../controllers/auctionController.js";
 
 const router = express.Router();
 
-router.post("/:repairId/bids", protect, roleCheck("worker"), submitBid);
+router.post("/:auctionId/bids", protect, roleCheck("worker"), submitBid);
 
 router.patch(
   "/:repairId/accept-bid",
@@ -22,5 +23,6 @@ router.patch(
 router.get("/:repairId/bids", protect, getAuctionBids);
 
 router.get("/open", protect, roleCheck("worker"), getOpenAuctions);
+router.get("/available", protect, roleCheck("worker"), getAvailableRepairs);
 
 export default router;
