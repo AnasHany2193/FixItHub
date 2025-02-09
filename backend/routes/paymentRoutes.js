@@ -1,7 +1,7 @@
 import express from "express";
 
-import { createRepairPaymentIntent } from "../controllers/payment.js";
 import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
+import { createRepairPaymentIntent } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.post(
   "/create-payment-intent",
   protect,
-  roleCheck(["customer"]),
+  roleCheck("customer"),
   createRepairPaymentIntent
 );
 

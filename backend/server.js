@@ -18,7 +18,7 @@ import ratingRoutes from "./routes/ratingRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 
-import { handleStripeWebhook } from "./controllers/payment.js";
+import { handleStripeWebhook } from "./controllers/paymentController.js";
 
 import repairRoutes from "./routes/repairRoutes.js";
 import auctionRoutes from "./routes/auctionRoutes.js";
