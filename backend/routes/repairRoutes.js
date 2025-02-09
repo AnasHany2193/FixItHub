@@ -2,6 +2,7 @@ import express from "express";
 import {
   completeRepair,
   createRepairRequest,
+  getCustomerHistory,
   getRepairRequests,
   getWorkerHistory,
   getWorkerRepairs,
@@ -18,6 +19,13 @@ router.post("/", protect, roleCheck("customer"), createRepairRequest);
 router.get("/", protect, roleCheck("customer"), getRepairRequests);
 
 router.patch("/:id/status", protect, roleCheck("customer"), updateRepairStatus);
+
+router.get(
+  "/customer/history",
+  protect,
+  roleCheck("customer"),
+  getCustomerHistory
+);
 
 router.patch("/:id/start", protect, roleCheck("worker"), startRepair);
 
