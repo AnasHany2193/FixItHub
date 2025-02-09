@@ -288,3 +288,38 @@ export const getCustomerHistory = async (req, res, next) => {
     next(error);
   }
 };
+
+export const cancelRepairRequest = async (req, res, next) => {
+  try {
+    const repairRequest = await RepairRequest.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        customer: req.user._id,
+        status: { $in: ["pending", "auction_open"] },
+      },
+      { status: "cancelled" },
+      { new: true }
+    );
+
+    if (!repairRequest)
+      throw createHttpError(
+        404,
+        "Repair request not found or cannot be cancelled in current state"
+      );
+
+    // Close associated auction
+    await Auction.findOneAndUpdate(
+      { repairRequest: repairRequest._id },
+      { status: "closed" },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Repair request cancelled successfully",
+      data: repairRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

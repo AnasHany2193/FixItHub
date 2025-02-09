@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  cancelRepairRequest,
   completeRepair,
   createRepairRequest,
   getCustomerHistory,
@@ -19,6 +20,13 @@ router.post("/", protect, roleCheck("customer"), createRepairRequest);
 router.get("/", protect, roleCheck("customer"), getRepairRequests);
 
 router.patch("/:id/status", protect, roleCheck("customer"), updateRepairStatus);
+
+router.patch(
+  "/:id/cancel",
+  protect,
+  roleCheck("customer"),
+  cancelRepairRequest
+);
 
 router.get(
   "/customer/history",
