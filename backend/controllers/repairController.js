@@ -165,3 +165,32 @@ export const completeRepair = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateShippingStatus = async (req, res, next) => {
+  try {
+    const { status, location } = req.body;
+
+    const repairRequest = await RepairRequest.findOne({
+      _id: req.params.id,
+      worker: req.user._id,
+      shippingRequired: true,
+    });
+
+    if (!repairRequest)
+      throw createHttpError(404, "Repair not found or shipping not required");
+
+    if (repairRequest.paymentDetails.status !== "paid")
+      throw createHttpError(402, "Payment required before shipping");
+
+    repairRequest.trackingUpdates.push({ status, location });
+    await repairRequest.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shipping status updated",
+      data: repairRequest.trackingUpdates,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

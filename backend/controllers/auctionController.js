@@ -92,7 +92,7 @@ export const getOpenAuctions = async (req, res, next) => {
       })
       .sort("-createdAt");
 
-    if (!auction) throw createHttpError(404, "Auction not found");
+    if (!auctions) throw createHttpError(404, "Auction not found");
 
     const validAuctions = auctions.filter((a) => a.repairRequest);
 
