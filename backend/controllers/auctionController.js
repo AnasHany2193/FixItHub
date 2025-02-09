@@ -12,6 +12,9 @@ export const submitBid = async (req, res, next) => {
 
     if (!auction) throw createHttpError(404, "Active auction not found");
 
+    if (auction.repairRequest.customer.toString() === req.user._id.toString())
+      throw createHttpError(403, "Customers cannot bid on their own requests");
+
     const newBid = {
       worker: req.user._id,
       bidPrice: req.body.bidPrice,
