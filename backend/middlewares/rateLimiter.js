@@ -14,20 +14,24 @@ export const generalLimiter = rateLimit({
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Max 5 attempts
-  message: "Too many attempts. Try again later.",
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
+
+  message: {
+    success: false,
+    error: "Too many attempts. Please try again after 15 minutes.",
+  },
+  validate: { trustProxy: true }, // If using reverse proxy
+  keyGenerator: (req) => `${req.ip}-${req.body?.email}`, // Combine IP + email
 });
 
 // Password reset limiter (prevent spam)
 export const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // Max 3 requests/hour
-  message: "Too many password reset requests. Wait 1 hour.",
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true,
+  message: {
+    success: false,
+    error: "Too many password reset attempts. Try again in 1 hour.",
+  },
+  skip: (req) => req.user?.isVerified, // Allow verified users more attempts
 });
 
 // Add bid submission limiter

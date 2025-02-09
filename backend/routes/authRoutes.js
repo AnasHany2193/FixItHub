@@ -29,14 +29,14 @@ router.use(generalLimiter);
 router.post("/register", authLimiter, register);
 
 router.post("/verify-otp", authLimiter, verifyOTP);
-router.post("/resend-otp", resendOTP);
+router.post("/resend-otp", authLimiter, resendOTP);
 
 // Route for user login
 router.post("/login", authLimiter, login);
 router.post("/refresh-token", refreshToken);
 
-router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", passwordResetLimiter, resetPassword);
+router.post("/forgot-password", passwordResetLimiter, forgotPassword);
 
 // Route for user logout
 router.post("/logout", protect, logout);
