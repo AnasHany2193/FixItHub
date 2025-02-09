@@ -13,6 +13,7 @@ const statusEnum = Object.freeze({
   IN_PROGRESS: "in_progress",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
+  RETURNING_TO_CUSTOMER: "returning_to_customer",
 });
 
 const RepairRequestSchema = new mongoose.Schema(

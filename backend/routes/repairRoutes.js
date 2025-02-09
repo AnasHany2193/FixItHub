@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  cancelAndReturnItem,
   cancelRepairRequest,
   completeRepair,
   createRepairRequest,
@@ -49,5 +50,11 @@ router.patch(
 router.get("/worker", protect, roleCheck("worker"), getWorkerRepairs);
 
 router.get("/worker/history", protect, roleCheck("worker"), getWorkerHistory);
+router.patch(
+  "/:id/cancel-and-return",
+  protect,
+  roleCheck("worker"),
+  cancelAndReturnItem
+);
 
 export default router;

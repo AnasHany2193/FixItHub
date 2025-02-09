@@ -323,3 +323,36 @@ export const cancelRepairRequest = async (req, res, next) => {
     next(error);
   }
 };
+
+export const cancelAndReturnItem = async (req, res, next) => {
+  try {
+    const repairRequest = await RepairRequest.findOne({
+      _id: req.params.id,
+      worker: req.user._id,
+      status: "in_progress",
+    });
+
+    if (!repairRequest)
+      throw createHttpError(404, "Repair not found or not in progress");
+
+    repairRequest.status = "returning_to_customer";
+    repairRequest.trackingUpdates.push({
+      status: "return_initiated",
+      location: "Preparing for return shipment",
+      details: "Item could not be repaired, initiating return",
+    });
+
+    await repairRequest.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Return process initiated",
+      data: {
+        status: repairRequest.status,
+        tracking: repairRequest.trackingUpdates,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
