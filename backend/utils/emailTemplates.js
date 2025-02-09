@@ -930,72 +930,79 @@ export const workerApprovalEmailTemplate = (userName = "Worker") => {
   `;
 };
 
-export const auctionExpiredEmailTemplate = (
+export const auctionExpiredEmailTemplate = ({
   itemType,
   auctionId,
-  userName = "Dear"
-) => {
-  return `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>⏰ Auction Expired - FixItHub</title>
-      <style>
-        /* Keep existing styles from verification template */
-        .status-box {
-          background: #e0f2fe;
-          border-radius: 12px;
-          padding: 25px;
-          margin: 30px 0;
-          text-align: center;
-        }
-        .highlight {
-          color: #4f46e5;
-          font-weight: 700;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <div class="emoji">⏰🔧</div>
-          <h1 class="logo">FixItHub</h1>
-        </div>
-        
-        <div class="content">
-           <p>🌟 Congratulations ${userName}! 👋!</p>
-          <p>Your auction for <span class="highlight">${itemType}</span> has officially ended.</p>
-          
-          <div class="status-box">
-            <p style="font-size: 24px;">🛑 Auction ID: ${auctionId}</p>
-            <p>🔍 Check your dashboard to review bids and select a repair provider!</p>
-          </div>
-
-          <p>Next steps:</p>
-          <ol>
-            <li>Review worker bids & ratings ⭐</li>
-            <li>Select your preferred provider ✅</li>
-            <li>Track repair progress in real-time 🚚</li>
-          </ol>
-
-          <div class="social-links">
-            <a href="https://fixithub.com/dashboard" class="social-link" 
-               style="background: #4f46e5; color: white;">
-              Go to Dashboard 📊
-            </a>
-          </div>
-        </div>
-
-        <div class="footer">
-          <p>Need help choosing? Reply to this email! 📩</p>
-          <p>© ${new Date().getFullYear()} FixItHub | Repair with confidence</p>
-        </div>
+  userName,
+  hasBids,
+  bidCount,
+}) => `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Auction Expired - FixItHub</title>
+    <style>
+      /* Base styles */
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+      .status-box { background: #f8f9fa; border-radius: 12px; padding: 25px; margin: 25px 0; }
+      .highlight { color: #4f46e5; font-weight: 600; }
+      .cta-button { 
+        display: inline-block; 
+        padding: 12px 24px; 
+        background: #4f46e5; 
+        color: white !important; 
+        border-radius: 8px; 
+        text-decoration: none;
+        margin: 15px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>⏰ Your ${itemType} Repair Auction Has Closed</h1>
+      
+      <div class="status-box">
+        <h2>Auction Summary</h2>
+        <p>📌 ID: <span class="highlight">${auctionId}</span></p>
+        <p>📅 Closed at: ${new Date().toLocaleString()}</p>
+        <p>📥 Total Bids: ${bidCount}</p>
       </div>
-    </body>
-  </html>
-  `;
-};
+
+      ${
+        hasBids
+          ? `
+        <h3>Next Steps</h3>
+        <p>Review the bids and select a repair provider:</p>
+        <a href="https://fixithub.com/auctions/${auctionId}" class="cta-button">
+          View Bids & Choose Provider →
+        </a>
+      `
+          : `
+        <div class="status-box">
+          <h3>⚠️ No Bids Received</h3>
+          <p>We recommend:</p>
+          <ul>
+            <li>Adjusting your maximum price</li>
+            <li>Adding more repair details</li>
+            <li>Extending the auction duration</li>
+          </ul>
+          <a href="https://fixithub.com/repairs/new" class="cta-button">
+            Repost Request →
+          </a>
+        </div>
+      `
+      }
+
+      <footer style="margin-top: 30px; color: #666;">
+        <p>Need help? <a href="mailto:support@fixithub.com">Contact our team</a></p>
+        <p>© ${new Date().getFullYear()} FixItHub - Repair Marketplace</p>
+      </footer>
+    </div>
+  </body>
+</html>
+`;
 
 // Bid Accepted Notification (Worker)
 export const bidAcceptedEmailTemplate = (itemType, price, customerName) => {

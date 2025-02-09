@@ -1,41 +1,74 @@
 import cron from "node-cron";
 import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
-import { sendEmail } from "./../services/emailService.js";
+import { sendEmail } from "../services/emailService.js";
 import { auctionExpiredEmailTemplate } from "./emailTemplates.js";
 
-// Run every hour
-cron.schedule("0 * * * *", async () => {
+const closeExpiredAuctions = async () => {
   try {
+    const now = new Date();
     const expiredAuctions = await Auction.find({
       status: "open",
-      expiresAt: { $lte: new Date() },
+      expiresAt: { $lte: now },
+    }).populate({
+      path: "repairRequest",
+      populate: { path: "customer", select: "email username" },
     });
 
-    for (const auction of expiredAuctions) {
-      auction.status = "closed";
-      await auction.save();
+    let processedCount = 0;
 
-      // Notify customer via email
-      const repairRequest = await RepairRequest.findById(
-        auction.repairRequest
-      ).populate("customer", "email username");
+    await Promise.all(
+      expiredAuctions.map(async (auction) => {
+        try {
+          // Close auction
+          auction.status = "closed";
+          await auction.save();
 
-      if (repairRequest?.customer?.email) {
-        await sendEmail({
-          to: repairRequest.customer.email,
-          subject: `⏰ Auction Expired - ${repairRequest.itemType}`,
-          html: auctionExpiredEmailTemplate(
-            repairRequest.itemType,
-            auction._id,
-            repairRequest.customer.username
-          ),
-        });
-      }
-    }
+          // Update repair request if no bids
+          if (auction.bids.length === 0)
+            await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
+              status: "cancelled",
+            });
 
-    console.log(`Closed ${expiredAuctions.length} expired auctions`);
+          // Send notification
+          if (auction.repairRequest?.customer?.email)
+            await sendExpiryNotification(auction);
+
+          processedCount++;
+        } catch (err) {
+          console.error(`Error processing auction ${auction._id}:`, err);
+        }
+      })
+    );
+
+    console.log(
+      `Successfully processed ${processedCount}/${expiredAuctions.length} expired auctions`
+    );
   } catch (err) {
-    console.error("Error closing expired auctions:", err);
+    console.error("Critical error in auction scheduler:", err);
   }
-});
+};
+
+const sendExpiryNotification = async (auction) => {
+  try {
+    const { repairRequest } = auction;
+    const hasBids = auction.bids.length > 0;
+
+    await sendEmail({
+      to: repairRequest.customer.email,
+      subject: `⏰ Auction Expired - ${repairRequest.itemType}`,
+      html: auctionExpiredEmailTemplate({
+        itemType: repairRequest.itemType,
+        auctionId: auction._id,
+        userName: repairRequest.customer.username,
+        hasBids,
+        bidCount: auction.bids.length,
+      }),
+    });
+  } catch (emailError) {
+    console.error("Failed to send expiry email:", emailError);
+  }
+};
+
+// Run every 5 minutes for better accuracy
+cron.schedule("*/5 * * * *", closeExpiredAuctions);
