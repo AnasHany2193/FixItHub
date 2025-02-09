@@ -136,3 +136,32 @@ export const startRepair = async (req, res, next) => {
     next(error);
   }
 };
+
+export const completeRepair = async (req, res, next) => {
+  try {
+    const repairRequest = await RepairRequest.findOne({
+      _id: req.params.id,
+      worker: req.user._id,
+      status: "in_progress",
+    });
+
+    if (!repairRequest)
+      throw createHttpError(404, "Repair not found or not in progress");
+
+    repairRequest.status = "completed";
+    repairRequest.trackingUpdates.push({
+      status: "quality_check",
+      location: "Quality Assurance Department",
+    });
+
+    await repairRequest.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Repair marked as completed",
+      data: repairRequest,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

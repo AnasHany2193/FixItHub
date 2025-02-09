@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  completeRepair,
   createRepairRequest,
   getRepairRequests,
   startRepair,
@@ -16,5 +17,7 @@ router.get("/", protect, roleCheck("customer"), getRepairRequests);
 router.patch("/:id/status", protect, roleCheck("customer"), updateRepairStatus);
 
 router.patch("/:id/start", protect, roleCheck("worker"), startRepair);
+
+router.patch("/:id/complete", protect, roleCheck("worker"), completeRepair);
 
 export default router;
