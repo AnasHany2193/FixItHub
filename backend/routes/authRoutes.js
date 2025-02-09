@@ -1,7 +1,5 @@
 import express from "express";
 
-import { upload } from "../utils/imageUploadUtil.js";
-
 // Controllers
 import {
   register,
@@ -15,7 +13,7 @@ import {
 } from "../controllers/auth.js";
 
 // Middlewares
-import { protect, roleCheck } from "../middlewares/authMiddleware.js";
+import { protect } from "../middlewares/authMiddleware.js";
 import {
   authLimiter,
   generalLimiter,
@@ -28,7 +26,7 @@ const router = express.Router();
 router.use(generalLimiter);
 
 // Route for user registration
-router.post("/register", authLimiter, upload, register);
+router.post("/register", authLimiter, register);
 
 router.post("/verify-otp", authLimiter, verifyOTP);
 router.post("/resend-otp", resendOTP);
@@ -36,11 +34,6 @@ router.post("/resend-otp", resendOTP);
 // Route for user login
 router.post("/login", authLimiter, login);
 router.post("/refresh-token", refreshToken);
-
-// Example protected route (admin-only)
-router.get("/admin/dashboard", protect, roleCheck(["admin"]), (req, res) => {
-  res.json({ secretData: "Admin dashboard" });
-});
 
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", passwordResetLimiter, resetPassword);

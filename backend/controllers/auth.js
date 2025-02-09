@@ -173,23 +173,15 @@ export const login = async (req, res, next) => {
         role: user.role,
         tokenVersion: user.tokenVersion,
       },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN }
     );
 
     const refreshToken = jwt.sign(
       { userId: user._id, tokenVersion: user.tokenVersion },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      process.env.JWT_REFRESH_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
     );
-
-    // Set refresh token in HTTP-only cookie
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
 
     // Generate a welcome message based on user role
     const welcomeMessage =
@@ -201,12 +193,27 @@ export const login = async (req, res, next) => {
             ? "Welcome Admin! You now have full access to our powerful control panel."
             : "WHO ARE YOU!! 😢";
 
-    res.status(200).json({
-      success: true,
-      accessToken,
-      user,
-      message: welcomeMessage,
-    });
+    // Set refresh & access token in HTTP-only cookie
+    res
+      .status(200)
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000, // 15 minutes
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      })
+      .json({
+        success: true,
+        accessToken, // Delete Later
+        user,
+        message: welcomeMessage,
+      });
   } catch (err) {
     next(err); // Pass the error to the error handler middleware
   }
@@ -219,19 +226,31 @@ export const refreshToken = async (req, res, next) => {
     if (!refreshToken) throw createHttpError(401, "Unauthorized - No token");
 
     // Verify token and check token version
-    const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.userId);
     if (!user || !user.isVerified || decoded.tokenVersion !== user.tokenVersion)
       throw createHttpError(401, "Unauthorized");
 
-    // Generate new access token
+    // Generate new access token with access secret
     const newAccessToken = jwt.sign(
       { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      process.env.JWT_ACCESS_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN }
     );
     console.log("New Access Token Done!");
-    res.status(200).json({ success: true, accessToken: newAccessToken });
+
+    res
+      .status(200)
+      .cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 15 * 60 * 1000,
+      })
+      .json({
+        success: true,
+        accessToken: newAccessToken, // Delete Later
+      });
   } catch (err) {
     // Handle specific JWT errors
     if (err.name === "TokenExpiredError")
