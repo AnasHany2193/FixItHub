@@ -1,33 +1,6 @@
 import mongoose from "mongoose";
 
-const bidSchema = new mongoose.Schema(
-  {
-    worker: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    bidPrice: {
-      type: Number,
-      required: true,
-    },
-    estimatedTimeDays: {
-      type: Number,
-      required: true,
-      min: [1, "Estimate must be at least 1 day"],
-    },
-    status: {
-      type: String,
-      enum: ["pending", "accepted", "rejected"],
-      default: "pending",
-    },
-    submittedAt: {
-      type: Date,
-      default: () => new Date(),
-    },
-  },
-  { _id: true }
-);
+import { bidSchema } from "./Bid.js";
 
 const AuctionSchema = new mongoose.Schema(
   {
@@ -55,7 +28,12 @@ const AuctionSchema = new mongoose.Schema(
         message: "Auction expiration must be in the future",
       },
     },
-    bids: [bidSchema],
+    bids: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Bid",
+      },
+    ],
     currentLowestBid: bidSchema,
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
