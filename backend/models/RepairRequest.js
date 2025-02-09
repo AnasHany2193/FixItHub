@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+// Models
 import User from "./User.js";
 import Auction from "./Auction.js";
 
@@ -15,6 +16,16 @@ const statusEnum = Object.freeze({
   CANCELLED: "cancelled",
   RETURNING_TO_CUSTOMER: "returning_to_customer",
 });
+
+const trackingStatusEnum = [
+  "received",
+  "diagnosing",
+  "repairing",
+  "quality_check",
+  "shipped",
+  "payment_received",
+  "payment_failed",
+];
 
 const RepairRequestSchema = new mongoose.Schema(
   {
@@ -84,23 +95,21 @@ const RepairRequestSchema = new mongoose.Schema(
       },
       default: statusEnum.PENDING,
     },
-    paymentDetails: {
-      intentId: {
-        type: String,
-        index: true,
-        sparse: true,
-      },
-      status: {
-        type: String,
-        enum: ["pending", "paid", "failed", "refunded"],
-        default: "pending",
-      },
-      amount: {
-        type: Number,
-        min: [0, "Amount cannot be negative"],
-        required: function () {
-          return this.paymentDetails.status !== "pending";
-        },
+    paymentIntentId: {
+      type: String,
+      index: true,
+      sparse: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "refunded"],
+      default: "pending",
+    },
+    paymentAmount: {
+      type: Number,
+      min: [0, "Amount cannot be negative"],
+      required: function () {
+        return this.paymentStatus !== "pending";
       },
     },
     trackingUpdates: [
@@ -108,13 +117,7 @@ const RepairRequestSchema = new mongoose.Schema(
         status: {
           type: String,
           required: true,
-          enum: [
-            "received",
-            "diagnosing",
-            "repairing",
-            "quality_check",
-            "shipped",
-          ],
+          enum: trackingStatusEnum,
         },
         location: {
           type: String,
@@ -127,7 +130,6 @@ const RepairRequestSchema = new mongoose.Schema(
         },
       },
     ],
-
     bids: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -135,7 +137,6 @@ const RepairRequestSchema = new mongoose.Schema(
       },
     ],
   },
-
   {
     timestamps: true,
     toJSON: { virtuals: true },
@@ -145,17 +146,26 @@ const RepairRequestSchema = new mongoose.Schema(
 
 // Indexes
 RepairRequestSchema.index({ createdAt: -1 });
-RepairRequestSchema.index({ "paymentDetails.status": 1 });
+RepairRequestSchema.index({ paymentStatus: 1 });
+RepairRequestSchema.index({ "trackingUpdates.status": 1 });
 
 // Virtuals
 RepairRequestSchema.virtual("activeBid").get(function () {
   return this.bids.find((bid) => bid.status === "accepted");
 });
 
+RepairRequestSchema.virtual("paymentDetails").get(function () {
+  return {
+    status: this.paymentStatus,
+    amount: this.paymentAmount,
+    intentId: this.paymentIntentId,
+  };
+});
+
 // Hooks
 RepairRequestSchema.post("save", async function (doc) {
-  if (doc.isModified("status")) {
-    try {
+  try {
+    if (doc.isModified("status")) {
       const customer = await User.findById(doc.customer);
       const shouldNotify = [
         statusEnum.IN_PROGRESS,
@@ -173,25 +183,19 @@ RepairRequestSchema.post("save", async function (doc) {
           ),
         });
       }
-    } catch (error) {
-      console.error("Status email failed:", error.message);
     }
-  }
 
-  if (doc.status === statusEnum.COMPLETED) {
-    await Auction.findOneAndUpdate(
-      { repairRequest: doc._id },
-      { status: "closed" },
-      { new: true }
-    );
-
-    // Auto-accept lowest bid if auction is closed
-    const auction = await Auction.findOne({ repairRequest: doc._id });
-    if (auction?.currentLowestBid) await auction.acceptLowestBid();
+    if (doc.isModified("paymentStatus") && doc.paymentStatus === "paid") {
+      const auction = await Auction.findOne({ repairRequest: doc._id });
+      if (auction) {
+        await Auction.findByIdAndUpdate(auction._id, { status: "closed" });
+      }
+    }
+  } catch (error) {
+    console.error("Post-save hook error:", error.message);
   }
 });
 
 const RepairRequest = mongoose.model("RepairRequest", RepairRequestSchema);
 export { statusEnum as RepairStatus };
-
 export default RepairRequest;
