@@ -3,183 +3,152 @@ import createHttpError from "http-errors";
 import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
 
-export const acceptBid = async (req, res, next) => {
+export const acceptLowestBid = async (req, res, next) => {
   try {
-    const auction = await Auction.findOne({
-      repairRequest: req.params.repairId,
-    }).populate("repairRequest");
+    const auction = await Auction.findById(req.params.auctionId);
 
     if (!auction) throw createHttpError(404, "Auction not found");
 
     if (auction.repairRequest.customer.toString() !== req.user._id.toString())
       throw createHttpError(403, "Not authorized to accept bids");
 
-    await auction.acceptLowestBid();
+    const updatedAuction = await auction.acceptLowestBid();
 
-    // Update repair request with selected worker
-    await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
-      worker: auction.currentLowestBid.worker,
+    // Update repair request
+    await RepairRequest.findByIdAndUpdate(auction.repairRequest, {
+      worker: updatedAuction.currentLowestBid.worker,
       status: "in_progress",
+      paymentAmount: updatedAuction.currentLowestBid.bidPrice,
     });
 
     res.status(200).json({
       success: true,
+      data: {
+        acceptedBid: updatedAuction.currentLowestBid,
+        repairStatus: "in_progress",
+      },
       message: "Bid accepted successfully",
-      acceptedBid: auction.currentLowestBid,
     });
   } catch (error) {
-    next(error);
+    next(createHttpError(400, error.message));
   }
 };
 
 export const getAuctionBids = async (req, res, next) => {
   try {
-    const auction = await Auction.findOne({
-      repairRequest: req.params.repairId,
-    })
+    const auction = await Auction.findById(req.params.auctionId)
       .populate({
         path: "bids.worker",
         select: "username profile.avatar rating.average",
       })
-      .sort("-bids.submittedAt");
+      .lean();
 
     if (!auction) throw createHttpError(404, "Auction not found");
 
+    // Transform bids data
+    const bids = auction.bids.map((bid) => ({
+      ...bid,
+      worker: bid.worker,
+      isLowest: bid._id.equals(auction.currentLowestBid?._id),
+    }));
+
     res.status(200).json({
       success: true,
+      data: {
+        ...auction,
+        bids,
+        currentLowestBid: auction.currentLowestBid,
+      },
       message: "Bids retrieved successfully",
-      data: auction.bids,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const getOpenAuctions = async (req, res, next) => {
+export const getAvailableAuctions = async (req, res, next) => {
   try {
-    const auctions = await Auction.find({ status: "open" })
+    const { includeCustomer } = req.query;
+
+    const query = await Auction.find({ status: "open" })
       .populate({
         path: "repairRequest",
-        select: "title category itemType photos shippingRequired createdAt",
         match: { status: "auction_open" },
+        select: "title category itemType photos shippingRequired createdAt",
+        populate: includeCustomer
+          ? {
+              path: "customer",
+              select: "username profile.avatar rating.average",
+            }
+          : undefined,
       })
       .sort("-createdAt");
 
-    if (!auctions) throw createHttpError(404, "Auction not found");
+    const auctions = await query.lean();
 
-    const validAuctions = auctions.filter((a) => a.repairRequest);
-
-    res.status(200).json({
-      success: true,
-      count: validAuctions.length,
-      message: "Open auctions retrieved",
-      data: validAuctions.map((auction) => ({
+    const transformedAuctions = auctions
+      .filter((a) => a.repairRequest) // Filter out null repair requests
+      .map((auction) => ({
         id: auction._id,
         startingMaxPrice: auction.startingMaxPrice,
         expiresAt: auction.expiresAt,
-        currentLowestBid: auction.currentLowestBid?.bidPrice || null,
-        repairRequest: auction.repairRequest,
-      })),
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getAvailableRepairs = async (req, res, next) => {
-  try {
-    const auctions = await Auction.find({ status: "open" })
-      .populate({
-        path: "repairRequest",
-        match: { status: "auction_open" },
-        select: "title category itemType photos shippingRequired createdAt",
-        populate: {
-          path: "customer",
-          select: "username profile.avatar rating.average",
-        },
-      })
-      .sort("-createdAt");
-
-    const validAuctions = auctions
-      .filter((a) => a.repairRequest)
-      .map((auction) => ({
-        auctionId: auction._id,
-        startingMaxPrice: auction.startingMaxPrice,
-        expiresAt: auction.expiresAt,
-        currentLowestBid: auction.currentLowestBid?.bidPrice || null,
-        repairRequest: auction.repairRequest,
+        currentLowestBid: auction.currentLowestBid?.bidPrice,
+        repairRequest: transformRepairRequest(auction.repairRequest),
       }));
 
-    if (!validAuctions.length) {
-      throw createHttpError(404, "No available repair requests found");
-    }
+    if (!transformedAuctions.length)
+      throw createHttpError(404, "No available auctions found");
 
     res.status(200).json({
       success: true,
-      count: validAuctions.length,
-      message: "Available repair requests retrieved",
-      data: validAuctions,
+      count: transformedAuctions.length,
+      data: transformedAuctions,
+      message: "Auctions retrieved successfully",
     });
   } catch (error) {
     next(error);
   }
 };
+
+// Helper function
+const transformRepairRequest = (repair) => ({
+  ...repair,
+  customer: repair.customer
+    ? {
+        username: repair.customer.username,
+        avatar: repair.customer.profile.avatar,
+        rating: repair.customer.rating?.average,
+      }
+    : undefined,
+});
 
 export const submitBid = async (req, res, next) => {
   try {
     const auction = await Auction.findOne({
       _id: req.params.auctionId,
       status: "open",
-    }).populate("repairRequest");
+    });
 
     if (!auction) throw createHttpError(404, "Active auction not found");
-
-    if (auction.repairRequest.customer.toString() === req.user._id.toString())
-      throw createHttpError(403, "Cannot bid on your own repair request");
-
-    const existingBid = auction.bids.find(
-      (b) => b.worker.toString() === req.user._id.toString()
-    );
-
-    if (existingBid)
-      throw createHttpError(
-        409,
-        "You already submitted a bid for this auction"
-      );
 
     const newBid = {
       worker: req.user._id,
       bidPrice: req.body.bidPrice,
       estimatedTimeDays: req.body.estimatedTimeDays,
+      status: "pending",
     };
 
-    // Validate bid price
-    if (newBid.bidPrice > auction.startingMaxPrice)
-      throw createHttpError(
-        400,
-        `Bid price cannot exceed ${auction.startingMaxPrice}`
-      );
-
-    if (
-      auction.currentLowestBid &&
-      newBid.bidPrice >= auction.currentLowestBid.bidPrice
-    )
-      throw createHttpError(
-        400,
-        `Bid must be lower than current lowest bid (${auction.currentLowestBid.bidPrice})`
-      );
-
-    await auction.submitBid(newBid);
+    const updatedAuction = await auction.submitBid(newBid);
 
     res.status(201).json({
       success: true,
       message: "Bid submitted successfully",
       data: {
         yourBid: newBid.bidPrice,
-        currentLowestBid: auction.currentLowestBid?.bidPrice || "No bids yet",
+        currentLowestBid: updatedAuction.currentLowestBid.bidPrice,
       },
     });
   } catch (error) {
-    next(error);
+    next(createHttpError(400, error.message));
   }
 };

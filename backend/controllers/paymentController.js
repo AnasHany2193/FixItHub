@@ -1,7 +1,9 @@
 import Stripe from "stripe";
 import createHttpError from "http-errors";
 
+import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
+
 import {
   paymentFailedEmailTemplate,
   paymentSuccessEmailTemplate,
@@ -102,9 +104,15 @@ const handlePaymentSuccess = async (paymentIntent) => {
       },
     },
     { new: true }
-  ).populate("customer worker");
+  ).populate("worker customer");
 
   if (!repairRequest) throw new Error("Repair request not found for payment");
+
+  // Close associated auction
+  await Auction.findOneAndUpdate(
+    { repairRequest: repairRequest._id },
+    { status: "closed" }
+  );
 
   // Send notifications
   await Promise.all([
