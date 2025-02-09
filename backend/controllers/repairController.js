@@ -224,3 +224,33 @@ export const getWorkerRepairs = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getWorkerHistory = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    const filter = {
+      worker: req.user._id,
+      status: status || "completed",
+    };
+
+    const repairs = await RepairRequest.find(filter)
+      .populate({
+        path: "customer",
+        select: "username profile.avatar",
+      })
+      .populate({
+        path: "bids",
+        select: "bidPrice estimatedTimeDays submittedAt",
+      })
+      .sort("-updatedAt");
+
+    res.status(200).json({
+      success: true,
+      count: repairs.length,
+      message: "Worker repair history retrieved",
+      data: repairs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
