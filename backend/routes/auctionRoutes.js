@@ -5,13 +5,10 @@ import {
   acceptLowestBid,
   getAuctionBids,
   getAvailableAuctions,
-  getOpenAuctions,
   submitBid,
 } from "../controllers/auctionController.js";
 
 const router = express.Router();
-
-router.get("/open", protect, roleCheck("worker"), getOpenAuctions);
 
 router.get("/available", protect, roleCheck("worker"), getAvailableAuctions);
 router.post("/:auctionId/bids", protect, roleCheck("worker"), submitBid);

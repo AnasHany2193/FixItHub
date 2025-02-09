@@ -70,6 +70,10 @@ export const getAvailableAuctions = async (req, res, next) => {
   try {
     const { includeCustomer } = req.query;
 
+    if (includeCustomer && req.user.role !== "admin") {
+      throw createHttpError(403, "Unauthorized customer data request");
+    }
+
     const query = await Auction.find({ status: "open" })
       .populate({
         path: "repairRequest",

@@ -6,7 +6,6 @@ const bidSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
     bidPrice: {
       type: Number,
@@ -63,10 +62,9 @@ const AuctionSchema = new mongoose.Schema(
 );
 
 // Indexes
-AuctionSchema.index({ status: 1, expiresAt: -1 });
-AuctionSchema.index({ repairRequest: 1 }, { unique: true });
-AuctionSchema.index({ "bids.worker": 1 });
-AuctionSchema.index({ "currentLowestBid.bidPrice": 1 });
+AuctionSchema.index({ status: 1, expiresAt: -1 }); // For active auction queries
+AuctionSchema.index({ "bids.worker": 1 }); // For bid uniqueness checks
+AuctionSchema.index({ "currentLowestBid.bidPrice": 1 }); // For price-based queries
 
 // Virtuals
 AuctionSchema.virtual("isExpired").get(function () {
