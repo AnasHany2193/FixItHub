@@ -81,3 +81,34 @@ export const getAuctionBids = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getOpenAuctions = async (req, res, next) => {
+  try {
+    const auctions = await Auction.find({ status: "open" })
+      .populate({
+        path: "repairRequest",
+        select: "title category itemType photos shippingRequired createdAt",
+        match: { status: "auction_open" },
+      })
+      .sort("-createdAt");
+
+    if (!auction) throw createHttpError(404, "Auction not found");
+
+    const validAuctions = auctions.filter((a) => a.repairRequest);
+
+    res.status(200).json({
+      success: true,
+      count: validAuctions.length,
+      message: "Open auctions retrieved",
+      data: validAuctions.map((auction) => ({
+        id: auction._id,
+        startingMaxPrice: auction.startingMaxPrice,
+        expiresAt: auction.expiresAt,
+        currentLowestBid: auction.currentLowestBid?.bidPrice || null,
+        repairRequest: auction.repairRequest,
+      })),
+    });
+  } catch (error) {
+    next(error);
+  }
+};

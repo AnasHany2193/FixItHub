@@ -4,20 +4,11 @@ import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   acceptBid,
   getAuctionBids,
+  getOpenAuctions,
   submitBid,
 } from "../controllers/auctionController.js";
 
 const router = express.Router();
-
-// // Customer routes
-// router.post("/", protect, roleCheck(["customer"]), createAuction);
-// router.put("/:id/accept-bid", protect, roleCheck(["customer"]), acceptBid);
-
-// // Worker/customer routes
-// router
-//   .route("/:id/bids")
-//   .get(protect, roleCheck(["customer", "worker"]), listBids)
-//   .post(protect, roleCheck(["worker"]), bidLimiter, submitBid);
 
 router.post("/:repairId/bids", protect, roleCheck("worker"), submitBid);
 
@@ -29,5 +20,7 @@ router.patch(
 );
 
 router.get("/:repairId/bids", protect, getAuctionBids);
+
+router.get("/open", protect, roleCheck("worker"), getOpenAuctions);
 
 export default router;
