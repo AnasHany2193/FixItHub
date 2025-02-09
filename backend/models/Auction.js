@@ -1,41 +1,34 @@
 import mongoose from "mongoose";
 
-const bidSchema = new mongoose.Schema({
-  worker: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-    index: true,
-  },
-  bidPrice: {
-    type: Number,
-    required: true,
-    validate: {
-      validator: function (v) {
-        const auction = this.parent();
-        return (
-          v <= auction.startingMaxPrice &&
-          v < (auction.currentLowestBid?.bidPrice || Infinity)
-        );
-      },
-      message: "Bid must be lower than current lowest bid and starting price",
+const bidSchema = new mongoose.Schema(
+  {
+    worker: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    bidPrice: {
+      type: Number,
+      required: true,
+    },
+    estimatedTimeDays: {
+      type: Number,
+      required: true,
+      min: [1, "Estimate must be at least 1 day"],
+    },
+    status: {
+      type: String,
+      enum: ["pending", "accepted", "rejected"],
+      default: "pending",
+    },
+    submittedAt: {
+      type: Date,
+      default: () => new Date(),
     },
   },
-  estimatedTimeDays: {
-    type: Number,
-    required: true,
-    min: [1, "Estimate must be at least 1 day"],
-  },
-  status: {
-    type: String,
-    enum: ["pending", "accepted", "rejected"],
-    default: "pending",
-  },
-  submittedAt: {
-    type: Date,
-    default: () => new Date(),
-  },
-});
+  { _id: true }
+);
 
 const AuctionSchema = new mongoose.Schema(
   {
@@ -50,8 +43,6 @@ const AuctionSchema = new mongoose.Schema(
       required: true,
       min: [1, "Starting price must be at least 1"],
     },
-    currentLowestBid: bidSchema,
-    bids: [bidSchema],
     status: {
       type: String,
       enum: ["open", "closed"],
@@ -65,12 +56,16 @@ const AuctionSchema = new mongoose.Schema(
         message: "Auction expiration must be in the future",
       },
     },
+    bids: [bidSchema],
+    currentLowestBid: bidSchema,
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 // Indexes
 AuctionSchema.index({ status: 1, expiresAt: -1 });
+AuctionSchema.index({ repairRequest: 1 }, { unique: true });
+AuctionSchema.index({ "bids.worker": 1 });
 AuctionSchema.index({ "currentLowestBid.bidPrice": 1 });
 
 // Virtuals
@@ -82,37 +77,65 @@ AuctionSchema.virtual("isExpired").get(function () {
 AuctionSchema.methods.submitBid = async function (newBid) {
   if (this.status !== "open") throw new Error("Auction is closed for bidding");
 
+  // Validate against starting price
   if (newBid.bidPrice > this.startingMaxPrice)
-    throw new Error("Bid exceeds maximum starting price");
+    throw new Error(
+      `Bid exceeds maximum starting price of ${this.startingMaxPrice}`
+    );
 
+  // Validate against current lowest
+  if (
+    this.currentLowestBid &&
+    newBid.bidPrice >= this.currentLowestBid.bidPrice
+  )
+    throw new Error(
+      `Bid must be lower than current lowest bid (${this.currentLowestBid.bidPrice})`
+    );
+
+  // Add validation for existing worker bid
+  const existingBid = this.bids.find(
+    (b) => b.worker.toString() === newBid.worker.toString()
+  );
+  if (existingBid)
+    throw new Error("Worker already submitted a bid for this auction");
+
+  // Proceed with bid submission
+  this.bids.push(newBid);
+
+  // Update current lowest bid
   if (
     !this.currentLowestBid ||
     newBid.bidPrice < this.currentLowestBid.bidPrice
   )
     this.currentLowestBid = newBid;
 
-  this.bids.push(newBid);
   return this.save();
 };
 
 AuctionSchema.methods.acceptLowestBid = async function () {
   if (!this.currentLowestBid) throw new Error("No bids to accept");
 
-  this.bids.forEach((bid) => {
-    bid.status = bid._id.equals(this.currentLowestBid._id)
-      ? "accepted"
-      : "rejected";
-  });
+  // Mark all bids
+  this.bids = this.bids.map((bid) => ({
+    ...bid.toObject(),
+    status:
+      bid.bidPrice === this.currentLowestBid.bidPrice ? "accepted" : "rejected",
+  }));
 
   this.status = "closed";
   return this.save();
 };
 
-AuctionSchema.pre("save", function (next) {
-  if (this.isExpired) this.status = "closed";
-
-  next();
-});
+// Add static method
+AuctionSchema.statics.closeExpiredAuctions = async function () {
+  return this.updateMany(
+    {
+      status: "open",
+      expiresAt: { $lte: new Date() },
+    },
+    { $set: { status: "closed" } }
+  );
+};
 
 const Auction = mongoose.model("Auction", AuctionSchema);
 export default Auction;
