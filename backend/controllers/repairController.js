@@ -325,6 +325,7 @@ export const getCustomerAuctions = async (req, res, next) => {
 
 export const cancelRepairRequest = async (req, res, next) => {
   try {
+    // 1. Find and cancel the repair request
     const repairRequest = await RepairRequest.findOneAndUpdate(
       {
         _id: req.params.id,
@@ -332,7 +333,7 @@ export const cancelRepairRequest = async (req, res, next) => {
         status: { $in: ["pending", "auction_open"] },
       },
       { status: "cancelled" },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!repairRequest)
@@ -341,17 +342,32 @@ export const cancelRepairRequest = async (req, res, next) => {
         "Repair request not found or cannot be cancelled in current state"
       );
 
-    // Close associated auction
-    await Auction.findOneAndUpdate(
-      { repairRequest: repairRequest._id },
+    // 2. Close associated auction using direct reference
+    const auction = await Auction.findByIdAndUpdate(
+      repairRequest.auction, // Use the stored auction reference
       { status: "closed" },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
+    if (!auction) {
+      throw createHttpError(
+        500,
+        "Associated auction not found - data inconsistency detected"
+      );
+    }
+
+    // 3. Return combined response
     res.status(200).json({
       success: true,
-      message: "Repair request cancelled successfully",
-      data: repairRequest,
+      message: "Repair request and auction cancelled successfully",
+      data: {
+        repair: repairRequest,
+        auction: {
+          _id: auction._id,
+          status: auction.status,
+          expiresAt: auction.expiresAt,
+        },
+      },
     });
   } catch (error) {
     next(error);
