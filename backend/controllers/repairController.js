@@ -12,7 +12,7 @@ export const createRepairRequest = async (req, res, next) => {
       itemType,
       startingMaxPrice,
       expiresAt,
-      imageUrls, // Array of pre-uploaded image URLs
+      imageUrls,
       shippingRequired,
     } = req.body;
 
@@ -20,7 +20,7 @@ export const createRepairRequest = async (req, res, next) => {
     if (!imageUrls?.length)
       throw createHttpError(400, "At least one image is required");
 
-    // Create repair request
+    // 1. First create repair request without auction reference
     const repairRequest = await RepairRequest.create({
       customer: req.user._id,
       title,
@@ -29,23 +29,32 @@ export const createRepairRequest = async (req, res, next) => {
       itemType,
       photos: imageUrls.map((url) => ({
         url,
-        public_id: url.split("/").pop().split(".")[0], // Extract public ID
+        public_id: url.split("/").pop().split(".")[0],
       })),
       status: "auction_open",
       shippingRequired: shippingRequired || false,
     });
 
-    // Create associated auction
+    // 2. Create associated auction
     const auction = await Auction.create({
       repairRequest: repairRequest._id,
       startingMaxPrice,
       expiresAt: new Date(expiresAt),
     });
 
+    // 3. Update repair request with auction reference
+    repairRequest.auction = auction._id;
+    await repairRequest.save();
+
     res.status(201).json({
       success: true,
-      repairRequest,
-      auction,
+      data: {
+        repairRequest: {
+          ...repairRequest.toObject(),
+          auction: auction._id,
+        },
+        auction,
+      },
       message: "Repair request created successfully",
     });
   } catch (error) {

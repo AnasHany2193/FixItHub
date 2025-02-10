@@ -136,6 +136,11 @@ const RepairRequestSchema = new mongoose.Schema(
         ref: "Bid",
       },
     ],
+    auction: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auction",
+      unique: true, // One-to-one relationship
+    },
   },
   {
     timestamps: true,

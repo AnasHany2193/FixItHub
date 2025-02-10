@@ -4,6 +4,7 @@ import {
   cancelRepairRequest,
   completeRepair,
   createRepairRequest,
+  getCustomerAuctions,
   getCustomerHistory,
   getRepairRequests,
   getWorkerHistory,
