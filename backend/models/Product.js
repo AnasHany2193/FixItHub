@@ -71,15 +71,8 @@ const productSchema = new mongoose.Schema(
       count: { type: Number, default: 0 },
     },
     location: {
-      type: {
-        type: String,
-        enum: ["Point"],
-        required: true,
-      },
-      coordinates: {
-        type: [Number], // [longitude, latitude]
-        required: true,
-      },
+      type: { type: String, enum: ["Point"] },
+      coordinates: [Number], // [longitude, latitude]
     },
   },
   { timestamps: true }

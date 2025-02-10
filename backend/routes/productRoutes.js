@@ -37,7 +37,6 @@ router.patch(
   productUpdateLimiter,
   protect,
   roleCheck("worker"),
-  validateImageUrls,
   updateProduct
 );
 

@@ -4,24 +4,21 @@ import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Reservation from "../models/Reservation.js";
 import RepairRequest from "../models/RepairRequest.js";
+import {
+  parseNumber,
+  processImageUrls,
+  processSingleImage,
+  validateAndFormatCoordinates,
+} from "../services/helperFunctions.js";
 
 export const createProduct = async (req, res, next) => {
   try {
-    const {
-      title,
-      description,
-      type,
-      category,
-      condition,
-      price,
-      imageUrls,
-      stock,
-      repairRequest,
-    } = req.body;
+    // Destructure with location handling
+    const { lng, lat, imageUrls, repairRequest, ...productData } = req.body;
 
-    // Verify worker status
+    // 1. Validate Worker Status
     const worker = await User.findById(req.user._id);
-    if (!worker.isApprovedWorker())
+    if (!worker?.isApprovedWorker())
       return next(
         createHttpError(
           403,
@@ -29,37 +26,36 @@ export const createProduct = async (req, res, next) => {
         )
       );
 
-    // Validate repair request ownership if provided
-    if (req.body.repairRequest) {
-      const repair = await RepairRequest.findOne({
-        _id: req.body.repairRequest,
-        worker: req.user._id,
-      });
+    // 2. Validate Photos
+    if (!imageUrls?.length || imageUrls.length > 5)
+      return next(createHttpError(400, "1-5 product images required"));
 
-      if (!repair) {
-        return next(
-          createHttpError(
-            403,
-            "You can only link products to your own repair requests"
-          )
-        );
-      }
+    // 3. Validate Location
+    const location = validateAndFormatCoordinates(lng, lat);
+    if (lng || lat) {
+      if (!location) return next(createHttpError(400, "Invalid coordinates"));
+      productData.location = location;
     }
 
+    // 4. Validate Repair Request
+    if (repairRequest) {
+      const validRepair = await RepairRequest.exists({
+        _id: repairRequest,
+        worker: req.user._id,
+      });
+      if (!validRepair)
+        return next(createHttpError(403, "Invalid repair request"));
+    }
+
+    // 5. Create Product
     const product = await Product.create({
-      title,
-      description,
-      type,
-      category,
-      condition,
-      price,
-      photos: imageUrls.map((url) => ({
-        url,
-        public_id: url.split("/").pop().split(".")[0],
-      })),
-      stock,
-      repairRequest,
+      ...productData,
+      price: parseNumber(price, "Price"),
+      stock: parseNumber(stock, "Stock"),
+      photos: processImageUrls(imageUrls),
       worker: req.user._id,
+      repairRequest,
+      location,
     });
 
     res.status(201).json({
@@ -74,42 +70,37 @@ export const createProduct = async (req, res, next) => {
 
 export const updateProduct = async (req, res, next) => {
   try {
-    const {
-      title,
-      description,
-      type,
-      category,
-      condition,
-      price,
-      imageUrls,
-      stock,
-    } = req.body;
+    const { lng, lat, imageUrls, ...updateData } = req.body;
 
+    // 1. Validate Photos
+    if (imageUrls?.length > 5)
+      return next(createHttpError(400, "Maximum 5 photos allowed"));
+
+    // 2. Handle Location
+    const location = validateAndFormatCoordinates(lng, lat);
+    if (lng || lat) {
+      if (!location) return next(createHttpError(400, "Invalid coordinates"));
+      updateData.location = location;
+    }
+
+    // 3. Process Numeric Fields
+    if (updateData.price)
+      updateData.price = parseNumber(updateData.price, "Price");
+    if (updateData.stock)
+      updateData.stock = parseNumber(updateData.stock, "Stock");
+
+    // 4. Update Product
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, worker: req.user._id },
       {
-        title,
-        description,
-        type,
-        category,
-        condition,
-        price,
-        photos: imageUrls.map((url) => ({
-          url,
-          public_id: url.split("/").pop().split(".")[0],
-        })),
-        stock,
+        ...updateData,
+        photos: imageUrls?.map(processSingleImage),
       },
       { new: true, runValidators: true }
     );
 
     if (!product)
-      return next(
-        createHttpError(
-          404,
-          "Product not found or you don't have permission to edit this listing"
-        )
-      );
+      return next(createHttpError(404, "Product not found or no permission"));
 
     res.status(200).json({
       success: true,
@@ -123,6 +114,7 @@ export const updateProduct = async (req, res, next) => {
 
 export const deleteProduct = async (req, res, next) => {
   try {
+    // Validate and delete product
     const product = await Product.findOneAndDelete({
       _id: req.params.id,
       worker: req.user._id,
@@ -131,9 +123,16 @@ export const deleteProduct = async (req, res, next) => {
     if (!product)
       return next(createHttpError(404, "Product not found or already removed"));
 
+    // Verify cascade deletion
+    const remainingReservations = await Reservation.countDocuments({
+      product: req.params.id,
+    });
+    if (remainingReservations > 0)
+      console.error(`Failed to delete ${remainingReservations} reservations`);
+
     res.status(200).json({
       success: true,
-      message: "Product permanently deleted 🗑️",
+      message: "Product and associated reservations deleted 🗑️",
       data: null,
     });
   } catch (error) {
@@ -143,13 +142,21 @@ export const deleteProduct = async (req, res, next) => {
 
 export const getWorkerProducts = async (req, res, next) => {
   try {
+    // Validate worker exists
+    const workerExists = await User.exists({ _id: req.user._id });
+    if (!workerExists)
+      return next(createHttpError(404, "Worker account not found"));
+
+    // Get products with pagination
     const products = await Product.find({ worker: req.user._id })
+      .select("-reservedStock")
       .sort("-createdAt")
-      .populate("repairRequest", "title status");
+      .populate("repairRequest", "title status")
+      .lean();
 
     res.status(200).json({
       success: true,
-      message: `Found ${products.length} of your listings 📦`,
+      message: `Found ${products.length} product${products.length !== 1 ? "s" : ""} 📦`,
       data: products,
     });
   } catch (error) {
@@ -171,57 +178,103 @@ export const searchProducts = async (req, res, next) => {
       sort = "-createdAt",
       lng,
       lat,
-      radius = 5000, // Radius in meters
+      radius = 5000,
     } = req.query;
+
+    // Validate coordinates
+    if (lng && lat && (isNaN(lng) || isNaN(lat)))
+      return next(createHttpError(400, "Invalid coordinates format"));
+
+    // Build base pipeline
+    const pipeline = [];
     const filter = {};
 
-    if (q) filter.$text = { $search: q };
-    if (type) filter.type = type;
-    if (category) filter.category = category;
-    if (condition) filter.condition = condition;
-
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = minPrice;
-      if (maxPrice) filter.price.$lte = maxPrice;
-    }
-
+    // Handle geospatial search
     if (lng && lat)
-      filter.location = {
-        $near: {
-          $geometry: {
+      pipeline.push({
+        $geoNear: {
+          near: {
             type: "Point",
             coordinates: [parseFloat(lng), parseFloat(lat)],
           },
-          $maxDistance: parseInt(radius),
+          distanceField: "distance",
+          maxDistance: parseInt(radius),
+          spherical: true,
         },
-      };
+      });
 
+    // Text search
+    if (q)
+      pipeline.push({
+        $match: { $text: { $search: q } },
+      });
+
+    // Other filters
+    ["type", "category", "condition"].forEach((field) => {
+      if (req.query[field]) filter[field] = req.query[field];
+    });
+
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    if (Object.keys(filter).length > 0) pipeline.push({ $match: filter });
+
+    // Sorting
+    const sortBy = {};
     const validSorts = ["price", "-price", "createdAt", "-createdAt"];
-    const sortBy = validSorts.includes(sort) ? sort : "-createdAt";
+    const sortField = validSorts.includes(sort)
+      ? sort.replace("-", "")
+      : "createdAt";
+    sortBy[sortField] = sort.startsWith("-") ? -1 : 1;
 
-    const products = await Product.find(filter)
-      .populate("worker", "username profile.avatar rating.average")
-      .populate("repairRequest", "title")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort(sortBy)
-      .select("-reservedStock") // Exclude reserved stock from public view
-      .lean();
+    // Pagination
+    const skip = (page - 1) * limit;
+    const facetStages = {
+      metadata: [{ $count: "total" }],
+      data: [
+        { $sort: sortBy },
+        { $skip: skip },
+        { $limit: parseInt(limit) },
+        {
+          $lookup: {
+            from: "users",
+            localField: "worker",
+            foreignField: "_id",
+            as: "worker",
+            pipeline: [{ $project: { username: 1, profile: 1 } }],
+          },
+        },
+        { $unwind: "$worker" },
+        {
+          $project: {
+            reservedStock: 0,
+            "worker.password": 0,
+            "worker.email": 0,
+          },
+        },
+      ],
+    };
 
-    const results = products.map((p) => ({
-      ...p,
-      availableStock: p.stock - p.reservedStock,
-    }));
+    const [result] = await Product.aggregate([
+      ...pipeline,
+      { $facet: facetStages },
+    ]);
 
-    const total = await Product.countDocuments(filter);
+    const products = result.data;
+    const total = result.metadata[0]?.total || 0;
 
     res.status(200).json({
       success: true,
       message: products.length
-        ? `Found ${products.length} matching items 🔍`
-        : "No products match your search criteria",
-      data: { products, results },
+        ? `Found ${products.length} items`
+        : "No products found",
+      data: products.map((p) => ({
+        ...p,
+        availableStock: p.stock - p.reservedStock,
+      })),
       pagination: {
         page: Number(page),
         limit: Number(limit),

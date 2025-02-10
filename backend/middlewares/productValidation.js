@@ -1,4 +1,5 @@
-// backend/middlewares/productValidation.js
+import createHttpError from "http-errors";
+
 export const validateImageUrls = (req, res, next) => {
   const { imageUrls } = req.body;
 
