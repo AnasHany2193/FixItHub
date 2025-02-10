@@ -69,6 +69,10 @@ export const getRepairRequests = async (req, res, next) => {
           select: "username profile.avatar rating.average",
         },
       })
+      .populate({
+        path: "auction",
+        select: "status expiresAt startingMaxPrice currentLowestBid",
+      })
       .sort("-createdAt");
 
     res.status(200).json({
@@ -257,7 +261,7 @@ export const getWorkerHistory = async (req, res, next) => {
 
 export const getCustomerHistory = async (req, res, next) => {
   try {
-    const { status } = req.query;
+    const { status, bidStatus } = req.query;
     const filter = {
       customer: req.user._id,
       ...(status && { status }),
@@ -270,11 +274,11 @@ export const getCustomerHistory = async (req, res, next) => {
       })
       .populate({
         path: "bids",
-        select: "bidPrice estimatedTimeDays status worker",
-        populate: {
-          path: "worker",
-          select: "username profile.avatar",
-        },
+        match: { status: bidStatus },
+      })
+      .populate({
+        path: "auction",
+        select: "status expiresAt startingMaxPrice currentLowestBid",
       })
       .sort("-createdAt");
 
@@ -283,6 +287,27 @@ export const getCustomerHistory = async (req, res, next) => {
       count: repairs.length,
       message: "Customer repair history retrieved",
       data: repairs,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCustomerAuctions = async (req, res, next) => {
+  try {
+    const repairs = await RepairRequest.find({
+      customer: req.user._id,
+      status: "auction_open",
+    }).populate({
+      path: "auction",
+      select: "status expiresAt startingMaxPrice bids",
+    });
+
+    res.status(200).json({
+      data: repairs.map((r) => r.auction),
+      count: repairs.length,
+      message: "Customer auctions retrieved successfully",
+      success: true,
     });
   } catch (error) {
     next(error);

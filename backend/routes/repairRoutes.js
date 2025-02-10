@@ -29,6 +29,8 @@ router.patch(
   cancelRepairRequest
 );
 
+router.get("/auctions", protect, roleCheck("customer"), getCustomerAuctions);
+
 router.get(
   "/customer/history",
   protect,
