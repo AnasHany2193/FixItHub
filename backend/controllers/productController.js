@@ -205,7 +205,14 @@ export const searchProducts = async (req, res, next) => {
       .populate("repairRequest", "title")
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort(sortBy);
+      .sort(sortBy)
+      .select("-reservedStock") // Exclude reserved stock from public view
+      .lean();
+
+    const results = products.map((p) => ({
+      ...p,
+      availableStock: p.stock - p.reservedStock,
+    }));
 
     const total = await Product.countDocuments(filter);
 
@@ -214,7 +221,7 @@ export const searchProducts = async (req, res, next) => {
       message: products.length
         ? `Found ${products.length} matching items 🔍`
         : "No products match your search criteria",
-      data: products,
+      data: { products, results },
       pagination: {
         page: Number(page),
         limit: Number(limit),
@@ -230,30 +237,67 @@ export const searchProducts = async (req, res, next) => {
 export const reserveStock = async (req, res, next) => {
   try {
     const { quantity } = req.body;
+    const reservationDuration = 15 * 60 * 1000; // 15 minutes
 
-    // Atomic stock update
-    const product = await Product.findByIdAndUpdate(
+    const product = await Product.findById(req.params.id);
+
+    if (product.stock - product.reservedStock < quantity)
+      return next(createHttpError(400, "Not enough available stock"));
+
+    // Atomic update
+    const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
-      { $inc: { stock: -quantity }, $min: { stock: 0 } },
+      { $inc: { reservedStock: quantity } },
       { new: true }
     );
 
-    if (!product || product.stock < 0)
-      return next(
-        createHttpError(400, "Insufficient stock or product not found")
-      );
-
-    // Create reservation record
     const reservation = await Reservation.create({
-      product: product._id,
+      product: req.params.id,
       user: req.user._id,
       quantity,
+      expiresAt: new Date(Date.now() + reservationDuration),
     });
 
     res.status(200).json({
       success: true,
-      message: "Stock reserved for 15 minutes ⏳",
-      data: reservation,
+      message: `Stock reserved for 15 minutes`,
+      data: {
+        reservationId: reservation._id,
+        expiresAt: reservation.expiresAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const confirmReservation = async (req, res, next) => {
+  try {
+    const { reservationId } = req.body;
+
+    const reservation = await Reservation.findOne({
+      _id: reservationId,
+      user: req.user._id,
+      status: "active",
+    });
+
+    if (!reservation)
+      return next(createHttpError(400, "Invalid or expired reservation"));
+
+    // Finalize reservation
+    await Product.findByIdAndUpdate(reservation.product, {
+      $inc: {
+        stock: -reservation.quantity,
+        reservedStock: -reservation.quantity,
+      },
+    });
+
+    reservation.status = "completed";
+    await reservation.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Reservation confirmed and stock updated",
     });
   } catch (error) {
     next(error);

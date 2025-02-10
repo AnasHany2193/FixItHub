@@ -12,6 +12,11 @@ const reservationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    status: {
+      type: String,
+      enum: ["active", "completed", "expired"],
+      default: "active",
+    },
     quantity: {
       type: Number,
       required: true,
@@ -19,11 +24,14 @@ const reservationSchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
-      default: () => new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+      required: true,
     },
   },
   { timestamps: true }
 );
+
+// Auto-delete expired reservations after 1 hour
+reservationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 3600 });
 
 const Reservation = mongoose.model("Reservation", reservationSchema);
 export default Reservation;

@@ -2,7 +2,7 @@ import cron from "node-cron";
 import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
 import { sendEmail } from "../services/emailService.js";
-import { auctionExpiredEmailTemplate } from "./emailTemplates.js";
+import { auctionExpiredEmailTemplate } from "../utils/emailTemplates.js";
 
 const closeExpiredAuctions = async () => {
   try {

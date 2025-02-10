@@ -8,7 +8,7 @@ import cookieParser from "cookie-parser";
 import connectDB from "./config/db.js"; // Import the DB connection function
 import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
 
-import "./utils/auctionScheduler.js";
+import "./jobs/auctionScheduler.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
@@ -19,6 +19,7 @@ import auctionRoutes from "./routes/auctionRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 
 import { handleStripeWebhook } from "./controllers/paymentController.js";
+import { startReservationCleanup } from "./jobs/reservationCleanup.js";
 
 dotenv.config(); // Load environment variables
 
@@ -80,3 +81,4 @@ const startServer = async () => {
 };
 
 startServer();
+startReservationCleanup();

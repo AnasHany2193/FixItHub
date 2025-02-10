@@ -59,6 +59,11 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "RepairRequest",
     },
+    reservedStock: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     location: {
       type: {
         type: String,
