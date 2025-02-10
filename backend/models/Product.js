@@ -1,90 +1,67 @@
-import { mongoose } from "mongoose";
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, "Product title is required"],
-      trim: true,
-      minlength: 3,
+      required: [true, "Title is required"],
       maxlength: [100, "Title cannot exceed 100 characters"],
-    },
-    type: {
-      type: String,
-      enum: ["product", "spare_part"],
-      default: "product",
-      required: true,
     },
     description: {
       type: String,
-      required: [true, "Product description is required"],
+      required: [true, "Description is required"],
       maxlength: [1000, "Description cannot exceed 1000 characters"],
     },
-    price: {
-      type: Number,
-      required: [true, "Product price is required"],
-      min: [0, "Price cannot be negative"],
+    type: {
+      type: String,
+      required: true,
+      enum: ["product", "spare_part"],
+      default: "product",
     },
     category: {
       type: String,
-      required: [true, "Product category is required"],
-      enum: ["electronics", "furniture", "vehicles", "appliances", "other"],
+      required: true,
+      enum: ["electronics", "furniture", "appliances", "other"],
     },
     condition: {
       type: String,
-      required: [true, "Product condition is required"],
-      default: "used",
-      enum: {
-        values: ["new", "used", "refurbished"],
-        message:
-          "Condition must be one of the following: new, used, refurbished",
+      required: true,
+      enum: ["new", "refurbished", "used"],
+    },
+    price: {
+      type: Number,
+      required: true,
+      min: [0, "Price cannot be negative"],
+    },
+    photos: {
+      type: [
+        {
+          url: String, // Cloudinary URL
+          public_id: String, // Cloudinary public ID
+        },
+      ],
+      validate: {
+        validator: (v) => v.length <= 5,
+        message: "Maximum 5 photos allowed",
       },
     },
-    images: [
-      {
-        url: String, // Cloudinary image URL
-        public_id: String, // Used for deletion from Cloudinary
-      },
-    ],
-    seller: {
+    stock: {
+      type: Number,
+      required: true,
+      min: [0, "Stock cannot be negative"],
+    },
+    worker: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    location: {
-      type: {
-        type: String,
-        default: "Point",
-        enum: {
-          values: ["Point"],
-          message: "Location type must be 'Point'",
-        },
-      },
-      coordinates: {
-        type: [Number],
-        required: [true, "Coordinates are required"],
-        validate: {
-          validator: (v) =>
-            Array.isArray(v) && v.length === 2 && !isNaN(v[0]) && !isNaN(v[1]),
-          message:
-            "Coordinates must be an array of two numbers [longitude, latitude]", // Custom error message
-        },
-      }, // [longitude, latitude]
-      address: String,
-    },
-    status: {
-      type: String,
-      enum: ["available", "sold", "pending"],
-      default: "available",
+    repairRequest: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "RepairRequest",
     },
   },
   { timestamps: true }
 );
-
-// Geospatial index for location-based searches
-productSchema.index({ location: "2dsphere" });
-productSchema.index({ price: 1, category: 1, condition: 1 }); // Compound index
-productSchema.index({ title: "text", description: "text" }); // Text search
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;
