@@ -15,11 +15,6 @@ export const acceptLowestBid = async (req, res, next) => {
 
     if (!auction) throw createHttpError(404, "Auction not found");
 
-    console.log(
-      "auction.repairRequest.customer",
-      auction.repairRequest.customer._id
-    );
-    console.log("req.user._id", req.user._id);
     if (
       auction.repairRequest.customer._id.toString() !== req.user._id.toString()
     )
@@ -27,20 +22,31 @@ export const acceptLowestBid = async (req, res, next) => {
 
     const updatedAuction = await auction.acceptLowestBid();
 
-    // Update repair request with worker and payment
-    await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
-      worker: updatedAuction.currentLowestBid.worker,
-      status: "in_progress",
-      paymentAmount: updatedAuction.currentLowestBid.bidPrice,
-    });
+    // Update repair request with initial tracking
+    const updatedRepair = await RepairRequest.findByIdAndUpdate(
+      auction.repairRequest._id,
+      {
+        worker: updatedAuction.currentLowestBid.worker,
+        status: "in_progress",
+        paymentAmount: updatedAuction.currentLowestBid.bidPrice,
+        $push: {
+          trackingUpdates: {
+            status: "diagnosing",
+            location: "Workshop",
+            details: "Repair initiated by worker",
+          },
+        },
+      },
+      { new: true }
+    );
 
     res.status(200).json({
       success: true,
       data: {
         acceptedBid: updatedAuction.currentLowestBid,
-        repairStatus: "in_progress",
+        repair: updatedRepair,
       },
-      message: "Bid accepted successfully",
+      message: "Bid accepted and repair started successfully",
     });
   } catch (error) {
     next(createHttpError(400, error.message));

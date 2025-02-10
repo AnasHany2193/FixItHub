@@ -9,7 +9,6 @@ import {
   getRepairRequests,
   getWorkerHistory,
   getWorkerRepairs,
-  startRepair,
   updateRepairStatus,
   updateShippingStatus,
 } from "../controllers/repairController.js";
@@ -38,8 +37,6 @@ router.get(
   roleCheck("customer"),
   getCustomerHistory
 );
-
-router.patch("/:id/start", protect, roleCheck("worker"), startRepair);
 
 router.patch("/:id/complete", protect, roleCheck("worker"), completeRepair);
 
