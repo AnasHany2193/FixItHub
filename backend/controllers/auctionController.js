@@ -6,19 +6,29 @@ import Bid from "../models/Bid.js";
 
 export const acceptLowestBid = async (req, res, next) => {
   try {
-    const auction = await Auction.findById(req.params.auctionId).populate(
-      "repairRequest"
-    );
+    const auction = await Auction.findById(req.params.auctionId)
+      .populate({
+        path: "repairRequest",
+        populate: { path: "customer" },
+      })
+      .populate("currentLowestBid");
 
     if (!auction) throw createHttpError(404, "Auction not found");
 
-    if (auction.repairRequest.customer.toString() !== req.user._id.toString())
+    console.log(
+      "auction.repairRequest.customer",
+      auction.repairRequest.customer._id
+    );
+    console.log("req.user._id", req.user._id);
+    if (
+      auction.repairRequest.customer._id.toString() !== req.user._id.toString()
+    )
       throw createHttpError(403, "Not authorized to accept bids");
 
     const updatedAuction = await auction.acceptLowestBid();
 
-    // Update repair request
-    await RepairRequest.findByIdAndUpdate(auction.repairRequest, {
+    // Update repair request with worker and payment
+    await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
       worker: updatedAuction.currentLowestBid.worker,
       status: "in_progress",
       paymentAmount: updatedAuction.currentLowestBid.bidPrice,

@@ -100,14 +100,23 @@ AuctionSchema.methods.submitBid = async function (newBidData) {
 AuctionSchema.methods.acceptLowestBid = async function () {
   if (!this.currentLowestBid) throw new Error("No bids to accept");
 
-  // Mark all bids
-  this.bids = this.bids.map((bid) => ({
-    ...bid.toObject(),
-    status:
-      bid.bidPrice === this.currentLowestBid.bidPrice ? "accepted" : "rejected",
-  }));
+  // Populate bids to access full documents
+  const auction = await this.populate("bids currentLowestBid");
 
+  // Update bid statuses
+  const updatedBids = await Promise.all(
+    auction.bids.map(async (bid) => {
+      bid.status = bid._id.equals(auction.currentLowestBid._id)
+        ? "accepted"
+        : "rejected";
+      return bid.save();
+    })
+  );
+
+  // Update auction status
   this.status = "closed";
+  this.bids = updatedBids.map((b) => b._id);
+
   return this.save();
 };
 
