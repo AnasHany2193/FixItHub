@@ -8,6 +8,7 @@ import {
   reserveStock,
   trackProductView,
   getProductDetails,
+  updateStock,
 } from "../controllers/productController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 import { validateImageUrls } from "../middlewares/productValidation.js";
@@ -39,6 +40,7 @@ router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
 router.get("/search", searchProducts);
 
 router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
+router.patch("/:id/stock", protect, roleCheck("worker"), updateStock);
 
 // Add route middleware
 router.get("/:id", trackProductView, getProductDetails);

@@ -266,3 +266,34 @@ export const getProductDetails = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateStock = async (req, res, next) => {
+  try {
+    const { action, quantity } = req.body;
+
+    const product = await Product.findOne({
+      _id: req.params.id,
+      worker: req.user._id,
+    });
+
+    if (!product) {
+      return next(createHttpError(404, "Product not found"));
+    }
+
+    if (action === "restock") {
+      product.stock += Number(quantity);
+    } else if (action === "reserve") {
+      product.stock = Math.max(0, product.stock - Number(quantity));
+    }
+
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: `Stock updated: ${product.stock} available`,
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
