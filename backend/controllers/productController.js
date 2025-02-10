@@ -2,6 +2,7 @@ import createHttpError from "http-errors";
 
 import User from "../models/User.js";
 import Product from "../models/Product.js";
+import Reservation from "../models/Reservation.js";
 import RepairRequest from "../models/RepairRequest.js";
 
 export const createProduct = async (req, res, next) => {
@@ -215,21 +216,30 @@ export const searchProducts = async (req, res, next) => {
 export const reserveStock = async (req, res, next) => {
   try {
     const { quantity } = req.body;
+
+    // Atomic stock update
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { $inc: { stock: -quantity }, $min: { stock: 0 } },
       { new: true }
     );
 
-    if (!product)
+    if (!product || product.stock < 0)
       return next(
         createHttpError(400, "Insufficient stock or product not found")
       );
 
+    // Create reservation record
+    const reservation = await Reservation.create({
+      product: product._id,
+      user: req.user._id,
+      quantity,
+    });
+
     res.status(200).json({
       success: true,
-      message: `Reserved ${quantity} units`,
-      data: product,
+      message: "Stock reserved for 15 minutes ⏳",
+      data: reservation,
     });
   } catch (error) {
     next(error);
