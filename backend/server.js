@@ -16,6 +16,7 @@ import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import auctionRoutes from "./routes/auctionRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
 
 import { handleStripeWebhook } from "./controllers/paymentController.js";
 
@@ -58,6 +59,7 @@ app.use("/api/v1/repairs", repairRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/document", uploadRoutes);
 app.use("/api/v1/auctions", auctionRoutes);
+app.use("/api/v1/products", productRoutes);
 
 // Error handling middleware should be added last
 app.use(errorHandler);

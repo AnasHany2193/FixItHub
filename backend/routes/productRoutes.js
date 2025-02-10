@@ -1,24 +1,25 @@
 import express from "express";
-import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   createProduct,
-  deleteProduct,
-  getProductDetails,
-  listProducts,
   updateProduct,
-} from "../controllers/product.js";
+  deleteProduct,
+  getWorkerProducts,
+  searchProducts,
+} from "../controllers/productController.js";
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router
-  .route("/")
-  .post(protect, roleCheck(["customer", "worker"]), createProduct) // Allow workers to sell
-  .get(listProducts); // Public access;
+// Worker endpoints
+router.post("/", protect, roleCheck("worker"), createProduct);
 
-router
-  .route("/:id")
-  .get(getProductDetails) // Public access;
-  .put(protect, roleCheck(["customer", "worker"]), updateProduct) // Workers can edit
-  .delete(protect, roleCheck(["customer", "worker"]), deleteProduct);
+router.patch("/:id", protect, roleCheck("worker"), updateProduct);
+
+router.delete("/:id", protect, roleCheck("worker"), deleteProduct);
+
+router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
+
+// Public endpoints
+router.get("/search", searchProducts);
 
 export default router;
