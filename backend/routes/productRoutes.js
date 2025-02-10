@@ -47,12 +47,6 @@ router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
 
 router.patch("/:id/stock", protect, roleCheck("worker"), updateStock);
 router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
-router.post(
-  "/reservations/confirm",
-  protect,
-  roleCheck("customer"),
-  confirmReservation
-);
 
 // Public endpoints
 router.get("/search", searchProducts);

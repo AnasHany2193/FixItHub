@@ -336,7 +336,7 @@ export const updateStock = async (req, res, next) => {
     const { action, quantity } = req.body;
 
     // Validate action type
-    if (!["restock", "reserve"].includes(action))
+    if (!["restock", "adjust"].includes(action))
       return next(createHttpError(400, "Invalid stock action"));
 
     const update =

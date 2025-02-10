@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+import Reservation from "./Reservation.js";
+
 const productSchema = new mongoose.Schema(
   {
     title: {
@@ -84,6 +86,11 @@ productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ location: "2dsphere" });
+
+productSchema.pre("deleteOne", async function () {
+  const productId = this.getQuery()._id;
+  await Reservation.deleteMany({ product: productId });
+});
 
 const Product = mongoose.model("Product", productSchema);
 export default Product;
