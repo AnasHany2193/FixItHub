@@ -45,9 +45,12 @@ const userSchema = new mongoose.Schema(
     },
     profile: {
       avatar: {
-        type: String,
-        default:
-          "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
+        url: {
+          type: String,
+          default:
+            "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png?20150327203541",
+        },
+        public_id: String,
       },
       phone: String,
       address: {
@@ -78,7 +81,12 @@ const userSchema = new mongoose.Schema(
         enum: ["pending", "approved", "rejected"],
         default: "pending",
       },
-      documents: { type: [String], default: [] },
+      documents: [
+        {
+          url: String,
+          public_id: String,
+        },
+      ],
       workHistory: [
         {
           position: String,
@@ -101,9 +109,22 @@ const userSchema = new mongoose.Schema(
       average: { type: Number, default: 0, min: 0, max: 5 },
       count: { type: Number, default: 0 },
     },
+    location: {
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: false,
+      },
+      coordinates: {
+        type: [Number],
+        required: false,
+      },
+    },
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
 );
+
+userSchema.index({ location: "2dsphere" });
 
 // Hash the password before saving the user
 userSchema.pre("save", async function (next) {

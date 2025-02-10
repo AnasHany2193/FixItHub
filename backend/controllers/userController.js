@@ -38,12 +38,17 @@ export const getAllWorkers = async (req, res, next) => {
     if (minRating) filter["rating.average"] = { $gte: parseFloat(minRating) };
 
     // Availability filter
-    if (availability) filter["workerApplication.availability"] = availability;
+    if (availability) {
+      const validAvailability = ["full-time", "part-time", "unavailable"];
+      if (!validAvailability.includes(availability))
+        return next(createHttpError(400, "Invalid availability status"));
 
+      filter["workerApplication.availability"] = availability;
+    }
     const [workers, total] = await Promise.all([
       User.find(filter)
         .select(
-          "username profile avatar rating workerApplication.skills location"
+          "username profile avatar rating workerApplication.skills workerApplication.availability"
         )
         .skip((page - 1) * limit)
         .limit(parseInt(limit))
