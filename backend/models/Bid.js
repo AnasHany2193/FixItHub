@@ -6,6 +6,7 @@ export const bidSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      index: true,
     },
     bidPrice: {
       type: Number,
@@ -20,6 +21,7 @@ export const bidSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auction",
       required: true,
+      index: true,
     },
     status: {
       type: String,

@@ -6,6 +6,7 @@ import {
   getAuctionBids,
   getAvailableAuctions,
   submitBid,
+  updateBid,
 } from "../controllers/auctionController.js";
 
 const router = express.Router();
@@ -19,5 +20,7 @@ router.patch(
   roleCheck("customer"),
   acceptLowestBid
 );
+
+router.put("/:auctionId/bids/:bidId", protect, roleCheck("worker"), updateBid);
 
 export default router;

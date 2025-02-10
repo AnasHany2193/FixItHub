@@ -185,3 +185,53 @@ export const submitBid = async (req, res, next) => {
     next(createHttpError(400, error.message));
   }
 };
+
+export const updateBid = async (req, res, next) => {
+  try {
+    const { bidPrice, estimatedTimeDays } = req.body;
+
+    const bid = await Bid.findById(req.params.bidId)
+      .populate("worker")
+      .populate({
+        path: "auction",
+        populate: { path: "currentLowestBid" },
+      });
+
+    // Validate ownership
+    if (bid.worker._id.toString() !== req.user._id.toString())
+      throw createHttpError(403, "Not authorized to update this bid");
+
+    // Validate auction status
+    if (bid.auction.status !== "open")
+      throw createHttpError(400, "Cannot update bid on closed auction");
+
+    // Get current lowest price
+    const currentLowest =
+      bid.auction.currentLowestBid?.bidPrice || bid.auction.startingMaxPrice;
+
+    if (bidPrice >= currentLowest)
+      throw createHttpError(
+        400,
+        `New bid must be lower than current lowest (${currentLowest})`
+      );
+
+    // Update bid
+    bid.bidPrice = bidPrice;
+    bid.estimatedTimeDays = estimatedTimeDays;
+    await bid.save();
+
+    // Update auction's current lowest if needed
+    if (bidPrice < currentLowest)
+      await Auction.findByIdAndUpdate(bid.auction._id, {
+        currentLowestBid: bid._id,
+      });
+
+    res.status(200).json({
+      success: true,
+      data: bid,
+      message: "Bid updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
