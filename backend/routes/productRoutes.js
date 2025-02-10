@@ -1,11 +1,14 @@
 import express from "express";
 
+// Import middlewares
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 import { validateImageUrls } from "../middlewares/productValidation.js";
 import {
   productCreateLimiter,
   productUpdateLimiter,
 } from "../middlewares/rateLimiter.js";
+
+// Import controllers
 import {
   createProduct,
   updateProduct,
@@ -21,14 +24,14 @@ import {
 
 const router = express.Router();
 
-// Worker endpoints
+// Worker Product Management
 router.post(
   "/",
-  productCreateLimiter,
-  protect,
-  roleCheck("worker"),
-  validateImageUrls,
-  createProduct
+  productCreateLimiter, // Rate limiting
+  protect, // Authentication
+  roleCheck("worker"), // Authorization
+  validateImageUrls, // Image validation
+  createProduct // Controller
 );
 
 router.patch(
@@ -36,19 +39,25 @@ router.patch(
   productUpdateLimiter,
   protect,
   roleCheck("worker"),
+  validateImageUrls,
   updateProduct
 );
-
 router.delete("/:id", protect, roleCheck("worker"), deleteProduct);
 
+// Worker Inventory
 router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
-
 router.patch("/:id/stock", protect, roleCheck("worker"), updateStock);
+
+// Customer Actions
 router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
 
-// Public endpoints
+// Public Access
 router.get("/search", searchProducts);
 router.get("/:id/similar", getSimilarProducts);
-router.get("/:id", trackProductView, getProductDetails);
+router.get(
+  "/:id",
+  trackProductView, // View tracking middleware
+  getProductDetails // Main handler
+);
 
 export default router;
