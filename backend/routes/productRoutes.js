@@ -10,13 +10,26 @@ import {
   getProductDetails,
 } from "../controllers/productController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
+import { validateImageUrls } from "../middlewares/productValidation.js";
 
 const router = express.Router();
 
 // Worker endpoints
-router.post("/", protect, roleCheck("worker"), createProduct);
+router.post(
+  "/",
+  protect,
+  roleCheck("worker"),
+  validateImageUrls,
+  createProduct
+);
 
-router.patch("/:id", protect, roleCheck("worker"), updateProduct);
+router.patch(
+  "/:id",
+  protect,
+  roleCheck("worker"),
+  validateImageUrls,
+  updateProduct
+);
 
 router.delete("/:id", protect, roleCheck("worker"), deleteProduct);
 

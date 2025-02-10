@@ -18,10 +18,6 @@ export const createProduct = async (req, res, next) => {
       repairRequest,
     } = req.body;
 
-    // Validate images
-    if (!imageUrls?.length)
-      throw createHttpError(400, "At least one image is required");
-
     // Verify worker status
     const worker = await User.findById(req.user._id);
     if (!worker.isApprovedWorker())
@@ -87,10 +83,6 @@ export const updateProduct = async (req, res, next) => {
       imageUrls,
       stock,
     } = req.body;
-
-    // Validate images
-    if (!imageUrls?.length)
-      throw createHttpError(400, "At least one image is required");
 
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, worker: req.user._id },
