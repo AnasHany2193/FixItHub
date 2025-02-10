@@ -1180,3 +1180,16 @@ export const workerPaymentReceivedEmailTemplate = (itemType, amount) => `
   </div>
 </div>
 `;
+
+export const productPaymentSuccessTemplate = (reservation) => `
+  <h1>Order Confirmation #${reservation._id}</h1>
+  <p>Thank you for purchasing ${reservation.quantity}x ${reservation.product.title}!</p>
+  <p>Total Paid: $${(reservation.product.price * reservation.quantity).toFixed(2)}</p>
+`;
+
+export const workerNewOrderTemplate = (reservation) => `
+  <h1>New Order Received</h1>
+  <p>Customer: ${reservation.user.username}</p>
+  <p>Product: ${reservation.product.title}</p>
+  <p>Quantity: ${reservation.quantity}</p>
+`;

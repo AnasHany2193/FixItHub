@@ -1,173 +1,180 @@
 import Stripe from "stripe";
 import createHttpError from "http-errors";
+import { sendEmail } from "../services/emailService.js";
 
+import Product from "../models/Product.js";
+import Reservation from "../models/Reservation.js";
 import RepairRequest from "../models/RepairRequest.js";
 
 import {
   paymentFailedEmailTemplate,
   paymentSuccessEmailTemplate,
+  productPaymentSuccessTemplate,
+  workerNewOrderTemplate,
   workerPaymentReceivedEmailTemplate,
 } from "../utils/emailTemplates.js";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Create payment intent for a repair request
+// ===================== Middleware =====================
+export const paymentResponseFormatter = (req, res, next) => {
+  res.jsonPaymentIntent = function (paymentIntent) {
+    this.json({
+      success: true,
+      data: {
+        clientSecret: paymentIntent.client_secret,
+        amount: paymentIntent.amount / 100,
+      },
+    });
+  };
+  next();
+};
+
+// ===================== Helpers =====================
+const createPaymentUpdate = (status, paymentId) => ({
+  status,
+  location: "Payment Gateway",
+  details: `Transaction ID: ${paymentId}`,
+  timestamp: new Date(),
+});
+
+const validateRepairPayment = async (req) => {
+  const { repairId } = req.body;
+  const repair = await RepairRequest.findOne({
+    _id: repairId,
+    customer: req.user._id,
+    status: { $in: ["in_progress", "completed"] },
+  }).populate("worker");
+
+  if (!repair) throw createHttpError(404, "Repair request not found");
+  if (!repair.paymentAmount)
+    throw createHttpError(400, "Payment amount not set");
+  return repair;
+};
+
+const validateProductReservation = async (req) => {
+  const { reservationId } = req.body;
+  const reservation = await Reservation.findOne({
+    _id: reservationId,
+    user: req.user._id,
+    status: "active",
+    expiresAt: { $gt: new Date() },
+  }).populate("product");
+
+  if (!reservation) throw createHttpError(400, "Invalid reservation");
+  if (reservation.product.stock < reservation.quantity)
+    throw createHttpError(400, "Insufficient stock");
+  return reservation;
+};
+
+// ===================== Payment Handlers =====================
+const createPaymentIntent = async (amount, metadata, updateFn) => {
+  return stripe.paymentIntents.create({
+    amount: Math.round(amount * 100),
+    currency: "usd",
+    automatic_payment_methods: { enabled: true },
+    metadata,
+  });
+};
+
+const handlePaymentSuccess = async (paymentIntent, handlers) => {
+  try {
+    const entity = await handlers.getEntity(paymentIntent);
+    if (!entity) return;
+
+    await handlers.updateEntity(entity, paymentIntent);
+
+    const emails = handlers
+      .emailTemplates(entity, paymentIntent)
+      .filter((template) => template)
+      .map((template) => sendEmail(template));
+
+    await Promise.all(emails);
+  } catch (error) {
+    console.error("Payment success handling failed:", error);
+  }
+};
+
+const handleFailedPayment = async (paymentIntent, handlers) => {
+  try {
+    const entity = await handlers.getEntity(paymentIntent);
+    if (!entity) return;
+
+    await handlers.updateFailedEntity(entity, paymentIntent);
+
+    const emails = handlers
+      .failureTemplates(entity, paymentIntent)
+      .filter((template) => template)
+      .map((template) => sendEmail(template));
+
+    await Promise.all(emails);
+  } catch (error) {
+    console.error("Payment failure handling failed:", error);
+  }
+};
+
+// ===================== Controllers =====================
 export const createRepairPaymentIntent = async (req, res, next) => {
   try {
-    const { repairId } = req.body;
-
-    const repair = await RepairRequest.findOne({
-      _id: repairId,
-      customer: req.user._id,
-      status: { $in: ["in_progress", "completed"] },
-    }).populate("worker");
-
-    if (!repair)
-      throw createHttpError(
-        404,
-        "Repair request not found or not in payable state"
-      );
-
-    if (!repair.paymentAmount)
-      throw createHttpError(
-        400,
-        "Payment amount not configured for this repair"
-      );
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(repair.paymentAmount * 100),
-      currency: "usd",
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        repairId: repair._id.toString(),
-        workerId: repair.worker._id.toString(),
-      },
+    const repair = await validateRepairPayment(req);
+    const paymentIntent = await createPaymentIntent(repair.paymentAmount, {
+      type: "repair",
+      repairId: repair._id.toString(),
     });
 
     await RepairRequest.findByIdAndUpdate(repair._id, {
       paymentIntentId: paymentIntent.id,
     });
 
-    res.status(200).json({
-      success: true,
-      data: {
-        clientSecret: paymentIntent.client_secret,
-        amount: repair.paymentAmount,
-      },
-      message: "Payment intent created successfully",
-    });
+    res.jsonPaymentIntent(paymentIntent);
   } catch (error) {
     next(error);
   }
 };
 
-// Handle Stripe webhooks
+export const createProductPaymentIntent = async (req, res, next) => {
+  try {
+    const reservation = await validateProductReservation(req);
+    const paymentIntent = await createPaymentIntent(
+      reservation.product.price * reservation.quantity,
+      { type: "product", reservationId: reservation._id.toString() }
+    );
+
+    await Reservation.findByIdAndUpdate(reservation._id, {
+      paymentIntentId: paymentIntent.id,
+    });
+
+    res.jsonPaymentIntent(paymentIntent);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const handleStripeWebhook = async (req, res, next) => {
   const sig = req.headers["stripe-signature"];
 
   try {
     const event = stripe.webhooks.constructEvent(
-      req.body,
+      req.rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    switch (event.type) {
-      case "payment_intent.succeeded":
-        await handleSuccessfulPayment(event.data.object);
-        break;
-      case "payment_intent.payment_failed":
-        await handleFailedPayment(event.data.object);
-        break;
+    const paymentIntent = event.data.object;
+    const handlers =
+      paymentIntent.metadata.type === "product"
+        ? productHandlers
+        : repairHandlers;
+
+    if (event.type === "payment_intent.succeeded") {
+      await handlePaymentSuccess(paymentIntent, handlers);
+    } else if (event.type === "payment_intent.payment_failed") {
+      await handleFailedPayment(paymentIntent, handlers);
     }
 
     res.status(200).json({ success: true });
   } catch (error) {
     console.error("Webhook processing failed:", error);
     next(createHttpError(400, `Webhook Error: ${error.message}`));
-  }
-};
-
-// Helper: Update repair request on successful payment
-const handleSuccessfulPayment = async (paymentIntent) => {
-  try {
-    const repair = await RepairRequest.findOneAndUpdate(
-      { paymentIntentId: paymentIntent.id },
-      {
-        paymentStatus: "paid",
-        $push: {
-          trackingUpdates: {
-            status: "payment_received",
-            location: "Payment Gateway",
-            details: `Transaction ID: ${paymentIntent.id}`,
-          },
-        },
-      },
-      { new: true }
-    ).populate("customer worker");
-
-    if (!repair) {
-      console.error("Repair not found for payment intent:", paymentIntent.id);
-      return;
-    }
-
-    await Promise.all([
-      sendEmail({
-        to: repair.customer.email,
-        subject: "Payment Confirmation",
-        html: paymentSuccessEmailTemplate({
-          itemType: repair.itemType,
-          amount: paymentIntent.amount / 100,
-          repairId: repair._id,
-        }),
-      }),
-      repair.worker?.email &&
-        sendEmail({
-          to: repair.worker.email,
-          subject: "Payment Received",
-          html: workerPaymentReceivedEmailTemplate({
-            itemType: repair.itemType,
-            amount: paymentIntent.amount / 100,
-            repairId: repair._id,
-          }),
-        }),
-    ]);
-  } catch (error) {
-    console.error("Error processing successful payment:", error);
-  }
-};
-
-// Add these helper functions
-const handleFailedPayment = async (paymentIntent) => {
-  try {
-    const repair = await RepairRequest.findOneAndUpdate(
-      { paymentIntentId: paymentIntent.id },
-      {
-        paymentStatus: "failed",
-        $push: {
-          trackingUpdates: {
-            status: "payment_failed",
-            location: "Payment Gateway",
-            details:
-              paymentIntent.last_payment_error?.message ||
-              "Unknown payment failure",
-          },
-        },
-      },
-      { new: true }
-    ).populate("customer");
-
-    if (repair?.customer?.email) {
-      await sendEmail({
-        to: repair.customer.email,
-        subject: "Payment Failed",
-        html: paymentFailedEmailTemplate({
-          itemType: repair.itemType,
-          amount: paymentIntent.amount / 100,
-        }),
-      });
-    }
-  } catch (error) {
-    console.error("Error processing failed payment:", error);
   }
 };

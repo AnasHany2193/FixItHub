@@ -74,6 +74,11 @@ const RepairRequestSchema = new mongoose.Schema(
       trim: true,
       maxlength: [50, "Item type cannot exceed 50 characters"],
     },
+    paymentIntentId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
     photos: {
       type: [
         {
