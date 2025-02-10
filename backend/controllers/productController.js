@@ -201,7 +201,7 @@ export const searchProducts = async (req, res, next) => {
     const sortBy = validSorts.includes(sort) ? sort : "-createdAt";
 
     const products = await Product.find(filter)
-      .populate("worker", "username profile.avatar rating")
+      .populate("worker", "username profile.avatar rating.average")
       .populate("repairRequest", "title")
       .skip((page - 1) * limit)
       .limit(limit)
@@ -316,7 +316,7 @@ export const trackProductView = async (req, res, next) => {
 export const getProductDetails = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate("worker", "username profile.avatar rating")
+      .populate("worker", "username profile.avatar rating.average")
       .populate("repairRequest", "title");
 
     if (!product) return next(createHttpError(404, "Product not found"));
@@ -383,7 +383,7 @@ export const getSimilarProducts = async (req, res, next) => {
       _id: { $ne: product._id },
     })
       .limit(4)
-      .populate("worker", "username rating");
+      .populate("worker", "username profile.avatar rating.average");
 
     res.status(200).json({
       success: true,
