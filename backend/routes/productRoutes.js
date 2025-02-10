@@ -39,8 +39,8 @@ router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
 // Public endpoints
 router.get("/search", searchProducts);
 
-router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
 router.patch("/:id/stock", protect, roleCheck("worker"), updateStock);
+router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
 
 // Add route middleware
 router.get("/:id", trackProductView, getProductDetails);

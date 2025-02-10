@@ -214,14 +214,10 @@ export const searchProducts = async (req, res, next) => {
 
 export const reserveStock = async (req, res, next) => {
   try {
-    const { productId, quantity } = req.body;
-
-    const product = await Product.findOneAndUpdate(
-      {
-        _id: productId,
-        stock: { $gte: quantity },
-      },
-      { $inc: { stock: -quantity } },
+    const { quantity } = req.body;
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { stock: -quantity }, $min: { stock: 0 } },
       { new: true }
     );
 
@@ -271,26 +267,38 @@ export const updateStock = async (req, res, next) => {
   try {
     const { action, quantity } = req.body;
 
-    const product = await Product.findOne({
-      _id: req.params.id,
-      worker: req.user._id,
-    });
+    // Validate action type
+    if (!["restock", "reserve"].includes(action))
+      return next(createHttpError(400, "Invalid stock action"));
 
-    if (!product) {
-      return next(createHttpError(404, "Product not found"));
-    }
+    const update =
+      action === "restock"
+        ? { $inc: { stock: quantity } }
+        : { $inc: { stock: -quantity }, $min: { stock: 0 } };
 
-    if (action === "restock") {
-      product.stock += Number(quantity);
-    } else if (action === "reserve") {
-      product.stock = Math.max(0, product.stock - Number(quantity));
-    }
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        worker: req.user._id,
+        ...(action === "reserve" && { stock: { $gte: quantity } }),
+      },
+      update,
+      { new: true, runValidators: true }
+    );
 
-    await product.save();
+    if (!product)
+      return next(
+        createHttpError(
+          404,
+          action === "reserve"
+            ? "Insufficient stock or product not found"
+            : "Product not found"
+        )
+      );
 
     res.status(200).json({
       success: true,
-      message: `Stock updated: ${product.stock} available`,
+      message: `Stock ${action} successful. Current stock: ${product.stock}`,
       data: product,
     });
   } catch (error) {
