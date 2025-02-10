@@ -1,8 +1,23 @@
+// routes/userRoutes.js
 import express from "express";
-import { protect } from "../middlewares/authMiddleware.js";
-import { getCurrentUser } from "../controllers/user.js";
-
 const router = express.Router();
-router.get("/me", protect, getCurrentUser);
+import { protect } from "../middlewares/authMiddleware.js";
+import {
+  getMyProfile,
+  updateMyProfile,
+  getAllWorkers,
+  getAllCustomers,
+  getUserProfile,
+} from "../controllers/userController.js";
+import { validateProfileUpdate } from "../middlewares/userValidation.js";
+
+// Profile management
+router.get("/me", protect, getMyProfile);
+router.patch("/me", protect, validateProfileUpdate, updateMyProfile);
+
+// Public profiles
+router.get("/workers", protect, getAllWorkers);
+router.get("/customers", protect, getAllCustomers);
+router.get("/:id", protect, getUserProfile);
 
 export default router;

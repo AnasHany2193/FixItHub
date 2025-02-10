@@ -53,7 +53,15 @@ const userSchema = new mongoose.Schema(
       address: {
         street: String,
         city: String,
+        state: String,
         zip: String,
+        country: String,
+      },
+      bio: { type: String, maxlength: 500 },
+      socialMedia: {
+        website: String,
+        linkedin: String,
+        twitter: String,
       },
     },
     tokenVersion: {
@@ -71,6 +79,23 @@ const userSchema = new mongoose.Schema(
         default: "pending",
       },
       documents: { type: [String], default: [] },
+      workHistory: [
+        {
+          position: String,
+          company: String,
+          startYear: Number,
+          endYear: Number,
+        },
+      ],
+      availability: {
+        type: String,
+        enum: ["full-time", "part-time", "unavailable"],
+      },
+    },
+    stats: {
+      completedRepairs: { type: Number, default: 0 },
+      completedSales: { type: Number, default: 0 },
+      responseRate: { type: Number, default: 0 },
     },
     rating: {
       average: { type: Number, default: 0, min: 0, max: 5 },
