@@ -16,6 +16,11 @@ export const bidSchema = new mongoose.Schema(
       required: true,
       min: [1, "Estimate must be at least 1 day"],
     },
+    auction: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auction",
+      required: true,
+    },
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected"],

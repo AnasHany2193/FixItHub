@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import { bidSchema } from "./Bid.js";
+import Bid from "./Bid.js";
 
 const AuctionSchema = new mongoose.Schema(
   {
@@ -34,7 +34,10 @@ const AuctionSchema = new mongoose.Schema(
         ref: "Bid",
       },
     ],
-    currentLowestBid: bidSchema,
+    currentLowestBid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bid",
+    },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -50,11 +53,11 @@ AuctionSchema.virtual("isExpired").get(function () {
 });
 
 // Methods
-AuctionSchema.methods.submitBid = async function (newBid) {
+AuctionSchema.methods.submitBid = async function (newBidData) {
   if (this.status !== "open") throw new Error("Auction is closed for bidding");
 
   // Validate against starting price
-  if (newBid.bidPrice > this.startingMaxPrice)
+  if (newBidData.bidPrice > this.startingMaxPrice)
     throw new Error(
       `Bid exceeds maximum starting price of ${this.startingMaxPrice}`
     );
@@ -62,7 +65,7 @@ AuctionSchema.methods.submitBid = async function (newBid) {
   // Validate against current lowest
   if (
     this.currentLowestBid &&
-    newBid.bidPrice >= this.currentLowestBid.bidPrice
+    newBidData.bidPrice >= this.currentLowestBid.bidPrice
   )
     throw new Error(
       `Bid must be lower than current lowest bid (${this.currentLowestBid.bidPrice})`
@@ -70,20 +73,30 @@ AuctionSchema.methods.submitBid = async function (newBid) {
 
   // Add validation for existing worker bid
   const existingBid = this.bids.find(
-    (b) => b.worker.toString() === newBid.worker.toString()
+    (b) => b.worker.toString() === newBidData.worker.toString()
   );
   if (existingBid)
     throw new Error("Worker already submitted a bid for this auction");
 
-  // Proceed with bid submission
-  this.bids.push(newBid);
+  // Create new Bid document
+  const newBid = new Bid({
+    ...newBidData,
+    auction: this._id,
+  });
+  await newBid.save(); // Proceed with bid submission
 
-  // Update current lowest bid
-  if (
-    !this.currentLowestBid ||
-    newBid.bidPrice < this.currentLowestBid.bidPrice
-  )
-    this.currentLowestBid = newBid;
+  // Add bid reference to auction
+  this.bids.push(newBid._id);
+
+  // Check if this is the lowest bid
+  if (!this.currentLowestBid) {
+    this.currentLowestBid = newBid._id;
+  } else {
+    const currentLowest = await Bid.findById(this.currentLowestBid);
+    if (newBid.bidPrice < currentLowest.bidPrice) {
+      this.currentLowestBid = newBid._id;
+    }
+  }
 
   return this.save();
 };

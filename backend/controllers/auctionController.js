@@ -2,10 +2,13 @@ import createHttpError from "http-errors";
 
 import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
+import Bid from "../models/Bid.js";
 
 export const acceptLowestBid = async (req, res, next) => {
   try {
-    const auction = await Auction.findById(req.params.auctionId);
+    const auction = await Auction.findById(req.params.auctionId).populate(
+      "repairRequest"
+    );
 
     if (!auction) throw createHttpError(404, "Auction not found");
 
@@ -74,7 +77,7 @@ export const getAvailableAuctions = async (req, res, next) => {
       throw createHttpError(403, "Unauthorized customer data request");
     }
 
-    const query = await Auction.find({ status: "open" })
+    const auctions = await Auction.find({ status: "open" })
       .populate({
         path: "repairRequest",
         match: { status: "auction_open" },
@@ -86,9 +89,13 @@ export const getAvailableAuctions = async (req, res, next) => {
             }
           : undefined,
       })
-      .sort("-createdAt");
-
-    const auctions = await query.lean();
+      .populate({
+        path: "bids",
+        options: { sort: { bidPrice: 1 } },
+      })
+      .populate("currentLowestBid")
+      .sort("-createdAt")
+      .lean();
 
     const transformedAuctions = auctions
       .filter((a) => a.repairRequest) // Filter out null repair requests
@@ -135,21 +142,25 @@ export const submitBid = async (req, res, next) => {
 
     if (!auction) throw createHttpError(404, "Active auction not found");
 
-    const newBid = {
+    const newBidData = {
       worker: req.user._id,
       bidPrice: req.body.bidPrice,
       estimatedTimeDays: req.body.estimatedTimeDays,
-      status: "pending",
     };
 
-    const updatedAuction = await auction.submitBid(newBid);
+    const updatedAuction = await auction.submitBid(newBidData);
+
+    // Populate the new bid for response
+    const currentLowestBid = await Bid.findById(
+      updatedAuction.currentLowestBid
+    );
 
     res.status(201).json({
       success: true,
       message: "Bid submitted successfully",
       data: {
-        yourBid: newBid.bidPrice,
-        currentLowestBid: updatedAuction.currentLowestBid.bidPrice,
+        yourBid: newBidData.bidPrice,
+        currentLowestBid: currentLowestBid.bidPrice,
       },
     });
   } catch (error) {
