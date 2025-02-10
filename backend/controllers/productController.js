@@ -169,6 +169,9 @@ export const searchProducts = async (req, res, next) => {
       page = 1,
       limit = 10,
       sort = "-createdAt",
+      lng,
+      lat,
+      radius = 5000, // Radius in meters
     } = req.query;
     const filter = {};
 
@@ -182,6 +185,17 @@ export const searchProducts = async (req, res, next) => {
       if (minPrice) filter.price.$gte = minPrice;
       if (maxPrice) filter.price.$lte = maxPrice;
     }
+
+    if (lng && lat)
+      filter.location = {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)],
+          },
+          $maxDistance: parseInt(radius),
+        },
+      };
 
     const validSorts = ["price", "-price", "createdAt", "-createdAt"];
     const sortBy = validSorts.includes(sort) ? sort : "-createdAt";
@@ -310,6 +324,27 @@ export const updateStock = async (req, res, next) => {
       success: true,
       message: `Stock ${action} successful. Current stock: ${product.stock}`,
       data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getSimilarProducts = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    const similar = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+    })
+      .limit(4)
+      .populate("worker", "username rating");
+
+    res.status(200).json({
+      success: true,
+      message: "Similar products you might like",
+      data: similar,
     });
   } catch (error) {
     next(error);

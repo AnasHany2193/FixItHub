@@ -16,6 +16,7 @@ import {
   trackProductView,
   getProductDetails,
   updateStock,
+  getSimilarProducts,
 } from "../controllers/productController.js";
 
 const router = express.Router();
@@ -43,13 +44,12 @@ router.delete("/:id", protect, roleCheck("worker"), deleteProduct);
 
 router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
 
-// Public endpoints
-router.get("/search", searchProducts);
-
 router.patch("/:id/stock", protect, roleCheck("worker"), updateStock);
 router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
 
-// Add route middleware
+// Public endpoints
+router.get("/search", searchProducts);
+router.get("/:id/similar", getSimilarProducts);
 router.get("/:id", trackProductView, getProductDetails);
 
 export default router;
