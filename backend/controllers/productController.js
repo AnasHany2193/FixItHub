@@ -247,3 +247,30 @@ export const reserveStock = async (req, res, next) => {
     next(error);
   }
 };
+
+export const trackProductView = async (req, res, next) => {
+  try {
+    await Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductDetails = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate("worker", "username profile.avatar rating")
+      .populate("repairRequest", "title");
+
+    if (!product) return next(createHttpError(404, "Product not found"));
+
+    res.status(200).json({
+      success: true,
+      message: "Product details retrieved successfully 🔍",
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

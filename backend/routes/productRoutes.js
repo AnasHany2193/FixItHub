@@ -6,6 +6,8 @@ import {
   getWorkerProducts,
   searchProducts,
   reserveStock,
+  trackProductView,
+  getProductDetails,
 } from "../controllers/productController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
@@ -24,5 +26,8 @@ router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
 router.get("/search", searchProducts);
 
 router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
+
+// Add route middleware
+router.get("/:id", trackProductView, getProductDetails);
 
 export default router;
