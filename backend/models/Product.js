@@ -66,27 +66,65 @@ const productSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    status: {
+      type: String,
+      enum: ["active", "archived"],
+      default: "active",
+    },
+    views: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     rating: {
       average: { type: Number, default: 0 },
       count: { type: Number, default: 0 },
     },
     location: {
-      type: { type: String, enum: ["Point"] },
-      coordinates: [Number], // [longitude, latitude]
+      type: {
+        type: String,
+        enum: ["Point"],
+        required: function () {
+          return this.coordinates?.length;
+        },
+      },
+      coordinates: {
+        type: [Number],
+        required: function () {
+          return this.type === "Point";
+        },
+        validate: {
+          validator: (v) =>
+            v.length === 2 &&
+            v[0] >= -180 &&
+            v[0] <= 180 &&
+            v[1] >= -90 &&
+            v[1] <= 90,
+          message: "Invalid coordinates",
+        },
+      },
     },
   },
   { timestamps: true }
 );
 
-productSchema.index({ worker: 1 });
-productSchema.index({ category: 1 });
 productSchema.index({ price: 1 });
+productSchema.index({ worker: 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ location: "2dsphere" });
+productSchema.index({ category: 1, status: 1 });
 
 productSchema.pre("deleteOne", async function () {
-  const productId = this.getQuery()._id;
-  await Reservation.deleteMany({ product: productId });
+  try {
+    await Reservation.deleteMany({ product: this.getQuery()._id });
+  } catch (error) {
+    console.error("Failed to delete reservations:", error);
+    throw error;
+  }
+});
+
+productSchema.virtual("availableStock").get(function () {
+  return this.stock - this.reservedStock;
 });
 
 const Product = mongoose.model("Product", productSchema);
