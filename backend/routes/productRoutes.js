@@ -17,7 +17,6 @@ import {
   getProductDetails,
   updateStock,
   getSimilarProducts,
-  confirmReservation,
 } from "../controllers/productController.js";
 
 const router = express.Router();

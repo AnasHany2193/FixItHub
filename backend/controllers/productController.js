@@ -297,42 +297,9 @@ export const reserveStock = async (req, res, next) => {
   }
 };
 
-export const confirmReservation = async (req, res, next) => {
-  try {
-    const { reservationId } = req.body;
-
-    const reservation = await Reservation.findOne({
-      _id: reservationId,
-      user: req.user._id,
-      status: "active",
-    });
-
-    if (!reservation)
-      return next(createHttpError(400, "Invalid or expired reservation"));
-
-    // Finalize reservation
-    await Product.findByIdAndUpdate(reservation.product, {
-      $inc: {
-        stock: -reservation.quantity,
-        reservedStock: -reservation.quantity,
-      },
-    });
-
-    reservation.status = "completed";
-    await reservation.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Reservation confirmed and stock updated",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const trackProductView = async (req, res, next) => {
   try {
-    await Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+    await Product.updateOne({ _id: req.params.id }, { $inc: { views: 1 } });
     next();
   } catch (error) {
     next(error);
@@ -342,15 +309,20 @@ export const trackProductView = async (req, res, next) => {
 export const getProductDetails = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id)
+      .select("-reservedStock")
       .populate("worker", "username profile.avatar rating.average")
-      .populate("repairRequest", "title");
+      .populate("repairRequest", "title")
+      .lean();
 
     if (!product) return next(createHttpError(404, "Product not found"));
 
     res.status(200).json({
       success: true,
       message: "Product details retrieved successfully 🔍",
-      data: product,
+      data: {
+        ...product,
+        availableStock: product.stock - product.reservedStock,
+      },
     });
   } catch (error) {
     next(error);
@@ -360,40 +332,38 @@ export const getProductDetails = async (req, res, next) => {
 export const updateStock = async (req, res, next) => {
   try {
     const { action, quantity } = req.body;
+    const numericQuantity = parseFloat(quantity);
 
-    // Validate action type
-    if (!["restock", "adjust"].includes(action))
-      return next(createHttpError(400, "Invalid stock action"));
+    // Validate input
+    if (!["restock", "adjust"].includes(action) || isNaN(numericQuantity))
+      return next(createHttpError(400, "Invalid action or quantity"));
 
-    const update =
-      action === "restock"
-        ? { $inc: { stock: quantity } }
-        : { $inc: { stock: -quantity }, $min: { stock: 0 } };
-
-    const product = await Product.findOneAndUpdate(
-      {
-        _id: req.params.id,
-        worker: req.user._id,
-        ...(action === "reserve" && { stock: { $gte: quantity } }),
+    // Prepare update operation
+    const update = {
+      $inc: {
+        stock: action === "restock" ? numericQuantity : -numericQuantity,
       },
+    };
+
+    if (action === "adjust") update.$min = { stock: 0 };
+
+    // Execute update
+    const product = await Product.findOneAndUpdate(
+      { _id: req.params.id, worker: req.user._id },
       update,
       { new: true, runValidators: true }
     );
 
     if (!product)
-      return next(
-        createHttpError(
-          404,
-          action === "reserve"
-            ? "Insufficient stock or product not found"
-            : "Product not found"
-        )
-      );
+      return next(createHttpError(404, "Product not found or unauthorized"));
 
     res.status(200).json({
       success: true,
       message: `Stock ${action} successful. Current stock: ${product.stock}`,
-      data: product,
+      data: {
+        stock: product.stock,
+        actionPerformed: action,
+      },
     });
   } catch (error) {
     next(error);
@@ -402,19 +372,27 @@ export const updateStock = async (req, res, next) => {
 
 export const getSimilarProducts = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const baseProduct = await Product.findById(req.params.id);
+    if (!baseProduct)
+      return next(createHttpError(404, "Base product not found"));
 
-    const similar = await Product.find({
-      category: product.category,
-      _id: { $ne: product._id },
-    })
-      .limit(4)
-      .populate("worker", "username profile.avatar rating.average");
+    const similarProducts = await Product.aggregate([
+      {
+        $match: {
+          category: baseProduct.category,
+          _id: { $ne: baseProduct._id },
+          status: "active",
+        },
+      },
+      { $sample: { size: 4 } },
+      { $lookup: workerLookupPipeline },
+      { $project: productProjection },
+    ]);
 
     res.status(200).json({
       success: true,
       message: "Similar products you might like",
-      data: similar,
+      data: similarProducts.map(addAvailableStock),
     });
   } catch (error) {
     next(error);
