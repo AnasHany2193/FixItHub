@@ -12,16 +12,12 @@ import "./utils/auctionScheduler.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
+import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
-import ratingRoutes from "./routes/ratingRoutes.js";
-import productRoutes from "./routes/productRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import auctionRoutes from "./routes/auctionRoutes.js";
 
 import { handleStripeWebhook } from "./controllers/paymentController.js";
-
-import repairRoutes from "./routes/repairRoutes.js";
-import auctionRoutes from "./routes/auctionRoutes.js";
 
 dotenv.config(); // Load environment variables
 
@@ -58,10 +54,7 @@ app.get("/api/v1/health", (req, res) => {
 });
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/repairs", repairRoutes);
-app.use("/api/v1/ratings", ratingRoutes);
-app.use("/api/v1/product", productRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/document", uploadRoutes);
 app.use("/api/v1/auctions", auctionRoutes);

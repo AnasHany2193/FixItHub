@@ -1,7 +1,6 @@
 import Stripe from "stripe";
 import createHttpError from "http-errors";
 
-import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
 
 import {
