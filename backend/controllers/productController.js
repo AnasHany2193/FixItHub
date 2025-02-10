@@ -219,3 +219,31 @@ export const searchProducts = async (req, res, next) => {
     next(error);
   }
 };
+
+export const reserveStock = async (req, res, next) => {
+  try {
+    const { productId, quantity } = req.body;
+
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: productId,
+        stock: { $gte: quantity },
+      },
+      { $inc: { stock: -quantity } },
+      { new: true }
+    );
+
+    if (!product)
+      return next(
+        createHttpError(400, "Insufficient stock or product not found")
+      );
+
+    res.status(200).json({
+      success: true,
+      message: `Reserved ${quantity} units`,
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

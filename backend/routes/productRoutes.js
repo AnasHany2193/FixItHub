@@ -5,6 +5,7 @@ import {
   deleteProduct,
   getWorkerProducts,
   searchProducts,
+  reserveStock,
 } from "../controllers/productController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
@@ -21,5 +22,7 @@ router.get("/my-products", protect, roleCheck("worker"), getWorkerProducts);
 
 // Public endpoints
 router.get("/search", searchProducts);
+
+router.post("/:id/reserve", protect, roleCheck("customer"), reserveStock);
 
 export default router;
