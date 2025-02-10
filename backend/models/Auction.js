@@ -56,47 +56,43 @@ AuctionSchema.virtual("isExpired").get(function () {
 AuctionSchema.methods.submitBid = async function (newBidData) {
   if (this.status !== "open") throw new Error("Auction is closed for bidding");
 
-  // Validate against starting price
+  // Check for existing bid from this worker
+  const existingBid = await Bid.findOne({
+    auction: this._id,
+    worker: newBidData.worker,
+  });
+
+  if (existingBid)
+    throw new Error("Worker already submitted a bid for this auction");
+
+  // Validate bid price
   if (newBidData.bidPrice > this.startingMaxPrice)
     throw new Error(
       `Bid exceeds maximum starting price of ${this.startingMaxPrice}`
     );
 
-  // Validate against current lowest
-  if (
-    this.currentLowestBid &&
-    newBidData.bidPrice >= this.currentLowestBid.bidPrice
-  )
+  // Get current lowest price
+  let currentLowestPrice = this.startingMaxPrice;
+  if (this.currentLowestBid) {
+    const currentLowestBidDoc = await Bid.findById(this.currentLowestBid);
+    currentLowestPrice = currentLowestBidDoc.bidPrice;
+  }
+
+  if (newBidData.bidPrice >= currentLowestPrice)
     throw new Error(
-      `Bid must be lower than current lowest bid (${this.currentLowestBid.bidPrice})`
+      `Bid must be lower than current lowest bid (${currentLowestPrice})`
     );
 
-  // Add validation for existing worker bid
-  const existingBid = this.bids.find(
-    (b) => b.worker.toString() === newBidData.worker.toString()
-  );
-  if (existingBid)
-    throw new Error("Worker already submitted a bid for this auction");
-
-  // Create new Bid document
+  // Create and save new bid
   const newBid = new Bid({
     ...newBidData,
     auction: this._id,
   });
-  await newBid.save(); // Proceed with bid submission
+  await newBid.save();
 
-  // Add bid reference to auction
+  // Update auction references
   this.bids.push(newBid._id);
-
-  // Check if this is the lowest bid
-  if (!this.currentLowestBid) {
-    this.currentLowestBid = newBid._id;
-  } else {
-    const currentLowest = await Bid.findById(this.currentLowestBid);
-    if (newBid.bidPrice < currentLowest.bidPrice) {
-      this.currentLowestBid = newBid._id;
-    }
-  }
+  this.currentLowestBid = newBid._id;
 
   return this.save();
 };

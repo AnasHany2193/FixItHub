@@ -34,5 +34,8 @@ export const bidSchema = new mongoose.Schema(
   { _id: true }
 );
 
+bidSchema.index({ auction: 1, worker: 1 }, { unique: true });
+bidSchema.index({ bidPrice: 1 });
+
 const Bid = mongoose.model("Bid", bidSchema);
 export default Bid;

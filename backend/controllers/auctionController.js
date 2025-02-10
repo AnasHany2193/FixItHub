@@ -41,9 +41,13 @@ export const getAuctionBids = async (req, res, next) => {
   try {
     const auction = await Auction.findById(req.params.auctionId)
       .populate({
-        path: "bids.worker",
-        select: "username profile.avatar rating.average",
+        path: "bids",
+        populate: {
+          path: "worker",
+          select: "username profile.avatar rating.average",
+        },
       })
+      .populate("currentLowestBid")
       .lean();
 
     if (!auction) throw createHttpError(404, "Auction not found");
@@ -51,7 +55,6 @@ export const getAuctionBids = async (req, res, next) => {
     // Transform bids data
     const bids = auction.bids.map((bid) => ({
       ...bid,
-      worker: bid.worker,
       isLowest: bid._id.equals(auction.currentLowestBid?._id),
     }));
 
@@ -90,10 +93,9 @@ export const getAvailableAuctions = async (req, res, next) => {
           : undefined,
       })
       .populate({
-        path: "bids",
-        options: { sort: { bidPrice: 1 } },
+        path: "currentLowestBid",
+        select: "bidPrice worker",
       })
-      .populate("currentLowestBid")
       .sort("-createdAt")
       .lean();
 
