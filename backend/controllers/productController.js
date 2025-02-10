@@ -166,7 +166,17 @@ export const getWorkerProducts = async (req, res, next) => {
 
 export const searchProducts = async (req, res, next) => {
   try {
-    const { q, type, category, minPrice, maxPrice, condition } = req.query;
+    const {
+      q,
+      type,
+      category,
+      minPrice,
+      maxPrice,
+      condition,
+      page = 1,
+      limit = 10,
+      sort = "-createdAt",
+    } = req.query;
     const filter = {};
 
     if (q) filter.$text = { $search: q };
@@ -180,10 +190,17 @@ export const searchProducts = async (req, res, next) => {
       if (maxPrice) filter.price.$lte = maxPrice;
     }
 
+    const validSorts = ["price", "-price", "createdAt", "-createdAt"];
+    const sortBy = validSorts.includes(sort) ? sort : "-createdAt";
+
     const products = await Product.find(filter)
       .populate("worker", "username profile.avatar rating")
       .populate("repairRequest", "title")
-      .sort("-createdAt");
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort(sortBy);
+
+    const total = await Product.countDocuments(filter);
 
     res.status(200).json({
       success: true,
@@ -191,6 +208,12 @@ export const searchProducts = async (req, res, next) => {
         ? `Found ${products.length} matching items 🔍`
         : "No products match your search criteria",
       data: products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     next(error);
