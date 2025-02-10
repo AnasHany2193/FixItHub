@@ -1,4 +1,11 @@
 import express from "express";
+
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
+import { validateImageUrls } from "../middlewares/productValidation.js";
+import {
+  productCreateLimiter,
+  productUpdateLimiter,
+} from "../middlewares/rateLimiter.js";
 import {
   createProduct,
   updateProduct,
@@ -10,14 +17,13 @@ import {
   getProductDetails,
   updateStock,
 } from "../controllers/productController.js";
-import { protect, roleCheck } from "../middlewares/authMiddleware.js";
-import { validateImageUrls } from "../middlewares/productValidation.js";
 
 const router = express.Router();
 
 // Worker endpoints
 router.post(
   "/",
+  productCreateLimiter,
   protect,
   roleCheck("worker"),
   validateImageUrls,
@@ -26,6 +32,7 @@ router.post(
 
 router.patch(
   "/:id",
+  productUpdateLimiter,
   protect,
   roleCheck("worker"),
   validateImageUrls,

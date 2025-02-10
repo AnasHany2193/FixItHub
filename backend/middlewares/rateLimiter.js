@@ -42,3 +42,15 @@ export const bidLimiter = rateLimit({
   message: "Too many bid attempts. Try again later.",
   standardHeaders: true,
 });
+
+export const productCreateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per window
+  message: "Too many product listings created. Try again later.",
+});
+
+export const productUpdateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many product updates. Try again later.",
+});
