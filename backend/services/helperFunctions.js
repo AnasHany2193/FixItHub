@@ -30,3 +30,39 @@ export const processSingleImage = (url) => ({
   url,
   public_id: url.split("/").pop().split(".")[0],
 });
+
+export const getSortCriteria = (sort = "-createdAt") => {
+  const validSorts = new Map([
+    ["price", 1],
+    ["-price", -1],
+    ["createdAt", 1],
+    ["-createdAt", -1],
+  ]);
+  return { [sort.replace("-", "")]: validSorts.get(sort) || -1 };
+};
+
+export const workerLookupPipeline = {
+  from: "users",
+  localField: "worker",
+  foreignField: "_id",
+  as: "worker",
+  pipeline: [{ $project: { username: 1, "profile.avatar": 1 } }],
+};
+
+export const productProjection = {
+  reservedStock: 0,
+  "worker.password": 0,
+  "worker.email": 0,
+};
+
+export const addAvailableStock = (product) => ({
+  ...product,
+  availableStock: product.stock - (product.reservedStock || 0),
+});
+
+export const createPagination = (page, limit, total) => ({
+  page: Number(page),
+  limit: Number(limit),
+  total,
+  totalPages: Math.ceil(total / limit),
+});

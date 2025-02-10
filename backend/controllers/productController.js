@@ -5,10 +5,15 @@ import Product from "../models/Product.js";
 import Reservation from "../models/Reservation.js";
 import RepairRequest from "../models/RepairRequest.js";
 import {
+  addAvailableStock,
+  createPagination,
+  getSortCriteria,
   parseNumber,
   processImageUrls,
   processSingleImage,
+  productProjection,
   validateAndFormatCoordinates,
+  workerLookupPipeline,
 } from "../services/helperFunctions.js";
 
 export const createProduct = async (req, res, next) => {
@@ -167,30 +172,31 @@ export const getWorkerProducts = async (req, res, next) => {
 export const searchProducts = async (req, res, next) => {
   try {
     const {
-      q,
-      type,
-      category,
-      minPrice,
-      maxPrice,
-      condition,
-      page = 1,
-      limit = 10,
-      sort = "-createdAt",
       lng,
       lat,
       radius = 5000,
+      page = 1,
+      limit = 10,
+      ...filters
     } = req.query;
 
     // Validate coordinates
-    if (lng && lat && (isNaN(lng) || isNaN(lat)))
-      return next(createHttpError(400, "Invalid coordinates format"));
+    if (lng && lat) {
+      const [longitude, latitude] = [parseFloat(lng), parseFloat(lat)];
+      if (
+        isNaN(longitude) ||
+        isNaN(latitude) ||
+        Math.abs(longitude) > 180 ||
+        Math.abs(latitude) > 90
+      )
+        return next(createHttpError(400, "Invalid coordinates"));
+    }
 
-    // Build base pipeline
+    // Build aggregation pipeline
     const pipeline = [];
-    const filter = {};
 
-    // Handle geospatial search
-    if (lng && lat)
+    // Geo search
+    if (lng && lat) {
       pipeline.push({
         $geoNear: {
           near: {
@@ -202,85 +208,51 @@ export const searchProducts = async (req, res, next) => {
           spherical: true,
         },
       });
-
-    // Text search
-    if (q)
-      pipeline.push({
-        $match: { $text: { $search: q } },
-      });
-
-    // Other filters
-    ["type", "category", "condition"].forEach((field) => {
-      if (req.query[field]) filter[field] = req.query[field];
-    });
-
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = parseFloat(minPrice);
-      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
     }
 
-    if (Object.keys(filter).length > 0) pipeline.push({ $match: filter });
+    // Text search
+    if (filters.q) {
+      pipeline.push({ $match: { $text: { $search: filters.q } } });
+      delete filters.q;
+    }
 
-    // Sorting
-    const sortBy = {};
-    const validSorts = ["price", "-price", "createdAt", "-createdAt"];
-    const sortField = validSorts.includes(sort)
-      ? sort.replace("-", "")
-      : "createdAt";
-    sortBy[sortField] = sort.startsWith("-") ? -1 : 1;
+    // Numeric filters
+    if (filters.minPrice || filters.maxPrice) {
+      filters.price = {
+        ...(filters.minPrice && { $gte: parseFloat(filters.minPrice) }),
+        ...(filters.maxPrice && { $lte: parseFloat(filters.maxPrice) }),
+      };
+      delete filters.minPrice;
+      delete filters.maxPrice;
+    }
 
-    // Pagination
-    const skip = (page - 1) * limit;
-    const facetStages = {
-      metadata: [{ $count: "total" }],
-      data: [
-        { $sort: sortBy },
-        { $skip: skip },
-        { $limit: parseInt(limit) },
-        {
-          $lookup: {
-            from: "users",
-            localField: "worker",
-            foreignField: "_id",
-            as: "worker",
-            pipeline: [{ $project: { username: 1, profile: 1 } }],
-          },
-        },
-        { $unwind: "$worker" },
-        {
-          $project: {
-            reservedStock: 0,
-            "worker.password": 0,
-            "worker.email": 0,
-          },
-        },
-      ],
-    };
+    // Add remaining filters
+    if (Object.keys(filters).length > 0) pipeline.push({ $match: filters });
 
+    // Pagination and sorting
     const [result] = await Product.aggregate([
       ...pipeline,
-      { $facet: facetStages },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $sort: getSortCriteria(req.query.sort) },
+            { $skip: (page - 1) * limit },
+            { $limit: parseInt(limit) },
+            { $lookup: workerLookupPipeline },
+            { $project: productProjection },
+          ],
+        },
+      },
     ]);
 
-    const products = result.data;
-    const total = result.metadata[0]?.total || 0;
+    const { metadata, data } = result;
+    const total = metadata[0]?.total || 0;
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: products.length
-        ? `Found ${products.length} items`
-        : "No products found",
-      data: products.map((p) => ({
-        ...p,
-        availableStock: p.stock - p.reservedStock,
-      })),
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      data: data.map(addAvailableStock),
+      pagination: createPagination(page, limit, total),
     });
   } catch (error) {
     next(error);
@@ -289,35 +261,36 @@ export const searchProducts = async (req, res, next) => {
 
 export const reserveStock = async (req, res, next) => {
   try {
-    const { quantity } = req.body;
-    const reservationDuration = 15 * 60 * 1000; // 15 minutes
+    const quantity = parseInt(req.body.quantity);
+    if (isNaN(quantity) || quantity <= 0)
+      return next(createHttpError(400, "Invalid quantity"));
 
     const product = await Product.findById(req.params.id);
-
-    if (product.stock - product.reservedStock < quantity)
+    if (!product || product.availableStock < quantity)
       return next(createHttpError(400, "Not enough available stock"));
 
-    // Atomic update
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { reservedStock: quantity } },
-      { new: true }
-    );
+    const [updatedProduct, reservation] = await Promise.all([
+      Product.findByIdAndUpdate(
+        req.params.id,
+        { $inc: { reservedStock: quantity } },
+        { new: true }
+      ),
+      Reservation.create({
+        product: req.params.id,
+        user: req.user._id,
+        quantity,
+        expiresAt: new Date(Date.now() + 900000), // 15 minutes
+      }),
+    ]);
 
-    const reservation = await Reservation.create({
-      product: req.params.id,
-      user: req.user._id,
-      quantity,
-      expiresAt: new Date(Date.now() + reservationDuration),
-    });
-
-    res.status(200).json({
+    res.json({
       success: true,
-      message: `Stock reserved for 15 minutes`,
       data: {
         reservationId: reservation._id,
         expiresAt: reservation.expiresAt,
+        availableStock: updatedProduct.availableStock,
       },
+      message: `Stock reserved for 15 minutes`,
     });
   } catch (error) {
     next(error);
