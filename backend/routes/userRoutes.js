@@ -1,9 +1,6 @@
 import express from "express";
-const router = express.Router();
 
 import { protect } from "../middlewares/authMiddleware.js";
-import { validateProfileUpdate } from "../middlewares/userValidation.js";
-
 import {
   getMyProfile,
   updateMyProfile,
@@ -12,13 +9,15 @@ import {
   getUserProfile,
 } from "../controllers/userController.js";
 
-// Profile management
-router.get("/me", protect, getMyProfile);
-router.patch("/me", protect, validateProfileUpdate, updateMyProfile);
+const router = express.Router();
 
-// Public profiles
+// Current User Profile
+router.get("/me", protect, getMyProfile);
+router.patch("/me", protect, updateMyProfile);
+
+// Public User Access
+router.get("/:id", protect, getUserProfile);
 router.get("/workers", protect, getAllWorkers);
 router.get("/customers", protect, getAllCustomers);
-router.get("/:id", protect, getUserProfile);
 
 export default router;
