@@ -207,6 +207,81 @@ components:
         - expiresAt
         - type
 
+    Bid:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        worker:
+          $ref: "#/components/schemas/User/properties/_id"
+        bidPrice:
+          type: number
+          minimum: 0.01
+          example: 149.99
+        estimatedTimeDays:
+          type: integer
+          minimum: 1
+          example: 3
+        auction:
+          $ref: "#/components/schemas/Auction/properties/_id"
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+          default: pending
+        submittedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - worker
+        - bidPrice
+        - estimatedTimeDays
+        - auction
+        - status
+
+    Auction:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        repairRequest:
+          $ref: "#/components/schemas/RepairRequest/properties/_id"
+        startingMaxPrice:
+          type: number
+          minimum: 1
+          example: 200.00
+        status:
+          type: string
+          enum: [open, closed]
+          default: open
+        expiresAt:
+          type: string
+          format: date-time
+          description: Future date for open auctions
+        bids:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bid/properties/_id"
+        currentLowestBid:
+          $ref: "#/components/schemas/Bid/properties/_id"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - repairRequest
+        - startingMaxPrice
+        - status
+        - expiresAt
+
     RepairRequest:
       type: object
       properties:
@@ -320,40 +395,6 @@ components:
           required: [customer, title, category, issueDescription, itemType]
         update:
           allowedFields: [status, trackingUpdates]
-
-    Bid:
-      type: object
-      properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        worker:
-          $ref: "#/components/schemas/User/properties/_id"
-        bidPrice:
-          type: number
-          minimum: 0.01
-          example: 149.99
-        estimatedTimeDays:
-          type: integer
-          minimum: 1
-          example: 3
-        auction:
-          $ref: "#/components/schemas/Auction/properties/_id"
-        status:
-          type: string
-          enum: [pending, accepted, rejected]
-          default: pending
-        submittedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - worker
-        - bidPrice
-        - estimatedTimeDays
-        - auction
-        - status
 
 # ======================
 # API Endpoints
