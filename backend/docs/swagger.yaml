@@ -555,6 +555,77 @@ components:
             - product
             - reservation
 
+    Report:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        reporter:
+          $ref: "#/components/schemas/User/properties/_id"
+        contentType:
+          type: string
+          enum: [product, repair, review, user]
+          example: review
+        contentId:
+          type: string
+          format: mongoId
+          description: |
+            Reference to reported content:
+            - product: Product ID
+            - repair: RepairRequest ID
+            - review: Review ID
+            - user: User ID
+        reason:
+          type: string
+          enum:
+            [
+              spam,
+              inappropriate,
+              fraudulent,
+              false_information,
+              harassment,
+              other,
+            ]
+          example: inappropriate
+        description:
+          type: string
+          maxLength: 500
+          example: Contains offensive language
+        status:
+          type: string
+          enum: [pending, under_review, resolved, dismissed]
+          default: pending
+        resolvedBy:
+          $ref: "#/components/schemas/User/properties/_id"
+        actionsTaken:
+          type: array
+          items:
+            type: string
+            enum: [remove_content, warn_user, ban_user, no_action]
+          example: [warn_user]
+        resolutionNotes:
+          type: string
+          example: Issued warning to user
+        resolvedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - reporter
+        - contentType
+        - contentId
+        - reason
+        - status
+
 # ======================
 # API Endpoints
 # ======================
