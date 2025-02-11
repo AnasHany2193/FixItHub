@@ -506,6 +506,55 @@ components:
         - stock
         - worker
 
+    BaseReview:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          maxLength: 500
+          example: Excellent service!
+        customer:
+          $ref: "#/components/schemas/User/properties/_id"
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+
+    WorkerReview:
+      allOf:
+        - $ref: "#/components/schemas/BaseReview"
+        - type: object
+          properties:
+            worker:
+              $ref: "#/components/schemas/User/properties/_id"
+            repairRequest:
+              $ref: "#/components/schemas/RepairRequest/properties/_id"
+          required:
+            - worker
+            - repairRequest
+
+    ProductReview:
+      allOf:
+        - $ref: "#/components/schemas/BaseReview"
+        - type: object
+          properties:
+            product:
+              $ref: "#/components/schemas/Product/properties/_id"
+            reservation:
+              $ref: "#/components/schemas/Reservation/properties/_id"
+          required:
+            - product
+            - reservation
+
 # ======================
 # API Endpoints
 # ======================
