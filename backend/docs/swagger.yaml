@@ -2,28 +2,39 @@ openapi: 3.0.0
 info:
   title: FixItHub API
   version: 1.0.0
-  description: Marketplace for repair services and refurbished products
+  description: |
+    Marketplace connecting users with repair service providers and refurbished products.
+    Features include auction-based repair requests, product listings, and secure file uploads.
 servers:
   - url: http://localhost:5000/api/v1
     description: Local development server
   - url: https://api.fixithub.com/api/v1
-    description: Production server
+    description: Production server (requires authentication)
 
+# ======================
+# Common Components
+# ======================
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: >-
+        JWT authentication for protected endpoints. 
+        Include like: `Authorization: Bearer <token>`
+
   schemas:
     UploadResult:
       type: object
+      description: Successful upload response
       properties:
         success:
           type: boolean
           example: true
         count:
           type: integer
+          description: Number of successfully uploaded files
           example: 3
         urls:
           type: array
@@ -33,18 +44,36 @@ components:
 
     CloudinaryFile:
       type: object
+      description: Uploaded file metadata
       properties:
         url:
           type: string
           format: uri
-          example: "https://res.cloudinary.com/demo/image/upload/v123/image.jpg" # change later
+          example: "https://res.cloudinary.com/demo/image/upload/v123/image.jpg"
         resourceType:
           type: string
+          enum: [image, video, raw]
           example: "image"
         bytes:
           type: integer
+          description: File size in bytes
           example: 102400
+
   responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Invalid file type"
+
     FileTooLarge:
       description: File exceeds size limit (5MB)
       content:
@@ -59,8 +88,22 @@ components:
                 type: string
                 example: "File size exceeds 5MB limit"
 
+    TooManyRequests:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Too many requests, please try again later"
+
     BadGateway:
-      description: Cloudinary service error
+      description: Third-party service error
       content:
         application/json:
           schema:
@@ -72,61 +115,45 @@ components:
               error:
                 type: string
                 example: "Cloudinary service unavailable"
+
   parameters:
     UploadFiles:
       in: formData
       name: images
-      description: Array of image files (max 5, 5MB each)
       required: true
+      style: form
+      explode: false
+      description: |
+        Array of image files (max 5 files, 5MB each).
+        Supported formats: JPEG, PNG, WEBP, AVIF, SVG
       schema:
         type: array
+        maxItems: 5
         items:
           type: string
           format: binary
 
+# ======================
+# API Endpoints
+# ======================
 paths:
-  /health:
-    get:
-      summary: Service health check
-      tags: [System]
-      responses:
-        200:
-          description: Service status information
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  db:
-                    type: string
-                  version:
-                    type: string
-                  environment:
-                    type: string
-
   /document/upload:
     post:
-      summary: Upload multiple images
       tags: [Uploads]
+      summary: Upload multiple images for repair requests or product listings
+      description: |
+        Securely upload up to 5 images with automatic malware scanning and EXIF removal.
+        Returns Cloudinary URLs for use in other endpoints.
       security:
         - BearerAuth: []
       requestBody:
-        required: true
         content:
           multipart/form-data:
             schema:
-              type: object
-              properties:
-                images:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
+              $ref: "#/components/parameters/UploadFiles"
       responses:
         200:
-          description: Upload successful
+          description: Files uploaded successfully
           content:
             application/json:
               schema:
@@ -140,4 +167,4 @@ paths:
         502:
           $ref: "#/components/responses/BadGateway"
 
-  # Add other endpoints here following the same pattern
+  # Other endpoints...
