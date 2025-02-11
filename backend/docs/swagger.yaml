@@ -11,6 +11,14 @@ servers:
   - url: https://api.fixithub.com/api/v1
     description: Production server (requires authentication)
 
+tags:
+  - name: Users
+    description: User profile management
+  - name: Uploads
+    description: File upload operations
+  - name: Auth
+    description: Authentication endpoints
+
 # ======================
 # Common Components
 # ======================
@@ -25,6 +33,74 @@ components:
         Include like: `Authorization: Bearer <token>`
 
   schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 5f8d04b3ab35b428f8617f3a
+        username:
+          type: string
+          example: tech_master
+        email:
+          type: string
+          example: user@fixithub.com
+        role:
+          type: string
+          enum: [customer, worker, admin]
+          example: customer
+        status:
+          type: string
+          enum: [active, banned, pending, deactivated]
+          example: active
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+
+    UserProfile:
+      type: object
+      properties:
+        avatar:
+          $ref: "#/components/schemas/CloudinaryFile"
+        bio:
+          type: string
+          example: Experienced electronics repair specialist
+        address:
+          $ref: "#/components/schemas/Address"
+        socialMedia:
+          $ref: "#/components/schemas/SocialMedia"
+
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+          example: 123 Tech Street
+        city:
+          type: string
+          example: Silicon Valley
+        state:
+          type: string
+          example: CA
+        zip:
+          type: string
+          example: "94043"
+        country:
+          type: string
+          example: USA
+
+    SocialMedia:
+      type: object
+      properties:
+        website:
+          type: string
+          example: https://myrepairshop.com
+        linkedin:
+          type: string
+          example: https://linkedin.com/in/techmaster
+        twitter:
+          type: string
+          example: https://twitter.com/techmaster
+
     UploadResult:
       type: object
       description: Successful upload response
@@ -58,6 +134,66 @@ components:
           type: integer
           description: File size in bytes
           example: 102400
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 5f8d04b3ab35b428f8617f3a
+        username:
+          type: string
+          example: "john_doe"
+        profile:
+          type: object
+          properties:
+            avatar:
+              $ref: "#/components/schemas/CloudinaryFile"
+            address:
+              $ref: "#/components/schemas/Address"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T09:30:00Z"
+        lastLogin:
+          type: string
+          format: date-time
+          example: "2024-03-20T14:45:00Z"
+
+    Worker:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 5f8d04b3ab35b428f8617f3a
+        username:
+          type: string
+          example: tech_master
+        profile:
+          type: object
+          properties:
+            avatar:
+              $ref: "#/components/schemas/CloudinaryFile"
+        rating:
+          type: object
+          properties:
+            average:
+              type: number
+              example: 4.7
+            count:
+              type: integer
+              example: 23
+        workerApplication:
+          type: object
+          properties:
+            skills:
+              type: array
+              items:
+                type: string
+              example: ["electronics", "appliances"]
+            availability:
+              type: string
+              example: "full-time"
 
   responses:
     BadRequest:
@@ -116,6 +252,48 @@ components:
                 type: string
                 example: "Cloudinary service unavailable"
 
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Authentication required"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Administrative privileges required"
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Internal server error"
+
   parameters:
     UploadFiles:
       in: formData
@@ -166,5 +344,257 @@ paths:
           $ref: "#/components/responses/TooManyRequests"
         502:
           $ref: "#/components/responses/BadGateway"
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/User"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+
+    patch:
+      tags: [Users]
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfile"
+      responses:
+        200:
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/User"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/workers:
+    get:
+      tags: [Users]
+      summary: Get all approved service workers
+      description: |
+        Retrieve a paginated list of approved service workers with optional filters.
+        Available to authenticated users.
+      operationId: getAllWorkers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: skills
+          in: query
+          description: Comma-separated list of skills to filter
+          schema:
+            type: string
+            example: "electronics,plumbing"
+        - name: minRating
+          in: query
+          description: Minimum average rating (0-5)
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 5
+            example: 4.5
+        - name: availability
+          in: query
+          description: Worker availability status
+          schema:
+            type: string
+            enum: [full-time, part-time, unavailable]
+            example: "full-time"
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        200:
+          description: Successfully retrieved workers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Found 15 workers matching your criteria"
+                  count:
+                    type: integer
+                    example: 15
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Worker"
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 10
+                      total:
+                        type: integer
+                        example: 15
+                      totalPages:
+                        type: integer
+                        example: 2
+        400:
+          $ref: "#/components/responses/BadRequest"
+        401:
+          $ref: "#/components/responses/Unauthorized"
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/ServerError"
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/User"
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "User not found"
+
+  /users/customers:
+    get:
+      tags: [Users]
+      summary: Get all customer accounts
+      description: |
+        Retrieve paginated list of customer accounts with optional city filter.
+      operationId: getAllCustomers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: city
+          in: query
+          description: Filter by city (case-insensitive)
+          schema:
+            type: string
+            example: "New York"
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        200:
+          description: Successfully retrieved customers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Found 25 customers in New York"
+                  count:
+                    type: integer
+                    example: 25
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Customer"
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 10
+                      total:
+                        type: integer
+                        example: 25
+                      totalPages:
+                        type: integer
+                        example: 3
+        403:
+          $ref: "#/components/responses/Forbidden"
+        500:
+          $ref: "#/components/responses/ServerError"
 
   # Other endpoints...
