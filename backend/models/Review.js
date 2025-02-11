@@ -44,7 +44,7 @@ workerReviewSchema.pre("save", async function () {
   const repair = await mongoose.model("RepairRequest").findOne({
     _id: this.repairRequest,
     customer: this.customer,
-    status: statusEnum.COMPLETED,
+    status: RepairStatus.COMPLETED,
   });
   if (!repair) throw new Error("Cannot review incomplete repairs");
 });

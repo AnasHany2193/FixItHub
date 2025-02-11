@@ -1,14 +1,20 @@
 import mongoose from "mongoose";
 
-// Models
 import User from "./User.js";
 import Auction from "./Auction.js";
-
-// Notifications
 import { sendEmail } from "../services/emailService.js";
 import { repairStatusEmailTemplate } from "../utils/emailTemplates.js";
 
-const statusEnum = Object.freeze({
+/**
+ * @typedef {Object} RepairStatus
+ * @property {string} PENDING - Initial request state
+ * @property {string} AUCTION_OPEN - Bidding open for workers
+ * @property {string} IN_PROGRESS - Repair work started
+ * @property {string} COMPLETED - Repair successfully finished
+ * @property {string} CANCELLED - Request cancelled
+ * @property {string} RETURNING_TO_CUSTOMER - Item in transit back
+ */
+export const RepairStatus = Object.freeze({
   PENDING: "pending",
   AUCTION_OPEN: "auction_open",
   IN_PROGRESS: "in_progress",
@@ -17,6 +23,16 @@ const statusEnum = Object.freeze({
   RETURNING_TO_CUSTOMER: "returning_to_customer",
 });
 
+/**
+ * @typedef {Object} TrackingStatus
+ * @property {string} RECEIVED - Item received at facility
+ * @property {string} DIAGNOSING - Under diagnosis
+ * @property {string} REPAIRING - Active repair work
+ * @property {string} QUALITY_CHECK - Post-repair inspection
+ * @property {string} SHIPPED - Item dispatched
+ * @property {string} PAYMENT_RECEIVED - Payment confirmed
+ * @property {string} PAYMENT_FAILED - Payment processing failed
+ */
 const trackingStatusEnum = [
   "received",
   "diagnosing",
@@ -46,7 +62,7 @@ const RepairRequestSchema = new mongoose.Schema(
       required: true,
       enum: {
         values: ["electronics", "furniture", "appliances", "other"],
-        message: "Invalid repair category",
+        message: "Invalid repair category: {VALUE}",
       },
     },
     issueDescription: {
@@ -70,15 +86,15 @@ const RepairRequestSchema = new mongoose.Schema(
     },
     itemType: {
       type: String,
-      required: [true, "Item type is required"], // e.g., "Laptop", "Refrigerator"
+      required: [true, "Item type is required"],
       trim: true,
       maxlength: [50, "Item type cannot exceed 50 characters"],
     },
     photos: {
       type: [
         {
-          url: String, // Cloudinary URL
-          public_id: String, // Cloudinary public ID
+          url: String,
+          public_id: String,
         },
       ],
       validate: {
@@ -90,10 +106,10 @@ const RepairRequestSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: {
-        values: Object.values(statusEnum),
-        message: "Invalid repair status",
+        values: Object.values(RepairStatus),
+        message: "Invalid repair status: {VALUE}",
       },
-      default: statusEnum.PENDING,
+      default: RepairStatus.PENDING,
     },
     paymentIntentId: {
       type: String,
@@ -139,7 +155,7 @@ const RepairRequestSchema = new mongoose.Schema(
     auction: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auction",
-      unique: true, // One-to-one relationship
+      unique: true,
     },
   },
   {
@@ -154,11 +170,18 @@ RepairRequestSchema.index({ paymentStatus: 1 });
 RepairRequestSchema.index({ status: 1, createdAt: -1 });
 RepairRequestSchema.index({ "trackingUpdates.status": 1 });
 
-// Virtuals
+/**
+ * Get the currently accepted bid
+ * @returns {Bid|null} Active bid document
+ */
 RepairRequestSchema.virtual("activeBid").get(function () {
   return this.bids.find((bid) => bid.status === "accepted");
 });
 
+/**
+ * Get simplified payment information
+ * @returns {Object} Payment status details
+ */
 RepairRequestSchema.virtual("paymentDetails").get(function () {
   return {
     status: this.paymentStatus,
@@ -167,17 +190,17 @@ RepairRequestSchema.virtual("paymentDetails").get(function () {
   };
 });
 
-// Hooks
+/**
+ * Post-save hook for status change notifications and auction updates
+ */
 RepairRequestSchema.post("save", async function (doc) {
   try {
+    // Send email notifications for status changes
     if (doc.isModified("status")) {
       const customer = await User.findById(doc.customer);
-      const shouldNotify = [
-        statusEnum.IN_PROGRESS,
-        statusEnum.COMPLETED,
-      ].includes(doc.status);
+      const notifyStatuses = [RepairStatus.IN_PROGRESS, RepairStatus.COMPLETED];
 
-      if (shouldNotify && customer?.email) {
+      if (notifyStatuses.includes(doc.status) && customer?.email) {
         await sendEmail({
           to: customer.email,
           subject: `🔧 Repair Update: ${doc.itemType}`,
@@ -190,6 +213,7 @@ RepairRequestSchema.post("save", async function (doc) {
       }
     }
 
+    // Close auction when payment completes
     if (doc.isModified("paymentStatus") && doc.paymentStatus === "paid") {
       const auction = await Auction.findOne({ repairRequest: doc._id });
       if (auction) {
@@ -201,11 +225,13 @@ RepairRequestSchema.post("save", async function (doc) {
   }
 });
 
+/**
+ * Pre-delete hook for data cleanup
+ */
 RepairRequestSchema.pre("deleteOne", async function () {
   await Auction.deleteOne({ repairRequest: this._id });
   await Bid.deleteMany({ repairRequest: this._id });
 });
 
 const RepairRequest = mongoose.model("RepairRequest", RepairRequestSchema);
-export { statusEnum as RepairStatus };
 export default RepairRequest;

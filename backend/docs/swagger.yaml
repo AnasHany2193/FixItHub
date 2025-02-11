@@ -47,158 +47,279 @@ components:
           enum: [customer, worker, admin]
           default: customer
         profile:
-          $ref: "#/components/schemas/UserProfile"
+          type: object
+          properties:
+            avatar:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  example: https://res.cloudinary.com/example.jpg
+                public_id:
+                  type: string
+                  example: sample_public_id
+            phone:
+              type: string
+              example: +1234567890
+            address:
+              type: object
+              properties:
+                street: { type: string }
+                city: { type: string }
+                state:
+                  type: string
+                  maxLength: 2
+                  example: NY
+                zip: { type: string }
+                country:
+                  type: string
+                  default: US
+            bio:
+              type: string
+              maxLength: 500
+              example: Certified electronics repair specialist
+            socialMedia:
+              type: object
+              properties:
+                website: { type: string, format: uri }
+                linkedin: { type: string, format: uri }
+                twitter: { type: string, format: uri }
         workerApplication:
-          $ref: "#/components/schemas/WorkerApplication"
+          type: object
+          properties:
+            skills:
+              type: array
+              items:
+                type: string
+                example: electronics
+            certifications:
+              type: array
+              items: { type: string }
+            experience:
+              type: string
+              enum: [beginner, intermediate, expert]
+            status:
+              type: string
+              enum: [pending, approved, rejected]
+            documents:
+              type: array
+              items:
+                type: object
+                properties:
+                  url: { type: string, format: uri }
+                  public_id: { type: string }
+            workHistory:
+              type: array
+              items:
+                type: object
+                properties:
+                  position: { type: string }
+                  company: { type: string }
+                  startYear:
+                    type: integer
+                    minimum: 1900
+                    example: 2018
+                  endYear:
+                    type: integer
+                    minimum: 1900
+                    example: 2023
+            availability:
+              type: string
+              enum: [full-time, part-time, unavailable]
         stats:
-          $ref: "#/components/schemas/UserStats"
+          type: object
+          properties:
+            completedRepairs:
+              type: integer
+              minimum: 0
+              example: 42
+            completedSales:
+              type: integer
+              minimum: 0
+              example: 15
+            responseRate:
+              type: number
+              minimum: 0
+              maximum: 100
+              example: 92.5
         rating:
-          $ref: "#/components/schemas/UserRating"
+          type: object
+          properties:
+            average:
+              type: number
+              minimum: 0
+              maximum: 5
+              example: 4.5
+            count:
+              type: integer
+              minimum: 0
+              example: 24
         location:
-          $ref: "#/components/schemas/GeoJSONPoint"
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [Point]
+            coordinates:
+              type: array
+              items: { type: number }
+              minItems: 2
+              maxItems: 2
+              example: [-73.935242, 40.730610]
         status:
           type: string
           enum: [active, banned, pending, deactivated]
           default: active
 
-    UserProfile:
+    OTP:
       type: object
+      description: One-Time Password document with security features
       properties:
-        avatar:
-          $ref: "#/components/schemas/CloudinaryImage"
-        phone:
+        userId:
           type: string
-          example: +1234567890
-        address:
-          $ref: "#/components/schemas/Address"
-        bio:
+          format: mongoId
+          description: Associated user reference
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        code:
           type: string
-          maxLength: 500
-          example: Certified electronics repair specialist
-        socialMedia:
-          $ref: "#/components/schemas/SocialMedia"
-
-    WorkerApplication:
-      type: object
-      properties:
-        skills:
-          type: array
-          items:
-            type: string
-            example: electronics
-        certifications:
-          type: array
-          items:
-            type: string
-        experience:
+          description: Hashed 6-digit OTP code
+          example: $2a$12$S4CX5hLfYw4R2kZq3XvJ7e
+        expiresAt:
           type: string
-          enum: [beginner, intermediate, expert]
-        status:
-          type: string
-          enum: [pending, approved, rejected]
-        documents:
-          type: array
-          items:
-            $ref: "#/components/schemas/CloudinaryDocument"
-        workHistory:
-          type: array
-          items:
-            $ref: "#/components/schemas/WorkHistory"
-        availability:
-          type: string
-          enum: [full-time, part-time, unavailable]
-
-    UserStats:
-      type: object
-      properties:
-        completedRepairs:
-          type: integer
-          minimum: 0
-        completedSales:
-          type: integer
-          minimum: 0
-        responseRate:
-          type: number
-          minimum: 0
-          maximum: 100
-
-    UserRating:
-      type: object
-      properties:
-        average:
-          type: number
-          minimum: 0
-          maximum: 5
-          example: 4.5
-        count:
-          type: integer
-          minimum: 0
-
-    GeoJSONPoint:
-      type: object
-      properties:
+          format: date-time
+          description: Auto-expiration timestamp (TTL index)
+          example: 2024-05-15T12:00:00Z
         type:
           type: string
-          enum: [Point]
-        coordinates:
+          enum: [verification, passwordReset]
+          default: verification
+          description: OTP usage context
+        attempts:
+          type: integer
+          minimum: 0
+          maximum: 3
+          default: 0
+          description: Failed validation attempts
+      required:
+        - userId
+        - code
+        - expiresAt
+        - type
+
+    RepairRequest:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        customer:
+          $ref: "#/components/schemas/User/properties/_id"
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: iPhone 12 Screen Replacement
+        category:
+          type: string
+          enum: [electronics, furniture, appliances, other]
+          example: electronics
+        issueDescription:
+          type: string
+          minLength: 20
+          example: Cracked screen with touch functionality issues
+        worker:
+          $ref: "#/components/schemas/User/properties/_id"
+        itemType:
+          type: string
+          maxLength: 50
+          example: iPhone 12 Pro Max
+        photos:
           type: array
           items:
-            type: number
-          minItems: 2
-          maxItems: 2
-          example: [-73.935242, 40.730610]
-
-    Address:
-      type: object
-      properties:
-        street:
+            $ref: "#/components/schemas/CloudinaryImage"
+          maxItems: 5
+        shippingRequired:
+          type: boolean
+          default: false
+        status:
           type: string
-        city:
+          enum:
+            [
+              pending,
+              auction_open,
+              in_progress,
+              completed,
+              cancelled,
+              returning_to_customer,
+            ]
+          default: pending
+          x-updatable: true
+        paymentStatus:
           type: string
-        state:
+          enum: [pending, paid, failed, refunded]
+          default: pending
+        paymentAmount:
+          type: number
+          minimum: 0
+          example: 149.99
+        trackingUpdates:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  [
+                    received,
+                    diagnosing,
+                    repairing,
+                    quality_check,
+                    shipped,
+                    payment_received,
+                    payment_failed,
+                  ]
+                x-updatable: true
+              location:
+                type: string
+                maxLength: 100
+                example: New York Repair Center
+                x-updatable: true
+              timestamp:
+                type: string
+                format: date-time
+          x-updatable: false # Managed through dedicated endpoints
+        bids:
+          type: array
+          items:
+            $ref: "#/components/schemas/Bid/properties/_id"
+          x-updatable: false
+        auction:
+          $ref: "#/components/schemas/Auction/properties/_id"
+          x-updatable: false
+        createdAt:
           type: string
-          maxLength: 2
-        zip:
+          format: date-time
+          readOnly: true
+        updatedAt:
           type: string
-        country:
-          type: string
-          default: US
-
-    SocialMedia:
-      type: object
-      properties:
-        website:
-          type: string
-          format: uri
-        linkedin:
-          type: string
-          format: uri
-        twitter:
-          type: string
-          format: uri
-
-    CloudinaryImage:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-        public_id:
-          type: string
-
-    WorkHistory:
-      type: object
-      properties:
-        position:
-          type: string
-        company:
-          type: string
-        startYear:
-          type: integer
-          minimum: 1900
-        endYear:
-          type: integer
-          minimum: 1900
+          format: date-time
+          readOnly: true
+      required:
+        - customer
+        - title
+        - category
+        - issueDescription
+        - itemType
+        - status
+        - paymentStatus
+      x-usage:
+        create:
+          required: [customer, title, category, issueDescription, itemType]
+        update:
+          allowedFields: [status, trackingUpdates]
 
 # ======================
 # API Endpoints
