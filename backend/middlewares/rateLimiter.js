@@ -13,8 +13,7 @@ export const generalLimiter = rateLimit({
 // Strict rate limiter (for OTP/password endpoints)
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Max 5 attempts
-
+  max: 20, // Max 20 attempts
   message: {
     success: false,
     error: "Too many attempts. Please try again after 15 minutes.",

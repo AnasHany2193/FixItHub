@@ -12,7 +12,7 @@ import {
   sendResetPasswordEmail,
   sendVerificationEmail,
   sendWelcomeEmail,
-} from "./../services/emailService.js";
+} from "../services/emailService.js";
 
 //
 export const register = async (req, res, next) => {

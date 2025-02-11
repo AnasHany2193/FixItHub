@@ -30,8 +30,14 @@ const reservationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Auto-delete expired reservations after 1 hour
-reservationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 3600 });
+// ✅ Fix: Delete exactly at expiration time
+reservationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+reservationSchema.pre("save", async function () {
+  const product = await mongoose.model("Product").findById(this.product);
+  if (product.availableStock < this.quantity)
+    throw new Error("Not enough stock available");
+});
 
 const Reservation = mongoose.model("Reservation", reservationSchema);
 export default Reservation;

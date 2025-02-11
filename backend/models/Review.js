@@ -39,6 +39,16 @@ const workerReviewSchema = new mongoose.Schema({
   },
 });
 
+// Add to WorkerReview discriminator
+workerReviewSchema.pre("save", async function () {
+  const repair = await mongoose.model("RepairRequest").findOne({
+    _id: this.repairRequest,
+    customer: this.customer,
+    status: statusEnum.COMPLETED,
+  });
+  if (!repair) throw new Error("Cannot review incomplete repairs");
+});
+
 // Product Review
 const productReviewSchema = new mongoose.Schema({
   product: {

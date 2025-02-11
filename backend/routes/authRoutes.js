@@ -10,7 +10,7 @@ import {
   refreshToken,
   forgotPassword,
   resetPassword,
-} from "../controllers/auth.js";
+} from "../controllers/authController.js";
 
 // Middlewares
 import { protect } from "../middlewares/authMiddleware.js";

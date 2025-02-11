@@ -74,11 +74,6 @@ const RepairRequestSchema = new mongoose.Schema(
       trim: true,
       maxlength: [50, "Item type cannot exceed 50 characters"],
     },
-    paymentIntentId: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
     photos: {
       type: [
         {
@@ -155,8 +150,8 @@ const RepairRequestSchema = new mongoose.Schema(
 );
 
 // Indexes
-RepairRequestSchema.index({ createdAt: -1 });
 RepairRequestSchema.index({ paymentStatus: 1 });
+RepairRequestSchema.index({ status: 1, createdAt: -1 });
 RepairRequestSchema.index({ "trackingUpdates.status": 1 });
 
 // Virtuals
@@ -204,6 +199,11 @@ RepairRequestSchema.post("save", async function (doc) {
   } catch (error) {
     console.error("Post-save hook error:", error.message);
   }
+});
+
+RepairRequestSchema.pre("deleteOne", async function () {
+  await Auction.deleteOne({ repairRequest: this._id });
+  await Bid.deleteMany({ repairRequest: this._id });
 });
 
 const RepairRequest = mongoose.model("RepairRequest", RepairRequestSchema);

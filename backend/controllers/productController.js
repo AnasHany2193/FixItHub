@@ -271,7 +271,10 @@ export const reserveStock = async (req, res, next) => {
 
     const [updatedProduct, reservation] = await Promise.all([
       Product.findByIdAndUpdate(
-        req.params.id,
+        {
+          _id: productId,
+          availableStock: { $gte: quantity },
+        },
         { $inc: { reservedStock: quantity } },
         { new: true }
       ),
@@ -282,6 +285,8 @@ export const reserveStock = async (req, res, next) => {
         expiresAt: new Date(Date.now() + 900000), // 15 minutes
       }),
     ]);
+
+    if (!updatedProduct) throw createHttpError(400, "Not enough stock");
 
     res.json({
       success: true,

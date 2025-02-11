@@ -113,6 +113,7 @@ productSchema.index({ worker: 1 });
 productSchema.index({ createdAt: -1 });
 productSchema.index({ location: "2dsphere" });
 productSchema.index({ category: 1, status: 1 });
+productSchema.index({ title: "text", description: "text" });
 
 productSchema.pre("deleteOne", async function () {
   try {

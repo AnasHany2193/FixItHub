@@ -29,6 +29,7 @@ dotenv.config(); // Load environment variables
 // Initialize Express app
 const app = express();
 const PORT = process.env.PORT || 5000;
+const v1Router = express.Router();
 
 app.post(
   "/api/v1/payment/webhook",
@@ -42,7 +43,12 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(cookieParser());
 
-app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
 
 app.use(helmet());
 app.use(helmet.permittedCrossDomainPolicies());
@@ -51,23 +57,25 @@ app.use(helmet.permittedCrossDomainPolicies());
 app.use(morgan("dev")); // 📝 Log requests
 
 // Routes
+app.use("/api/v1", v1Router);
 app.get("/", (_, res) => {
   res.send("Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀");
 });
-app.get("/api/v1/health", (req, res) => {
-  res.status(200).json({ status: "OK", timestamp: new Date() });
+app.get("/api/v1/health", async (req, res) => {
+  const dbStatus =
+    mongoose.connection.readyState === 1 ? "connected" : "disconnected";
+  res.status(200).json({ status: "OK", db: dbStatus });
 });
-
-app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/admin", adminRoutes);
-app.use("/api/v1/reviews", reviewRoutes);
-app.use("/api/v1/reports", reportRoutes);
-app.use("/api/v1/repairs", repairRoutes);
-app.use("/api/v1/payment", paymentRoutes);
-app.use("/api/v1/document", uploadRoutes);
-app.use("/api/v1/auctions", auctionRoutes);
-app.use("/api/v1/products", productRoutes);
+v1Router.use("/auth", authRoutes);
+v1Router.use("/users", userRoutes);
+v1Router.use("/admin", adminRoutes);
+v1Router.use("/reviews", reviewRoutes);
+v1Router.use("/reports", reportRoutes);
+v1Router.use("/repairs", repairRoutes);
+v1Router.use("/payment", paymentRoutes);
+v1Router.use("/document", uploadRoutes);
+v1Router.use("/auctions", auctionRoutes);
+v1Router.use("/products", productRoutes);
 
 // Error handling middleware should be added last
 app.use(errorHandler);
