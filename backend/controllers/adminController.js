@@ -84,43 +84,121 @@ export const updateUserStatus = async (req, res, next) => {
   }
 };
 
-//
-export const getWorkerApplications = async (req, res, next) => {
+export const getUserDetails = async (req, res, next) => {
   try {
-    const applications = await User.find({
-      "workerApplication.status": "pending",
-    }).select("username email workerApplication");
+    const user = await User.findById(req.params.userId)
+      .select("-password -tokenVersion")
+      .populate({
+        path: "workerApplication.documents",
+        select: "url public_id",
+      })
+      .populate({
+        path: "adminLogs.targetUser",
+        select: "username",
+      })
+      .lean();
 
-    res.status(200).json({ success: true, data: applications });
-  } catch (err) {
-    next(err);
+    if (!user) return next(createHttpError(404, "User not found"));
+
+    // Get user reports
+    const reports = await Report.find({
+      contentType: "user",
+      contentId: user._id,
+    }).sort("-createdAt");
+
+    const userData = {
+      ...user,
+      reports,
+      activity: {
+        productListings: await Product.countDocuments({ worker: user._id }),
+        repairsCompleted: user.stats?.completedRepairs || 0,
+        lastLogin: user.lastLogin,
+      },
+    };
+
+    res.json({
+      success: true,
+      data: userData,
+    });
+  } catch (error) {
+    next(error);
   }
 };
 
-//
-export const updateWorkerStatus = async (req, res, next) => {
-  const { userId } = req.params;
-  const { status } = req.body;
+export const getWorkerApplications = async (req, res, next) => {
   try {
-    if (!mongoose.isValidObjectId(userId))
-      throw createHttpError(404, "Invalid User ID");
+    const { status = "pending", page = 1, limit = 10 } = req.query;
 
-    const user = await User.findById(userId);
-    if (!user || user.role !== "customer") {
-      throw createHttpError(404, "Worker application not found");
+    const [applications, total] = await Promise.all([
+      User.find({
+        "workerApplication.status": status,
+        role: "worker",
+      })
+        .select("username email profile workerApplication createdAt")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      User.countDocuments({
+        "workerApplication.status": status,
+        role: "worker",
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      data: applications,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const processApplication = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+    const { status, reason } = req.body;
+
+    const validStatuses = ["approved", "rejected"];
+    if (!validStatuses.includes(status))
+      return next(createHttpError(400, "Invalid application status"));
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { "workerApplication.status": status },
+      { new: true }
+    ).select("email username workerApplication");
+
+    if (!user) return next(createHttpError(404, "User not found"));
+
+    // Send email notification
+    await sendApprovalEmail(user.email, user.username, status, reason);
+
+    // Clean up rejected documents
+    if (status === "rejected" && user.workerApplication.documents?.length) {
+      const publicIds = user.workerApplication.documents
+        .map((doc) => doc.public_id)
+        .filter(Boolean);
+
+      if (publicIds.length) await cloudinary.api.delete_resources(publicIds);
     }
 
-    user.workerApplication.status = status;
-    if (status === "approved") {
-      user.role = "worker";
-
-      // Send approval email
-      sendApprovalEmail(user.email, user.username);
-    }
-
-    await user.save();
-    res.status(200).json({ success: true, message: `Application ${status}` });
-  } catch (err) {
-    next(err);
+    res.json({
+      success: true,
+      message: `Application ${status} successfully`,
+      data: {
+        userId,
+        newStatus: status,
+        emailSent: true,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
 };

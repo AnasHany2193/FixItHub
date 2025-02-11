@@ -6,14 +6,15 @@ import { protect, requireAdmin } from "../middlewares/authMiddleware.js";
 
 import {
   listUsers,
-  // getUserDetails,
+  getUserDetails,
   updateUserStatus,
-  // getWorkerApplications,
+  processApplication,
+  getWorkerApplications,
 } from "../controllers/adminController.js";
 
 // User Management
 router.get("/users", protect, requireAdmin, adminActionLimiter, listUsers);
-// router.get("/users/:userId", protect, requireAdmin, getUserDetails);
+router.get("/users/:userId", protect, requireAdmin, getUserDetails);
 router.patch(
   "/users/:userId/status",
   protect,
@@ -23,6 +24,13 @@ router.patch(
 );
 
 // Worker Applications
-// router.get("/applications", protect, requireAdmin, getWorkerApplications);
+router.get("/applications", protect, requireAdmin, getWorkerApplications);
+router.patch(
+  "/applications/:userId",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  processApplication
+);
 
 export default router;

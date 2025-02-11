@@ -98,10 +98,13 @@ export const sendResetPasswordEmail = async (email, userName) => {
  * @param {string} email - The recipient's email address.
  * @param {string} userName - (Optional) The user's name.
  */
-export const sendApprovalEmail = async (email, userName) => {
+export const sendApprovalEmail = async (email, userName, status, reason) => {
   await sendEmail({
     to: email,
-    subject: "Worker Application Approved!",
-    html: workerApprovalEmailTemplate(userName),
+    subject:
+      status === "approved"
+        ? "🎉 Worker Application Approved!"
+        : "⚠️ Application Update",
+    html: workerApprovalEmailTemplate(userName, status, reason),
   });
 };
