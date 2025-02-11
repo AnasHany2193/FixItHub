@@ -3,15 +3,18 @@ import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import express from "express";
+import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-
-import connectDB from "./config/db.js"; // Import the DB connection function
-import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
 import swaggerUi from "swagger-ui-express";
-import specs from "./config/swagger.js";
+import YAML from "yamljs";
 
+import connectDB from "./config/db.js";
+import errorHandler from "./middlewares/errorHandler.js";
+import { handleStripeWebhook } from "./controllers/paymentController.js";
+import { startReservationCleanup } from "./jobs/reservationCleanup.js";
 import "./jobs/auctionScheduler.js";
 
+// Route Imports
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -23,117 +26,155 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import auctionRoutes from "./routes/auctionRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 
-import { handleStripeWebhook } from "./controllers/paymentController.js";
-import { startReservationCleanup } from "./jobs/reservationCleanup.js";
-import mongoose from "mongoose";
+// Load environment variables and Swagger docs
+dotenv.config();
+const swaggerDocument = YAML.load("./docs/swagger.yaml");
 
-dotenv.config(); // Load environment variables
-
-// Initialize Express app
+// Initialize Express application
 const app = express();
 const PORT = process.env.PORT || 5000;
 const v1Router = express.Router();
 
+// ======================
+// Security Middlewares
+// ======================
+app.use(helmet());
+app.use(
+  helmet.permittedCrossDomainPolicies({
+    permittedPolicies: "by-content-type",
+  })
+);
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  })
+);
+app.use(cookieParser());
+
+// ======================
+// Webhook Handling
+// ======================
 app.post(
   "/api/v1/payment/webhook",
   express.raw({ type: "application/json" }),
   handleStripeWebhook
 );
 
-// Middleware
-app.use(express.json()); // To parse JSON data from requests
-app.use(express.urlencoded({ extended: true }));
+// ======================
+// Request Parsing
+// ======================
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-app.use(cookieParser());
+// ======================
+// Logging & Monitoring
+// ======================
+if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
+// ======================
+// API Documentation (Swagger)
+// ======================
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true,
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    explorer: true,
+    customCssUrl:
+      "https://cdn.jsdelivr.net/npm/swagger-ui-themes@3.0.1/themes/3.x/theme-material.css",
   })
 );
 
-app.use(helmet());
-app.use(helmet.permittedCrossDomainPolicies());
-
-// Add logging for debugging
-app.use(morgan("dev")); // 📝 Log requests
-
-// Routes
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
-
-/**
- * @swagger
- * /:
- *   get:
- *     summary: Root endpoint
- *     description: Returns welcome message
- *     responses:
- *       200:
- *         description: Successful response
- *         content:
- *           text/plain:
- *             example: Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀
- */
-app.get("/", (_, res) => {
-  res.send("Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀");
-});
-
-app.use("/api/v1", v1Router);
-/**
- * @swagger
- * /api/v1/health:
- *   get:
- *     summary: Health check
- *     description: Returns API and database status
- *     responses:
- *       200:
- *         description: Service status
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: string
- *                   example: OK
- *                 db:
- *                   type: string
- *                   example: connected
- */
 v1Router.get("/health", async (req, res) => {
   const dbStatus =
     mongoose.connection.readyState === 1 ? "connected" : "disconnected";
-  res.status(200).json({ status: "OK", db: dbStatus });
+  res.status(200).json({
+    status: "OK",
+    db: dbStatus,
+    version: "1.0.0",
+    environment: process.env.NODE_ENV || "development",
+  });
 });
-v1Router.use("/auth", authRoutes);
-v1Router.use("/users", userRoutes);
-v1Router.use("/admin", adminRoutes);
-v1Router.use("/reviews", reviewRoutes);
-v1Router.use("/reports", reportRoutes);
-v1Router.use("/repairs", repairRoutes);
-v1Router.use("/payment", paymentRoutes);
-v1Router.use("/document", uploadRoutes);
-v1Router.use("/auctions", auctionRoutes);
-v1Router.use("/products", productRoutes);
 
-// Error handling middleware should be added last
+// ======================
+// Health Check & Root Route
+// ======================
+app.get("/", (_, res) => {
+  res.send(`
+    <h1>FixItHub API Service</h1>
+    <p>Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Backend System 🚀</p>
+    <ul>
+      <li><a href="/api-docs">API Documentation</a></li>
+      <li><a href="/api/v1/health">Service Health</a></li>
+    </ul>
+  `);
+});
+
+// ======================
+// API Routes
+// ======================
+
+const routeConfig = [
+  { path: "/auth", route: authRoutes },
+  { path: "/users", route: userRoutes },
+  { path: "/admin", route: adminRoutes },
+  { path: "/reviews", route: reviewRoutes },
+  { path: "/reports", route: reportRoutes },
+  { path: "/repairs", route: repairRoutes },
+  { path: "/payment", route: paymentRoutes },
+  { path: "/document", route: uploadRoutes },
+  { path: "/auctions", route: auctionRoutes },
+  { path: "/products", route: productRoutes },
+];
+
+// Apply rate limiting and register routes
+routeConfig.forEach(({ path, route }) => {
+  v1Router.use(path, route);
+});
+
+app.use("/api/v1", v1Router);
+
+// ======================
+// Error Handling
+// ======================
 app.use(errorHandler);
 
-// Start Server
+// ======================
+// Server Initialization
+// ======================
 const startServer = async () => {
   try {
-    await connectDB(); // Connect to the database
-    app.listen(PORT, () => {
-      console.log(
-        `🟢 Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Server is running on http://localhost:${PORT}`
-      );
+    await connectDB();
+    const server = app.listen(PORT, () => {
+      console.log(`
+        🚀 Server running in ${process.env.NODE_ENV || "development"} mode
+        🔗 Base URL: http://localhost:${PORT}
+        📚 API Docs: http://localhost:${PORT}/api-docs
+      `);
     });
+
+    // Graceful shutdown
+    const shutdown = async () => {
+      console.log("\n🛑 Received shutdown signal...");
+      await mongoose.disconnect();
+      server.close(() => {
+        console.log("💤 Server process terminated");
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGTERM", shutdown);
+    process.on("SIGINT", shutdown);
   } catch (error) {
-    console.error("Failed to start the server:", error.message);
-    process.exit(1); // Exit with failure code
+    console.error("❌ Server startup failed:", error.message);
+    process.exit(1);
   }
 };
 
+// ======================
+// Start Application
+// ======================
 startServer();
 startReservationCleanup();

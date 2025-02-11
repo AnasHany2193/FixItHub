@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: FixItHub API
+  version: 1.0.0
+  description: Marketplace for repair services and refurbished products
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local development server
+  - url: https://api.fixithub.com/api/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /health:
+    get:
+      summary: Service health check
+      tags: [System]
+      responses:
+        200:
+          description: Service status information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  db:
+                    type: string
+                  version:
+                    type: string
+                  environment:
+                    type: string
+
+  # Add other endpoints here following the same pattern

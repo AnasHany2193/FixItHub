@@ -37,7 +37,8 @@
     "stripe": "^17.6.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
-    "validator": "^13.12.0"
+    "validator": "^13.12.0",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
