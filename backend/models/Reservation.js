@@ -1,17 +1,31 @@
+import createHttpError from "http-errors";
 import mongoose from "mongoose";
 
+/**
+ * @typedef {Object} Reservation
+ * @property {mongoose.Types.ObjectId} product - Reserved product reference
+ * @property {mongoose.Types.ObjectId} user - User making reservation
+ * @property {'active'|'completed'|'expired'} status - Reservation state
+ * @property {number} quantity - Reserved item count
+ * @property {Date} expiresAt - Auto-expiration timestamp
+ */
 const reservationSchema = new mongoose.Schema(
   {
+    // Product and User References
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
-      required: true,
+      required: [true, "Product reference is required"],
+      index: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: [true, "User reference is required"],
+      index: true,
     },
+
+    // Reservation Details
     status: {
       type: String,
       enum: ["active", "completed", "expired"],
@@ -19,24 +33,34 @@ const reservationSchema = new mongoose.Schema(
     },
     quantity: {
       type: Number,
-      required: true,
-      min: 1,
+      required: [true, "Quantity is required"],
+      min: [1, "Minimum reservation quantity is 1"],
     },
     expiresAt: {
       type: Date,
-      required: true,
+      required: [true, "Expiration date is required"],
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-// ✅ Fix: Delete exactly at expiration time
+// TTL Index for automatic expiration
 reservationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
+/**
+ * Validate stock availability before saving
+ * @throws {BadRequest} If insufficient stock
+ */
 reservationSchema.pre("save", async function () {
   const product = await mongoose.model("Product").findById(this.product);
   if (product.availableStock < this.quantity)
-    throw new Error("Not enough stock available");
+    throw createHttpError.BadRequest(
+      `Only ${product.availableStock} items available for reservation`
+    );
 });
 
 const Reservation = mongoose.model("Reservation", reservationSchema);

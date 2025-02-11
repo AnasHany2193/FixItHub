@@ -396,6 +396,42 @@ components:
         update:
           allowedFields: [status, trackingUpdates]
 
+    Reservation:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        product:
+          $ref: "#/components/schemas/Product/properties/_id"
+        user:
+          $ref: "#/components/schemas/User/properties/_id"
+        status:
+          type: string
+          enum: [active, completed, expired]
+          default: active
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - product
+        - user
+        - quantity
+        - expiresAt
+
 # ======================
 # API Endpoints
 # ======================
