@@ -7,6 +7,7 @@ import dotenv from "dotenv";
  */
 
 const connectDB = async () => {
+  const startTime = Date.now();
   const MONGO_URI = process.env.MONGO_URI;
 
   if (!MONGO_URI) {
@@ -23,10 +24,12 @@ const connectDB = async () => {
   };
 
   try {
+    const connectionTime = Date.now() - startTime;
     const conn = await mongoose.connect(MONGO_URI, connectionOptions);
+
     console.log(`🟢 MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.db.databaseName}`);
-    console.log(`⏱️  Connection time: ${Date.now() - conn.start}ms`);
+    console.log(`⏱️  Connection time: ${connectionTime}ms`);
   } catch (error) {
     console.error("🔴 MongoDB Connection Error:", error.message);
     process.exit(1);
