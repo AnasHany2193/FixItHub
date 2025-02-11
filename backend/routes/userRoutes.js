@@ -1,7 +1,9 @@
-// routes/userRoutes.js
 import express from "express";
 const router = express.Router();
+
 import { protect } from "../middlewares/authMiddleware.js";
+import { validateProfileUpdate } from "../middlewares/userValidation.js";
+
 import {
   getMyProfile,
   updateMyProfile,
@@ -9,7 +11,6 @@ import {
   getAllCustomers,
   getUserProfile,
 } from "../controllers/userController.js";
-import { validateProfileUpdate } from "../middlewares/userValidation.js";
 
 // Profile management
 router.get("/me", protect, getMyProfile);

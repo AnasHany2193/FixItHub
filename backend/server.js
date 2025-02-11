@@ -15,6 +15,7 @@ import userRoutes from "./routes/userRoutes.js";
 import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import auctionRoutes from "./routes/auctionRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -58,6 +59,7 @@ app.get("/api/v1/health", (req, res) => {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
+app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/repairs", repairRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/document", uploadRoutes);
