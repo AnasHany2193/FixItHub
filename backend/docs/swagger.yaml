@@ -15,6 +15,74 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    UploadResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        count:
+          type: integer
+          example: 3
+        urls:
+          type: array
+          items:
+            $ref: "#/components/schemas/CloudinaryFile"
+      required: [success, count, urls]
+
+    CloudinaryFile:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          example: "https://res.cloudinary.com/demo/image/upload/v123/image.jpg" # change later
+        resourceType:
+          type: string
+          example: "image"
+        bytes:
+          type: integer
+          example: 102400
+  responses:
+    FileTooLarge:
+      description: File exceeds size limit (5MB)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "File size exceeds 5MB limit"
+
+    BadGateway:
+      description: Cloudinary service error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: "Cloudinary service unavailable"
+  parameters:
+    UploadFiles:
+      in: formData
+      name: images
+      description: Array of image files (max 5, 5MB each)
+      required: true
+      schema:
+        type: array
+        items:
+          type: string
+          format: binary
 
 paths:
   /health:
@@ -37,5 +105,39 @@ paths:
                     type: string
                   environment:
                     type: string
+
+  /document/upload:
+    post:
+      summary: Upload multiple images
+      tags: [Uploads]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        200:
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+        400:
+          $ref: "#/components/responses/BadRequest"
+        413:
+          $ref: "#/components/responses/FileTooLarge"
+        429:
+          $ref: "#/components/responses/TooManyRequests"
+        502:
+          $ref: "#/components/responses/BadGateway"
 
   # Add other endpoints here following the same pattern

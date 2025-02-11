@@ -1,35 +1,39 @@
-// controllers/upload.js
 import { imageUploadUtil } from "../utils/imageUploadUtil.js";
 
+/**
+ * @desc    Handle multiple image uploads
+ * @route   POST /api/v1/document/upload
+ * @access  Private
+ */
 export const handleImageUpload = async (req, res) => {
   try {
-    // Multi-Image Upload Support
-    if (!req.files?.length) {
-      return res.status(400).json({
-        success: false,
-        message: "No files uploaded. Please provide an image.",
-      });
-    }
+    if (!req.files?.length)
+      throw createHttpError("400", "At least one image file required");
 
-    // Process all files
-    const results = await Promise.all(
+    const uploadResults = await Promise.all(
       req.files.map(async (file) => {
         const b64 = Buffer.from(file.buffer).toString("base64");
-        const url = `data:${file.mimetype};base64,${b64}`;
-        return await imageUploadUtil(url);
+        const dataURI = `data:${file.mimetype};base64,${b64}`;
+        return imageUploadUtil(dataURI);
       })
     );
 
     res.status(200).json({
       success: true,
+      count: uploadResults.length,
+      urls: uploadResults.map((result) => ({
+        url: result.secure_url,
+        resourceType: result.resource_type,
+        bytes: result.bytes,
+      })),
       message: "Uploaded",
-      imageUrls: results.map((r) => r.secure_url), // Return Cloudinary URL
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error uploading image",
-      error: error.message,
-    });
+    next(
+      createHttpError(error.status || 500, error.message, {
+        details: error.details,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      })
+    );
   }
 };
