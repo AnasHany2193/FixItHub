@@ -1,44 +1,67 @@
 import multer from "multer";
 import createHttpError from "http-errors";
 
-// Error handler middleware
+/**
+ * Central Error Handling Middleware
+ * @description Handles all errors in a consistent format
+ */
 const errorHandler = (err, req, res, next) => {
-  // Log the error for debugging
-  console.error(`[ERROR] ${err.stack}`); // Log full stack trace
+  // Security: Obfuscate errors in production
+  const isProduction = process.env.NODE_ENV === "production";
 
-  if (process.env.NODE_ENV === "production") delete err.stack; // Hide stack in production
+  // Structured error logging
+  console.error(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
+    error: err.message,
+    stack: isProduction ? undefined : err.stack,
+    type: err.name || "UnknownError",
+    user: req.user?.id || "anonymous",
+  });
 
-  // MongoDB duplicate key
+  // Standardized error response
+  const response = {
+    success: false,
+    error: isProduction && !err.expose ? "Something went wrong" : err.message,
+    ...(!isProduction && { details: err.details }),
+  };
+
+  // Handle specific error types
   if (err.code === 11000) {
     const field = Object.keys(err.keyPattern)[0];
     return res.status(409).json({
-      success: false,
-      error: `${field} already exists`,
+      ...response,
+      error: "Duplicate entry",
+      details: isProduction ? undefined : `${field} already exists`,
     });
   }
 
-  // Invalid JSON body
-  if (err.type === "entity.parse.failed") {
+  if (err.type === "entity.parse.failed")
     return res.status(400).json({
-      success: false,
-      error: "Invalid JSON payload",
+      ...response,
+      error: "Invalid JSON",
     });
-  }
 
-  // Handle Mongoose ValidationError
   if (err.name === "ValidationError")
     return res.status(400).json({
-      success: false,
+      ...response,
       error: "Validation failed",
-      details: err.message,
+      details: isProduction ? undefined : err.message,
     });
 
-  // Handle invalid ObjectId format (e.g., "123" instead of valid 24-character ID)
   if (err.name === "CastError")
     return res.status(400).json({
-      success: false,
-      error: "Invalid product ID format.",
+      ...response,
+      error: "Invalid ID format",
     });
+
+  if (err instanceof multer.MulterError)
+    return res.status(err.code === "LIMIT_FILE_SIZE" ? 413 : 400).json({
+      ...response,
+      error: "File upload error",
+      details: isProduction ? undefined : err.message,
+    });
+
+  if (err instanceof createHttpError.HttpError)
+    return res.status(err.statusCode).json(response);
 
   if (err.name === "Error")
     return res.status(400).json({
@@ -46,22 +69,12 @@ const errorHandler = (err, req, res, next) => {
       error: err.message,
     });
 
-  if (err instanceof multer.MulterError) {
-    // File upload errors
-    return res.status(400).json({
-      success: false,
-      error: `File upload error: ${err.message}`,
-    });
-  }
-
-  // Handle HTTP errors
-  if (err instanceof createHttpError.HttpError)
-    return res
-      .status(err.statusCode)
-      .json({ success: false, error: err.message });
-
-  // Fallback: Generic server error
-  res.status(500).json({ success: false, error: "Internal server error" });
+  // Fallback to generic error
+  res.status(500).json({
+    success: false,
+    error: isProduction ? "Internal server error" : err.message,
+    ...(!isProduction && { stack: err.stack }),
+  });
 };
 
 export default errorHandler;
