@@ -2,7 +2,13 @@ import mongoose from "mongoose";
 import createHttpError from "http-errors";
 
 import User from "../models/User.js";
+import cloudinary from "../config/cloudinary.js";
 import { sendApprovalEmail } from "../services/emailService.js";
+import {
+  banReportedUser,
+  handleContentRemoval,
+  sendUserWarning,
+} from "../utils/reportHandlers.js";
 
 export const listUsers = async (req, res, next) => {
   try {
@@ -197,6 +203,130 @@ export const processApplication = async (req, res, next) => {
         newStatus: status,
         emailSent: true,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReports = async (req, res, next) => {
+  try {
+    const { status, type, page = 1, limit = 20 } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (type) filter.contentType = type;
+
+    const [reports, total] = await Promise.all([
+      Report.find(filter)
+        .populate("reporter", "username")
+        .populate("contentId")
+        .sort("-createdAt")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Report.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: reports,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateReportStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["pending", "under_review", "resolved", "dismissed"];
+
+    if (!validStatuses.includes(status))
+      return next(createHttpError(400, "Invalid report status"));
+
+    const report = await Report.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate("contentId");
+
+    // Log admin action
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: {
+        adminLogs: {
+          action: "REPORT_STATUS_UPDATE",
+          targetReport: report._id,
+          details: {
+            previousStatus: report.status,
+            newStatus: status,
+          },
+        },
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Report status updated to ${status}`,
+      data: report,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const takeReportAction = async (req, res, next) => {
+  try {
+    const { actionType } = req.body;
+    const validActions = [
+      "remove_content",
+      "warn_user",
+      "ban_user",
+      "no_action",
+    ];
+
+    if (!validActions.includes(actionType))
+      return next(createHttpError(400, "Invalid report action"));
+
+    const report = await Report.findById(req.params.id)
+      .populate("contentId")
+      .populate("reporter");
+
+    // Take action based on type
+    switch (actionType) {
+      case "remove_content":
+        await handleContentRemoval(report);
+        break;
+      case "warn_user":
+        await sendUserWarning(report);
+        break;
+      case "ban_user":
+        await banReportedUser(report);
+        break;
+    }
+
+    // Update report status
+    const updatedReport = await Report.findByIdAndUpdate(
+      report._id,
+      {
+        status: "resolved",
+        resolvedBy: req.user._id,
+        resolvedAt: new Date(),
+        $push: { actionsTaken: actionType },
+      },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: `Action ${actionType} completed`,
+      data: updatedReport,
     });
   } catch (error) {
     next(error);

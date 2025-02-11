@@ -43,6 +43,13 @@ const reportSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    actionsTaken: [
+      {
+        type: String,
+        enum: ["remove_content", "warn_user", "ban_user", "no_action"],
+      },
+    ],
+    resolutionNotes: String,
     resolvedAt: Date,
   },
   { timestamps: true }

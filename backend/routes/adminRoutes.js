@@ -4,12 +4,16 @@ const router = express.Router();
 import { adminActionLimiter } from "../middlewares/rateLimiter.js";
 import { protect, requireAdmin } from "../middlewares/authMiddleware.js";
 
+import { getReportDetails } from "./../controllers/reportController.js";
 import {
   listUsers,
   getUserDetails,
   updateUserStatus,
   processApplication,
   getWorkerApplications,
+  getReports,
+  updateReportStatus,
+  takeReportAction,
 } from "../controllers/adminController.js";
 
 // User Management
@@ -31,6 +35,23 @@ router.patch(
   requireAdmin,
   adminActionLimiter,
   processApplication
+);
+
+router.get("/reports", protect, requireAdmin, adminActionLimiter, getReports);
+router.get("/reports/:id", protect, requireAdmin, getReportDetails);
+router.patch(
+  "/reports/:id",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  updateReportStatus
+);
+router.post(
+  "/reports/:id/actions",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  takeReportAction
 );
 
 export default router;

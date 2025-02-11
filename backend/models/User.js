@@ -128,6 +128,16 @@ const userSchema = new mongoose.Schema(
         timestamp: { type: Date, default: Date.now },
       },
     ],
+    warnings: [
+      {
+        date: Date,
+        reason: String,
+        contentType: String,
+        contentId: mongoose.Schema.Types.ObjectId,
+      },
+    ],
+    banReason: String,
+    bannedAt: Date,
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
 );

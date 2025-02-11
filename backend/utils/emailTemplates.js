@@ -1148,3 +1148,38 @@ export const workerNewOrderTemplate = (reservation) => `
   <p>Product: ${reservation.product.title}</p>
   <p>Quantity: ${reservation.quantity}</p>
 `;
+
+export const warningEmailTemplate = (username, reason) => `
+  <div style="font-family: Arial, sans-serif; padding: 20px;">
+    <h2 style="color: #dc2626;">⚠️ Content Policy Warning</h2>
+    <p>Hello ${username},</p>
+    <p>Your content has been flagged for violating our community guidelines:</p>
+    <blockquote style="background: #fee2e2; padding: 10px; border-left: 3px solid #dc2626;">
+      ${reason || "Violation of community standards"}
+    </blockquote>
+    <p>Please review our <a href="${process.env.BASE_URL}/policies">content policies</a> 
+       to avoid further action.</p>
+    <p>Repeated violations may result in account suspension.</p>
+    <p>Best regards,<br/>FixItHub Safety Team</p>
+  </div>
+`;
+
+export const banEmailTemplate = (username, reason) => `
+  <div style="font-family: Arial, sans-serif; padding: 20px;">
+    <h2 style="color: #dc2626;">🚫 Account Suspended</h2>
+    <p>Hello ${username},</p>
+    <p>Your account has been suspended due to severe policy violations:</p>
+    <blockquote style="background: #fee2e2; padding: 10px; border-left: 3px solid #dc2626;">
+      ${reason || "Severe or repeated community guidelines violations"}
+    </blockquote>
+    <p>This suspension is effective immediately. During this suspension:</p>
+    <ul>
+      <li>You cannot access your account</li>
+      <li>All active listings/services are paused</li>
+      <li>Pending transactions are canceled</li>
+    </ul>
+    <p>If you believe this is an error, you may appeal this decision within 
+       30 days by contacting 
+       <a href="mailto:appeals@fixithub.com">appeals@fixithub.com</a>.</p>
+  </div>
+`;
