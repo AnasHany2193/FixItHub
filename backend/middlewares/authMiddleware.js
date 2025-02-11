@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 import createHttpError from "http-errors";
+
+import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -38,5 +39,18 @@ export const roleCheck = (roles) => (req, res, next) => {
   if (!roles.includes(req.user.role))
     return next(createHttpError(403, "Forbidden - Insufficient permissions"));
 
+  next();
+};
+
+export const requireAdmin = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return next(
+      createHttpError(
+        403,
+        "Administrator privileges required for this action",
+        { code: "ADMIN_ACCESS_DENIED" }
+      )
+    );
+  }
   next();
 };

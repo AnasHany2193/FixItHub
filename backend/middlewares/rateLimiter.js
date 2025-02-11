@@ -54,3 +54,11 @@ export const productUpdateLimiter = rateLimit({
   max: 10,
   message: "Too many product updates. Try again later.",
 });
+
+export const adminActionLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: "Too many admin actions. Please slow down.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});

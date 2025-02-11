@@ -12,6 +12,7 @@ import "./jobs/auctionScheduler.js";
 
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
@@ -56,8 +57,10 @@ app.get("/", (_, res) => {
 app.get("/api/v1/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date() });
 });
+
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/reviews", reviewRoutes);
 app.use("/api/v1/reports", reportRoutes);
 app.use("/api/v1/repairs", repairRoutes);

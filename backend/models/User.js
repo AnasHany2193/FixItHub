@@ -120,6 +120,14 @@ const userSchema = new mongoose.Schema(
         required: false,
       },
     },
+    adminLogs: [
+      {
+        action: String,
+        targetUser: mongoose.Schema.Types.ObjectId,
+        details: mongoose.Schema.Types.Mixed,
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt`
 );

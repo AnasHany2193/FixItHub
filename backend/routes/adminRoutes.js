@@ -1,19 +1,28 @@
 import express from "express";
-
-// Middlewares
-import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
-
-// Controllers
-import {
-  getWorkerApplications,
-  updateWorkerStatus,
-} from "../controllers/admin.js";
-
 const router = express.Router();
 
-router.use(protect, roleCheck(["admin"]));
+import { adminActionLimiter } from "../middlewares/rateLimiter.js";
+import { protect, requireAdmin } from "../middlewares/authMiddleware.js";
 
-router.get("/workers/pending", getWorkerApplications);
-router.put("/workers/:userId", updateWorkerStatus);
+import {
+  listUsers,
+  // getUserDetails,
+  updateUserStatus,
+  // getWorkerApplications,
+} from "../controllers/adminController.js";
+
+// User Management
+router.get("/users", protect, requireAdmin, adminActionLimiter, listUsers);
+// router.get("/users/:userId", protect, requireAdmin, getUserDetails);
+router.patch(
+  "/users/:userId/status",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  updateUserStatus
+);
+
+// Worker Applications
+// router.get("/applications", protect, requireAdmin, getWorkerApplications);
 
 export default router;
