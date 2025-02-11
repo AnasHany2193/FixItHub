@@ -146,7 +146,7 @@ export const getAllWorkers = async (req, res, next) => {
 /**
  * @desc    Get all customer accounts with location filter
  * @route   GET /api/v1/users/customers
- * @access  Private/Admin
+ * @access  Public
  * @param   {string} [req.query.city] - Filter by city (case-insensitive)
  * @param   {number} [req.query.page=1] - Pagination page
  * @param   {number} [req.query.limit=10] - Items per page

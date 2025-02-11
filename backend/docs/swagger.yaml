@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: FixItHub API
   version: 1.0.0
@@ -9,592 +9,452 @@ servers:
   - url: http://localhost:5000/api/v1
     description: Local development server
   - url: https://api.fixithub.com/api/v1
-    description: Production server (requires authentication)
-
-tags:
-  - name: Users
-    description: User profile management
-  - name: Uploads
-    description: File upload operations
-  - name: Auth
-    description: Authentication endpoints
+    description: Production server
 
 # ======================
 # Common Components
 # ======================
 components:
   securitySchemes:
-    BearerAuth:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+    bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: >-
-        JWT authentication for protected endpoints. 
-        Include like: `Authorization: Bearer <token>`
 
   schemas:
     User:
       type: object
       properties:
-        id:
+        _id:
           type: string
-          example: 5f8d04b3ab35b428f8617f3a
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
         username:
           type: string
-          example: tech_master
+          minLength: 3
+          maxLength: 30
+          example: tech_repair_guru
         email:
           type: string
+          format: email
           example: user@fixithub.com
         role:
           type: string
           enum: [customer, worker, admin]
-          example: customer
+          default: customer
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+        workerApplication:
+          $ref: "#/components/schemas/WorkerApplication"
+        stats:
+          $ref: "#/components/schemas/UserStats"
+        rating:
+          $ref: "#/components/schemas/UserRating"
+        location:
+          $ref: "#/components/schemas/GeoJSONPoint"
         status:
           type: string
           enum: [active, banned, pending, deactivated]
-          example: active
-        profile:
-          $ref: "#/components/schemas/UserProfile"
+          default: active
 
     UserProfile:
       type: object
       properties:
         avatar:
-          $ref: "#/components/schemas/CloudinaryFile"
-        bio:
+          $ref: "#/components/schemas/CloudinaryImage"
+        phone:
           type: string
-          example: Experienced electronics repair specialist
+          example: +1234567890
         address:
           $ref: "#/components/schemas/Address"
+        bio:
+          type: string
+          maxLength: 500
+          example: Certified electronics repair specialist
         socialMedia:
           $ref: "#/components/schemas/SocialMedia"
+
+    WorkerApplication:
+      type: object
+      properties:
+        skills:
+          type: array
+          items:
+            type: string
+            example: electronics
+        certifications:
+          type: array
+          items:
+            type: string
+        experience:
+          type: string
+          enum: [beginner, intermediate, expert]
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/CloudinaryDocument"
+        workHistory:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkHistory"
+        availability:
+          type: string
+          enum: [full-time, part-time, unavailable]
+
+    UserStats:
+      type: object
+      properties:
+        completedRepairs:
+          type: integer
+          minimum: 0
+        completedSales:
+          type: integer
+          minimum: 0
+        responseRate:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    UserRating:
+      type: object
+      properties:
+        average:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4.5
+        count:
+          type: integer
+          minimum: 0
+
+    GeoJSONPoint:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [Point]
+        coordinates:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+          example: [-73.935242, 40.730610]
 
     Address:
       type: object
       properties:
         street:
           type: string
-          example: 123 Tech Street
         city:
           type: string
-          example: Silicon Valley
         state:
           type: string
-          example: CA
+          maxLength: 2
         zip:
           type: string
-          example: "94043"
         country:
           type: string
-          example: USA
+          default: US
 
     SocialMedia:
       type: object
       properties:
         website:
           type: string
-          example: https://myrepairshop.com
+          format: uri
         linkedin:
           type: string
-          example: https://linkedin.com/in/techmaster
+          format: uri
         twitter:
           type: string
-          example: https://twitter.com/techmaster
+          format: uri
 
-    UploadResult:
+    CloudinaryImage:
       type: object
-      description: Successful upload response
-      properties:
-        success:
-          type: boolean
-          example: true
-        count:
-          type: integer
-          description: Number of successfully uploaded files
-          example: 3
-        urls:
-          type: array
-          items:
-            $ref: "#/components/schemas/CloudinaryFile"
-      required: [success, count, urls]
-
-    CloudinaryFile:
-      type: object
-      description: Uploaded file metadata
       properties:
         url:
           type: string
           format: uri
-          example: "https://res.cloudinary.com/demo/image/upload/v123/image.jpg"
-        resourceType:
+        public_id:
           type: string
-          enum: [image, video, raw]
-          example: "image"
-        bytes:
+
+    WorkHistory:
+      type: object
+      properties:
+        position:
+          type: string
+        company:
+          type: string
+        startYear:
           type: integer
-          description: File size in bytes
-          example: 102400
-
-    Customer:
-      type: object
-      properties:
-        id:
-          type: string
-          example: 5f8d04b3ab35b428f8617f3a
-        username:
-          type: string
-          example: "john_doe"
-        profile:
-          type: object
-          properties:
-            avatar:
-              $ref: "#/components/schemas/CloudinaryFile"
-            address:
-              $ref: "#/components/schemas/Address"
-        createdAt:
-          type: string
-          format: date-time
-          example: "2024-01-15T09:30:00Z"
-        lastLogin:
-          type: string
-          format: date-time
-          example: "2024-03-20T14:45:00Z"
-
-    Worker:
-      type: object
-      properties:
-        id:
-          type: string
-          example: 5f8d04b3ab35b428f8617f3a
-        username:
-          type: string
-          example: tech_master
-        profile:
-          type: object
-          properties:
-            avatar:
-              $ref: "#/components/schemas/CloudinaryFile"
-        rating:
-          type: object
-          properties:
-            average:
-              type: number
-              example: 4.7
-            count:
-              type: integer
-              example: 23
-        workerApplication:
-          type: object
-          properties:
-            skills:
-              type: array
-              items:
-                type: string
-              example: ["electronics", "appliances"]
-            availability:
-              type: string
-              example: "full-time"
-
-  responses:
-    BadRequest:
-      description: Invalid request parameters
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "Invalid file type"
-
-    FileTooLarge:
-      description: File exceeds size limit (5MB)
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "File size exceeds 5MB limit"
-
-    TooManyRequests:
-      description: Rate limit exceeded
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "Too many requests, please try again later"
-
-    BadGateway:
-      description: Third-party service error
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "Cloudinary service unavailable"
-
-    Unauthorized:
-      description: Missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "Authentication required"
-
-    Forbidden:
-      description: Insufficient permissions
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "Administrative privileges required"
-
-    ServerError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success:
-                type: boolean
-                example: false
-              error:
-                type: string
-                example: "Internal server error"
-
-  parameters:
-    UploadFiles:
-      in: formData
-      name: images
-      required: true
-      style: form
-      explode: false
-      description: |
-        Array of image files (max 5 files, 5MB each).
-        Supported formats: JPEG, PNG, WEBP, AVIF, SVG
-      schema:
-        type: array
-        maxItems: 5
-        items:
-          type: string
-          format: binary
+          minimum: 1900
+        endYear:
+          type: integer
+          minimum: 1900
 
 # ======================
 # API Endpoints
 # ======================
 paths:
-  /document/upload:
-    post:
-      tags: [Uploads]
-      summary: Upload multiple images for repair requests or product listings
-      description: |
-        Securely upload up to 5 images with automatic malware scanning and EXIF removal.
-        Returns Cloudinary URLs for use in other endpoints.
-      security:
-        - BearerAuth: []
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: "#/components/parameters/UploadFiles"
-      responses:
-        200:
-          description: Files uploaded successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UploadResult"
-        400:
-          $ref: "#/components/responses/BadRequest"
-        413:
-          $ref: "#/components/responses/FileTooLarge"
-        429:
-          $ref: "#/components/responses/TooManyRequests"
-        502:
-          $ref: "#/components/responses/BadGateway"
-
   /users/me:
     get:
       tags: [Users]
-      summary: Get current user profile
+      summary: Get current user's profile
+      description: Retrieve authenticated user's profile (excluding sensitive data)
       security:
-        - BearerAuth: []
+        - cookieAuth: []
       responses:
         200:
           description: User profile retrieved
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserProfile"
         401:
-          $ref: "#/components/responses/Unauthorized"
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
     patch:
       tags: [Users]
-      summary: Update user profile
+      summary: Update current user's profile
+      description: Update profile information for authenticated user
       security:
-        - BearerAuth: []
+        - cookieAuth: []
       requestBody:
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UserProfile"
+              type: object
+              properties:
+                profile.bio:
+                  type: string
+                  example: Updated bio text
+                profile.phone:
+                  type: string
+                  example: +15551234567
+                profile.address:
+                  type: object
+                  properties:
+                    street:
+                      type: string
+                    city:
+                      type: string
+                    zipCode:
+                      type: string
+              example:
+                profile.bio: "New bio description"
+                profile.phone: "+15551234567"
       responses:
         200:
-          description: Profile updated
+          description: Profile updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserProfile"
         400:
-          $ref: "#/components/responses/BadRequest"
+          description: Invalid update data
         401:
-          $ref: "#/components/responses/Unauthorized"
-
-  /users/workers:
-    get:
-      tags: [Users]
-      summary: Get all approved service workers
-      description: |
-        Retrieve a paginated list of approved service workers with optional filters.
-        Available to authenticated users.
-      operationId: getAllWorkers
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: skills
-          in: query
-          description: Comma-separated list of skills to filter
-          schema:
-            type: string
-            example: "electronics,plumbing"
-        - name: minRating
-          in: query
-          description: Minimum average rating (0-5)
-          schema:
-            type: number
-            format: float
-            minimum: 0
-            maximum: 5
-            example: 4.5
-        - name: availability
-          in: query
-          description: Worker availability status
-          schema:
-            type: string
-            enum: [full-time, part-time, unavailable]
-            example: "full-time"
-        - name: page
-          in: query
-          description: Page number for pagination
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          description: Number of items per page
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-      responses:
-        200:
-          description: Successfully retrieved workers
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Found 15 workers matching your criteria"
-                  count:
-                    type: integer
-                    example: 15
-                  data:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Worker"
-                  pagination:
-                    type: object
-                    properties:
-                      page:
-                        type: integer
-                        example: 1
-                      limit:
-                        type: integer
-                        example: 10
-                      total:
-                        type: integer
-                        example: 15
-                      totalPages:
-                        type: integer
-                        example: 2
-        400:
-          $ref: "#/components/responses/BadRequest"
-        401:
-          $ref: "#/components/responses/Unauthorized"
-        403:
-          $ref: "#/components/responses/Forbidden"
-        500:
-          $ref: "#/components/responses/ServerError"
+          description: Unauthorized
 
   /users/{id}:
     get:
       tags: [Users]
-      summary: Get user by ID
+      summary: Get public user profile
+      description: Retrieve public profile information for any user
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
+            format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+      security:
+        - cookieAuth: []
       responses:
         200:
-          description: User details
+          description: Public user data
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  data:
-                    $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserProfile"
         404:
           description: User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: string
-                    example: "User not found"
 
-  /users/customers:
+  /users/workers:
     get:
       tags: [Users]
-      summary: Get all customer accounts
-      description: |
-        Retrieve paginated list of customer accounts with optional city filter.
-      operationId: getAllCustomers
-      security:
-        - BearerAuth: []
+      summary: Search service workers
+      description: Find approved service providers with filtering and sorting
       parameters:
-        - name: city
+        - name: skills
           in: query
-          description: Filter by city (case-insensitive)
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [electronics, furniture, appliances]
+          style: form
+          explode: false
+          example: electronics,furniture
+        - name: minRating
+          in: query
+          schema:
+            type: number
+            minimum: 0
+            maximum: 5
+          example: 4.0
+        - name: sort
+          in: query
           schema:
             type: string
-            example: "New York"
+            enum: [rating.average, -rating.average, hourlyRate, -hourlyRate]
+          example: -rating.average
         - name: page
           in: query
-          description: Page number for pagination
           schema:
             type: integer
             minimum: 1
-            default: 1
+          example: 1
         - name: limit
           in: query
-          description: Number of items per page
           schema:
             type: integer
             minimum: 1
-            maximum: 100
-            default: 10
+            maximum: 50
+          example: 10
+      security:
+        - cookieAuth: []
       responses:
         200:
-          description: Successfully retrieved customers
+          description: Paginated list of workers
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Found 25 customers in New York"
-                  count:
-                    type: integer
-                    example: 25
                   data:
                     type: array
                     items:
-                      $ref: "#/components/schemas/Customer"
+                      $ref: "#/components/schemas/WorkerProfile"
                   pagination:
                     type: object
                     properties:
                       page:
                         type: integer
-                        example: 1
                       limit:
                         type: integer
-                        example: 10
                       total:
                         type: integer
-                        example: 25
                       totalPages:
                         type: integer
-                        example: 3
-        403:
-          $ref: "#/components/responses/Forbidden"
-        500:
-          $ref: "#/components/responses/ServerError"
+        400:
+          description: Invalid filter parameters
 
-  # Other endpoints...
+  /users/customers:
+    get:
+      tags: [Users]
+      summary: List all customers
+      description: Retrieve paginated list of customer accounts
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+          example: New York
+        - name: page
+          in: query
+          schema:
+            type: integer
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: 10
+      security:
+        - cookieAuth: []
+      responses:
+        200:
+          description: Customer list retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserProfile"
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+        403:
+          description: Forbidden (non-admin access)
+
+  /document/upload:
+    post:
+      tags: [Media]
+      summary: Upload multiple images
+      description: Upload up to 5 images (max 2MB each) for listings/repair requests
+      security:
+        - cookieAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        200:
+          description: Image URLs and metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  urls:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          format: uri
+                        resourceType:
+                          type: string
+                          example: image
+                        bytes:
+                          type: integer
+                          example: 102400
+        400:
+          description: Invalid file upload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        413:
+          description: File too large
