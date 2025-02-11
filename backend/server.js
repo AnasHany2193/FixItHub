@@ -7,6 +7,8 @@ import cookieParser from "cookie-parser";
 
 import connectDB from "./config/db.js"; // Import the DB connection function
 import errorHandler from "./middlewares/errorHandler.js"; // Import the error handler
+import swaggerUi from "swagger-ui-express";
+import specs from "./config/swagger.js";
 
 import "./jobs/auctionScheduler.js";
 
@@ -23,6 +25,7 @@ import productRoutes from "./routes/productRoutes.js";
 
 import { handleStripeWebhook } from "./controllers/paymentController.js";
 import { startReservationCleanup } from "./jobs/reservationCleanup.js";
+import mongoose from "mongoose";
 
 dotenv.config(); // Load environment variables
 
@@ -57,11 +60,48 @@ app.use(helmet.permittedCrossDomainPolicies());
 app.use(morgan("dev")); // 📝 Log requests
 
 // Routes
-app.use("/api/v1", v1Router);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
+
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Root endpoint
+ *     description: Returns welcome message
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           text/plain:
+ *             example: Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀
+ */
 app.get("/", (_, res) => {
   res.send("Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Project 🚀");
 });
-app.get("/api/v1/health", async (req, res) => {
+
+app.use("/api/v1", v1Router);
+/**
+ * @swagger
+ * /api/v1/health:
+ *   get:
+ *     summary: Health check
+ *     description: Returns API and database status
+ *     responses:
+ *       200:
+ *         description: Service status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: OK
+ *                 db:
+ *                   type: string
+ *                   example: connected
+ */
+v1Router.get("/health", async (req, res) => {
   const dbStatus =
     mongoose.connection.readyState === 1 ? "connected" : "disconnected";
   res.status(200).json({ status: "OK", db: dbStatus });
