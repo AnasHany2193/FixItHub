@@ -24,8 +24,10 @@ const AuctionSchema = new mongoose.Schema(
       type: Date,
       required: true,
       validate: {
-        validator: (v) => v > new Date(),
-        message: "Auction expiration must be in the future",
+        validator: function (v) {
+          return this.status === "open" ? v > new Date() : true;
+        },
+        message: "Expiration date must be in the future for open auctions",
       },
     },
     bids: [
@@ -54,7 +56,7 @@ AuctionSchema.virtual("isExpired").get(function () {
 
 // Methods
 AuctionSchema.methods.submitBid = async function (newBidData) {
-  if (this.status !== "open") throw new Error("Auction is closed for bidding");
+  return this.status === "open" && this.expiresAt <= new Date();
 
   // Check for existing bid from this worker
   const existingBid = await Bid.findOne({
@@ -118,17 +120,6 @@ AuctionSchema.methods.acceptLowestBid = async function () {
   this.bids = updatedBids.map((b) => b._id);
 
   return this.save();
-};
-
-// Add static method
-AuctionSchema.statics.closeExpiredAuctions = async function () {
-  return this.updateMany(
-    {
-      status: "open",
-      expiresAt: { $lte: new Date() },
-    },
-    { $set: { status: "closed" } }
-  );
 };
 
 const Auction = mongoose.model("Auction", AuctionSchema);

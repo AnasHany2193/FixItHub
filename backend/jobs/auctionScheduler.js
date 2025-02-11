@@ -7,6 +7,8 @@ import { auctionExpiredEmailTemplate } from "../utils/emailTemplates.js";
 const closeExpiredAuctions = async () => {
   try {
     const now = new Date();
+
+    // Find auctions that should be closed
     const expiredAuctions = await Auction.find({
       status: "open",
       expiresAt: { $lte: now },
@@ -15,34 +17,34 @@ const closeExpiredAuctions = async () => {
       populate: { path: "customer", select: "email username" },
     });
 
-    let processedCount = 0;
+    // Bypass validation when closing auctions
+    await Auction.updateMany(
+      { _id: { $in: expiredAuctions.map((a) => a._id) } },
+      { $set: { status: "closed" } },
+      { runValidators: false } // Disable validation for bulk update
+    );
 
+    // Process individual auctions
     await Promise.all(
       expiredAuctions.map(async (auction) => {
         try {
-          // Close auction
-          auction.status = "closed";
-          await auction.save();
+          // Refresh auction data after bulk update
+          const updatedAuction = await Auction.findById(auction._id);
 
-          // Update repair request if no bids
-          if (auction.bids.length === 0)
-            await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
-              status: "cancelled",
-            });
+          // Handle bids and notifications
+          if (updatedAuction.bids.length === 0)
+            await RepairRequest.findByIdAndUpdate(
+              updatedAuction.repairRequest._id,
+              { status: "cancelled" }
+            );
 
-          // Send notification
-          if (auction.repairRequest?.customer?.email)
-            await sendExpiryNotification(auction);
-
-          processedCount++;
+          // Send notifications
+          if (updatedAuction.repairRequest?.customer?.email)
+            await sendExpiryNotification(updatedAuction);
         } catch (err) {
           console.error(`Error processing auction ${auction._id}:`, err);
         }
       })
-    );
-
-    console.log(
-      `Successfully processed ${processedCount}/${expiredAuctions.length} expired auctions`
     );
   } catch (err) {
     console.error("Critical error in auction scheduler:", err);
