@@ -432,6 +432,80 @@ components:
         - quantity
         - expiresAt
 
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        title:
+          type: string
+          maxLength: 100
+          example: iPhone 12 Pro Max Refurbished
+        description:
+          type: string
+          maxLength: 1000
+          example: Factory-refurbished device with 1-year warranty
+        type:
+          type: string
+          enum: [product, spare_part]
+          default: product
+        category:
+          type: string
+          enum: [electronics, furniture, appliances, other]
+          example: electronics
+        condition:
+          type: string
+          enum: [new, refurbished, used]
+          example: refurbished
+        price:
+          type: number
+          minimum: 0
+          example: 599.99
+        photos:
+          type: array
+          items:
+            $ref: "#/components/schemas/CloudinaryImage"
+          maxItems: 5
+        stock:
+          type: integer
+          minimum: 0
+          example: 10
+        reservedStock:
+          type: integer
+          minimum: 0
+          example: 2
+        worker:
+          $ref: "#/components/schemas/User/properties/_id"
+        status:
+          type: string
+          enum: [active, archived]
+          default: active
+        location:
+          $ref: "#/components/schemas/GeoJSONPoint"
+        availableStock:
+          type: integer
+          readOnly: true
+          example: 8
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - title
+        - description
+        - type
+        - category
+        - condition
+        - price
+        - stock
+        - worker
+
 # ======================
 # API Endpoints
 # ======================
