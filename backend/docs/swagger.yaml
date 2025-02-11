@@ -321,6 +321,40 @@ components:
         update:
           allowedFields: [status, trackingUpdates]
 
+    Bid:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+          example: 65f8d7e8cdf1b203f8d7e8cd
+        worker:
+          $ref: "#/components/schemas/User/properties/_id"
+        bidPrice:
+          type: number
+          minimum: 0.01
+          example: 149.99
+        estimatedTimeDays:
+          type: integer
+          minimum: 1
+          example: 3
+        auction:
+          $ref: "#/components/schemas/Auction/properties/_id"
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+          default: pending
+        submittedAt:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+        - worker
+        - bidPrice
+        - estimatedTimeDays
+        - auction
+        - status
+
 # ======================
 # API Endpoints
 # ======================
