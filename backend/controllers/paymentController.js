@@ -24,6 +24,7 @@ export const paymentResponseFormatter = (req, res, next) => {
       data: {
         clientSecret: paymentIntent.client_secret,
         amount: paymentIntent.amount / 100,
+        currency: paymentIntent.currency,
       },
     });
   };
@@ -31,18 +32,16 @@ export const paymentResponseFormatter = (req, res, next) => {
 };
 
 // ===================== Helpers =====================
-const createPaymentUpdate = (status, paymentId) => ({
+const createPaymentRecord = (status, paymentId) => ({
   status,
-  location: "Payment Gateway",
-  details: `Transaction ID: ${paymentId}`,
+  paymentId,
   timestamp: new Date(),
 });
 
-const validateRepairPayment = async (req) => {
-  const { repairId } = req.body;
+const validateRepairRequest = async (userId, repairId) => {
   const repair = await RepairRequest.findOne({
     _id: repairId,
-    customer: req.user._id,
+    customer: userId,
     status: { $in: ["in_progress", "completed"] },
   }).populate("worker");
 
@@ -52,74 +51,136 @@ const validateRepairPayment = async (req) => {
   return repair;
 };
 
-const validateProductReservation = async (req) => {
-  const { reservationId } = req.body;
+const validateProductReservation = async (userId, reservationId) => {
   const reservation = await Reservation.findOne({
     _id: reservationId,
-    user: req.user._id,
+    user: userId,
     status: "active",
     expiresAt: { $gt: new Date() },
   }).populate("product");
 
   if (!reservation) throw createHttpError(400, "Invalid reservation");
-  if (reservation.product.stock < reservation.quantity)
+  if (reservation.product.stock < reservation.quantity) {
     throw createHttpError(400, "Insufficient stock");
+  }
   return reservation;
 };
 
 // ===================== Payment Handlers =====================
-const createPaymentIntent = async (amount, metadata, updateFn) => {
-  return stripe.paymentIntents.create({
-    amount: Math.round(amount * 100),
-    currency: "usd",
-    automatic_payment_methods: { enabled: true },
-    metadata,
-  });
-};
+const productPaymentHandlers = {
+  getEntity: async (paymentIntent) => {
+    return await Reservation.findById(
+      paymentIntent.metadata.reservationId
+    ).populate("product user");
+  },
 
-const handlePaymentSuccess = async (paymentIntent, handlers) => {
-  try {
-    const entity = await handlers.getEntity(paymentIntent);
-    if (!entity) return;
+  handleSuccess: async (reservation, paymentIntent) => {
+    await Promise.all([
+      Reservation.findByIdAndUpdate(reservation._id, {
+        status: "completed",
+        payment: createPaymentRecord("succeeded", paymentIntent.id),
+      }),
+      Product.findByIdAndUpdate(reservation.product._id, {
+        $inc: { stock: -reservation.quantity },
+      }),
+    ]);
 
-    await handlers.updateEntity(entity, paymentIntent);
-
-    const emails = handlers
-      .emailTemplates(entity, paymentIntent)
-      .filter((template) => template)
-      .map((template) => sendEmail(template));
-
-    await Promise.all(emails);
-  } catch (error) {
-    console.error("Payment success handling failed:", error);
-  }
-};
-
-const handleFailedPayment = async (paymentIntent, handlers) => {
-  try {
-    const entity = await handlers.getEntity(paymentIntent);
-    if (!entity) return;
-
-    await handlers.updateFailedEntity(entity, paymentIntent);
-
-    const emails = handlers
-      .failureTemplates(entity, paymentIntent)
-      .filter((template) => template)
-      .map((template) => sendEmail(template));
+    const emails = [
+      sendEmail({
+        to: reservation.user.email,
+        subject: `Order Confirmation #${reservation._id}`,
+        html: productPaymentSuccessTemplate(reservation),
+      }),
+      sendEmail({
+        to: reservation.product.worker.email,
+        subject: `New Order Received!`,
+        html: workerNewOrderTemplate(reservation),
+      }),
+    ];
 
     await Promise.all(emails);
-  } catch (error) {
-    console.error("Payment failure handling failed:", error);
-  }
+  },
+
+  handleFailure: async (reservation) => {
+    await Reservation.findByIdAndUpdate(reservation._id, {
+      status: "payment_failed",
+      payment: createPaymentRecord("failed", null),
+    });
+
+    await sendEmail({
+      to: reservation.user.email,
+      subject: "Product Payment Failed",
+      html: paymentFailedEmailTemplate(
+        "product",
+        reservation.product.price * reservation.quantity
+      ),
+    });
+  },
+};
+
+const repairPaymentHandlers = {
+  getEntity: async (paymentIntent) => {
+    return await RepairRequest.findById(
+      paymentIntent.metadata.repairId
+    ).populate("customer worker");
+  },
+
+  handleSuccess: async (repair, paymentIntent) => {
+    await RepairRequest.findByIdAndUpdate(repair._id, {
+      status: "completed",
+      payment: createPaymentRecord("succeeded", paymentIntent.id),
+    });
+
+    const emails = [
+      sendEmail({
+        to: repair.customer.email,
+        subject: `Repair Payment Confirmation #${repair._id}`,
+        html: paymentSuccessEmailTemplate(
+          "repair",
+          paymentIntent.amount / 100,
+          repair._id
+        ),
+      }),
+      sendEmail({
+        to: repair.worker.email,
+        subject: `Payment Received for Repair #${repair._id}`,
+        html: workerPaymentReceivedEmailTemplate(
+          "repair",
+          paymentIntent.amount / 100
+        ),
+      }),
+    ];
+
+    await Promise.all(emails);
+  },
+
+  handleFailure: async (repair) => {
+    await RepairRequest.findByIdAndUpdate(repair._id, {
+      status: "payment_failed",
+      payment: createPaymentRecord("failed", null),
+    });
+
+    await sendEmail({
+      to: repair.customer.email,
+      subject: "Repair Payment Failed",
+      html: paymentFailedEmailTemplate("repair", repair.paymentAmount),
+    });
+  },
 };
 
 // ===================== Controllers =====================
 export const createRepairPaymentIntent = async (req, res, next) => {
   try {
-    const repair = await validateRepairPayment(req);
-    const paymentIntent = await createPaymentIntent(repair.paymentAmount, {
-      type: "repair",
-      repairId: repair._id.toString(),
+    const repair = await validateRepairRequest(req.user._id, req.body.repairId);
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(repair.paymentAmount * 100),
+      currency: "usd",
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        type: "repair",
+        repairId: repair._id.toString(),
+      },
     });
 
     await RepairRequest.findByIdAndUpdate(repair._id, {
@@ -134,11 +195,21 @@ export const createRepairPaymentIntent = async (req, res, next) => {
 
 export const createProductPaymentIntent = async (req, res, next) => {
   try {
-    const reservation = await validateProductReservation(req);
-    const paymentIntent = await createPaymentIntent(
-      reservation.product.price * reservation.quantity,
-      { type: "product", reservationId: reservation._id.toString() }
+    const reservation = await validateProductReservation(
+      req.user._id,
+      req.body.reservationId
     );
+    const amount = reservation.product.price * reservation.quantity;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100),
+      currency: "usd",
+      automatic_payment_methods: { enabled: true },
+      metadata: {
+        type: "product",
+        reservationId: reservation._id.toString(),
+      },
+    });
 
     await Reservation.findByIdAndUpdate(reservation._id, {
       paymentIntentId: paymentIntent.id,
@@ -152,29 +223,40 @@ export const createProductPaymentIntent = async (req, res, next) => {
 
 export const handleStripeWebhook = async (req, res, next) => {
   const sig = req.headers["stripe-signature"];
+  let event;
 
   try {
-    const event = stripe.webhooks.constructEvent(
+    event = stripe.webhooks.constructEvent(
       req.rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
+  } catch (err) {
+    return next(createHttpError(400, `Webhook Error: ${err.message}`));
+  }
 
+  try {
     const paymentIntent = event.data.object;
     const handlers =
       paymentIntent.metadata.type === "product"
-        ? productHandlers
-        : repairHandlers;
+        ? productPaymentHandlers
+        : repairPaymentHandlers;
 
-    if (event.type === "payment_intent.succeeded") {
-      await handlePaymentSuccess(paymentIntent, handlers);
-    } else if (event.type === "payment_intent.payment_failed") {
-      await handleFailedPayment(paymentIntent, handlers);
+    switch (event.type) {
+      case "payment_intent.succeeded":
+        const entity = await handlers.getEntity(paymentIntent);
+        if (entity) await handlers.handleSuccess(entity, paymentIntent);
+        break;
+
+      case "payment_intent.payment_failed":
+        const failedEntity = await handlers.getEntity(paymentIntent);
+        if (failedEntity) await handlers.handleFailure(failedEntity);
+        break;
     }
 
-    res.status(200).json({ success: true });
+    res.status(200).json({ received: true });
   } catch (error) {
-    console.error("Webhook processing failed:", error);
-    next(createHttpError(400, `Webhook Error: ${error.message}`));
+    console.error("Webhook processing error:", error);
+    next(createHttpError(500, "Error processing webhook"));
   }
 };
