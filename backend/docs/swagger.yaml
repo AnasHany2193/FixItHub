@@ -73,6 +73,8 @@ tags:
     description: Review management and queries
   - name: Reports
     description: Content and behavior reporting
+  - name: Admin
+    description: Administrative operations
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -1499,6 +1501,293 @@ paths:
         '404':
           description: Report not found
 
+  /api/v1/admin/users:
+    get:
+      tags: [Admin]
+      summary: List users
+      description: Filter and paginate user accounts
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: role
+          schema:
+            type: string
+            enum: [customer, worker, admin]
+          description: Filter by user role
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, suspended, banned]
+          description: Filter by account status
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search by username or email
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Items per page
+      responses:
+        '200':
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/admin/users/{userId}:
+    get:
+      tags: [Admin]
+      summary: Get user details
+      description: View detailed user profile with activity
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetailsResponse'
+        '404':
+          description: User not found
+
+  /api/v1/admin/users/{userId}/status:
+    patch:
+      tags: [Admin]
+      summary: Update user status
+      description: Modify user account status
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserStatusUpdate'
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Invalid status value
+        '404':
+          description: User not found
+
+  /api/v1/admin/applications:
+    get:
+      tags: [Admin]
+      summary: Get worker applications
+      description: List worker applications with filters
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+          description: Filter by application status
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Applications list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationListResponse'
+
+  /api/v1/admin/applications/{userId}:
+    patch:
+      tags: [Admin]
+      summary: Process application
+      description: Approve/reject worker application
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationDecision'
+      responses:
+        '200':
+          description: Application processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationResponse'
+
+  /api/v1/admin/reports:
+    get:
+      tags: [Admin]
+      summary: List reports
+      description: Filter and manage content reports
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, under_review, resolved, dismissed]
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [user, product, repair, review]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Reports list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportListResponse'
+
+  /api/v1/admin/reports/{id}:
+    get:
+      tags: [Admin]
+      summary: Get report details
+      description: View full report information
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportDetails'
+
+    patch:
+      tags: [Admin]
+      summary: Update report status
+      description: Modify report investigation status
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportStatusUpdate'
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+
+  /api/v1/admin/reports/{id}/actions:
+    post:
+      tags: [Admin]
+      summary: Take report action
+      description: Execute moderation action on reported content
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportAction'
+      responses:
+        '200':
+          description: Action completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+ 
   # ... other path definitions ...
 
 # ===================================================
@@ -2398,6 +2687,124 @@ components:
             total:
               type: integer
 
+    UserListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    UserDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            profile:
+              $ref: '#/components/schemas/User'
+            reports:
+              type: array
+              items:
+                $ref: '#/components/schemas/Report'
+            activity:
+              type: object
+              properties:
+                productListings:
+                  type: integer
+                repairsCompleted:
+                  type: integer
+                lastLogin:
+                  type: string
+                  format: date-time
+
+    UserStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, suspended, banned]
+        reason:
+          type: string
+          maxLength: 500
+      required: [status]
+
+    ApplicationListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Application'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ApplicationDecision:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+        reason:
+          type: string
+          maxLength: 500
+      required: [status]
+
+    ReportListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Report'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ReportDetails:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            report:
+              $ref: '#/components/schemas/Report'
+            contentDetails:
+              type: object
+            actionHistory:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReportAction'
+
+    ReportStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, under_review, resolved, dismissed]
+      required: [status]
+
+    ReportAction:
+      type: object
+      properties:
+        actionType:
+          type: string
+          enum: [remove_content, warn_user, ban_user, no_action]
+        comment:
+          type: string
+          maxLength: 500
+      required: [actionType]
     # Add other schemas as needed
 
   responses:
