@@ -11,8 +11,8 @@ import YAML from "yamljs";
 import connectDB from "./config/db.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { handleStripeWebhook } from "./controllers/paymentController.js";
-import { startReservationCleanup } from "./jobs/reservationCleanup.js";
 import "./jobs/auctionScheduler.js";
+import "./jobs/reservationCleanup.js";
 
 // Route Imports
 import authRoutes from "./routes/authRoutes.js";
@@ -177,4 +177,3 @@ const startServer = async () => {
 // Start Application
 // ======================
 startServer();
-startReservationCleanup();
