@@ -9,20 +9,34 @@ import {
 
 const router = express.Router();
 
+// ===================================================
+//                 PAYMENT INITIATION
+// ===================================================
+
+/**
+ * @desc    Create repair service payment intent
+ * @route   POST /api/v1/payments/repair
+ * @access  Private (Customer)
+ */
 // Customer payment initiation
 router.post(
-  "/create-repair-payment-intent",
-  paymentResponseFormatter,
+  "/repair",
   protect,
   roleCheck("customer"),
+  paymentResponseFormatter,
   createRepairPaymentIntent
 );
 
+/**
+ * @desc    Create product purchase payment intent
+ * @route   POST /api/v1/payments/product
+ * @access  Private (Customer)
+ */
 router.post(
-  "/create-product-payment-intent",
-  paymentResponseFormatter,
+  "/product",
   protect,
   roleCheck("customer"),
+  paymentResponseFormatter,
   createProductPaymentIntent
 );
 

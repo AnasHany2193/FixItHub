@@ -67,7 +67,9 @@ tags:
     description: Repair request lifecycle management
   - name: Products
     description: Product listing and inventory management
-
+  - name: Payments
+    description: Payment processing operations
+    
 # ===================================================
 #                API ENDPOINT DEFINITIONS
 # ===================================================
@@ -1154,6 +1156,94 @@ paths:
               schema:
                 $ref: "#/components/schemas/ProductListResponse"
 
+  /api/v1/payments/repair:
+    post:
+      tags: [Payments]
+      summary: Initiate repair payment
+      description: Create payment intent for repair service completion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repairId:
+                  type: string
+                  pattern: '^[0-9a-fA-F]{24}$'
+                  example: "507f1f77bcf86cd799439011"
+              required: [repairId]
+      responses:
+        '200':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '400':
+          description: Invalid repair request
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/payments/product:
+    post:
+      tags: [Payments]
+      summary: Initiate product payment
+      description: Create payment intent for product purchase
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reservationId:
+                  type: string
+                  pattern: '^[0-9a-fA-F]{24}$'
+                  example: "507f1f77bcf86cd799439012"
+              required: [reservationId]
+      responses:
+        '200':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentIntentResponse'
+        '400':
+          description: Invalid reservation
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/payments/webhook:
+    post:
+      tags: [Payments]
+      summary: Stripe webhook endpoint
+      description: Handle Stripe payment events (for internal use)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              x-examples:
+                success:
+                  value:
+                    id: "evt_1P8Z2j2eZvKYlo2CJZJZJZJZ"
+                    type: "payment_intent.succeeded"
+                failure:
+                  value:
+                    id: "evt_1P8Z2j2eZvKYlo2CJZJZJZJZ"
+                    type: "payment_intent.payment_failed"
+      responses:
+        '200':
+          description: Webhook processed
+        '400':
+          description: Invalid webhook signature
+  
   # ... other path definitions ...
 
 # ===================================================
@@ -1855,6 +1945,25 @@ components:
           format: date-time
         availableStock:
           type: integer
+
+    PaymentIntentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            clientSecret:
+              type: string
+              example: "pi_3P8Z2j2eZvKYlo2C1JZJZJZJ_secret_JZJZJZJZJZJZJZJZJZJZJZJZ"
+            amount:
+              type: number
+              example: 299.99
+            currency:
+              type: string
+              example: "usd"
 
     # Add other schemas as needed
 
