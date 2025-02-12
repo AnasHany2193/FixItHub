@@ -17,6 +17,9 @@ import {
   getProducts,
   deleteProduct,
   getProductDetails,
+  getRepairs,
+  getRepairDetails,
+  deleteRepair,
 } from "../controllers/adminController.js";
 
 // ===================================================
@@ -165,6 +168,37 @@ router.delete(
   requireAdmin,
   adminActionLimiter,
   deleteProduct
+);
+
+// ===================================================
+//                 REPAIR MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get repair requests
+ * @route   GET /api/v1/admin/repairs
+ * @access  Private (Admin)
+ */
+router.get("/repairs", protect, requireAdmin, apiLimiter, getRepairs);
+
+/**
+ * @desc    Get repair details
+ * @route   GET /api/v1/admin/repairs/:id
+ * @access  Private (Admin)
+ */
+router.get("/repairs/:id", protect, requireAdmin, apiLimiter, getRepairDetails);
+
+/**
+ * @desc    Delete repair request
+ * @route   DELETE /api/v1/admin/repairs/:id
+ * @access  Private (Admin)
+ */
+router.delete(
+  "/repairs/:id",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  deleteRepair
 );
 
 export default router;

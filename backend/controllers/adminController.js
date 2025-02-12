@@ -12,6 +12,8 @@ import User from "../models/User.js";
 import Review from "../models/Review.js";
 import Product from "../models/Product.js";
 import RepairRequest from "../models/RepairRequest.js";
+import Bid from "../models/Bid.js";
+import Auction from "../models/Auction.js";
 
 // ===================================================
 //                 USER MANAGEMENT
@@ -595,6 +597,156 @@ export const deleteProduct = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Product and associated reservations deleted 🗑️",
+      data: null,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+};
+
+// ===================================================
+//                 REPAIR MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get repair requests with filters
+ * @route   GET /api/v1/admin/repairs
+ * @access  Private (Admin)
+ */
+export const getRepairs = async (req, res, next) => {
+  try {
+    const { status, search, page = 1, limit = 20 } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (search) {
+      filter.$or = [
+        { title: new RegExp(search, "i") },
+        { description: new RegExp(search, "i") },
+      ];
+    }
+
+    const [repairs, total] = await Promise.all([
+      RepairRequest.find(filter)
+        .populate("customer worker", "username email")
+        .sort("-createdAt")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      RepairRequest.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: repairs,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get repair request details
+ * @route   GET /api/v1/admin/repairs/:id
+ * @access  Private (Admin)
+ */
+export const getRepairDetails = async (req, res, next) => {
+  try {
+    const repair = await RepairRequest.findById(req.params.id)
+      .populate("customer worker", "username email profile")
+      .populate({
+        path: "auction",
+        select: "status currentLowestBid",
+      })
+      .populate({
+        path: "bids",
+        select: "worker bidPrice submittedAt",
+        options: { sort: "-submittedAt" },
+      })
+      .lean();
+
+    if (!repair) {
+      return next(createHttpError(404, "Repair request not found"));
+    }
+
+    // Get payment history
+    const payments = await Payment.find({
+      repair: repair._id,
+    }).select("amount status createdAt");
+
+    // Get time statistics
+    const timeStats = await RepairRequest.aggregate([
+      { $match: { _id: repair._id } },
+      {
+        $project: {
+          processingTime: {
+            $dateDiff: {
+              startDate: "$createdAt",
+              endDate: "$completedAt",
+              unit: "hour",
+            },
+          },
+        },
+      },
+    ]);
+
+    const repairDetails = {
+      ...repair,
+      stats: {
+        payments: payments.length,
+        totalPaid: payments.reduce((sum, p) => sum + p.amount, 0),
+        processingTime: timeStats[0]?.processingTime || 0,
+      },
+    };
+
+    res.status(200).json({
+      success: true,
+      data: repairDetails,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Delete repair request and associated data
+ * @route   DELETE /api/v1/admin/repairs/:id
+ * @access  Private (Admin)
+ */
+export const deleteRepair = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const repair = await RepairRequest.findById(req.params.id).session(session);
+
+    if (!repair) {
+      throw createHttpError(404, "Repair request not found");
+    }
+
+    // Delete associated data
+    await Promise.all([
+      Auction.deleteOne({ repairRequest: repair._id }).session(session),
+      Bid.deleteMany({ repairRequest: repair._id }).session(session),
+    ]);
+
+    // Delete repair request
+    await RepairRequest.deleteOne({ _id: repair._id }).session(session);
+
+    await session.commitTransaction();
+
+    res.status(200).json({
+      success: true,
+      message: "Repair request and associated data deleted",
       data: null,
     });
   } catch (error) {

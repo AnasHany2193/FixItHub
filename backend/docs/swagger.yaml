@@ -1873,6 +1873,87 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
 
+  /api/v1/admin/repairs:
+    get:
+      tags: [Admin]
+      summary: List repair requests
+      description: Filter and search repair requests
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, in_progress, completed, cancelled]
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Repairs list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairListResponse'
+
+  /api/v1/admin/repairs/{id}:
+    get:
+      tags: [Admin]
+      summary: Get repair details
+      description: View repair request with full details
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Repair details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairDetailsResponse'
+
+    delete:
+      tags: [Admin]
+      summary: Delete repair request
+      description: Remove repair and all associated data
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Repair deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
   # ... other path definitions ...
 
 # ===================================================
@@ -2941,6 +3022,44 @@ components:
             worker:
               $ref: '#/components/schemas/UserPreview'
     
+    RepairListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Repair'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    RepairDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            repair:
+              $ref: '#/components/schemas/Repair'
+            auction:
+              $ref: '#/components/schemas/Auction'
+            bids:
+              type: array
+              items:
+                $ref: '#/components/schemas/Bid'
+            stats:
+              type: object
+              properties:
+                payments:
+                  type: integer
+                totalPaid:
+                  type: number
+                processingTime:
+                  type: number
+
     # Add other schemas as needed
 
   responses:
