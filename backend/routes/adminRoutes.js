@@ -14,6 +14,8 @@ import {
   updateReportStatus,
   takeReportAction,
   getReportDetails,
+  getProducts,
+  deleteProduct,
 } from "../controllers/adminController.js";
 
 // ===================================================
@@ -125,6 +127,30 @@ router.post(
   requireAdmin,
   adminActionLimiter,
   takeReportAction
+);
+
+// ===================================================
+//                 PRODUCT MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get products
+ * @route   GET /api/v1/admin/products
+ * @access  Private (Admin)
+ */
+router.get("/products", protect, requireAdmin, apiLimiter, getProducts);
+
+/**
+ * @desc    Delete product
+ * @route   DELETE /api/v1/admin/products/:id
+ * @access  Private (Admin)
+ */
+router.delete(
+  "/products/:id",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  deleteProduct
 );
 
 export default router;

@@ -446,3 +446,96 @@ export const takeReportAction = async (req, res, next) => {
     next(error);
   }
 };
+
+// ===================================================
+//                 PRODUCT MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get products with filters
+ * @route   GET /api/v1/admin/products
+ * @access  Private (Admin)
+ */
+export const getProducts = async (req, res, next) => {
+  try {
+    const { status, search, category, page = 1, limit = 20 } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (category) filter.category = category;
+    if (search) {
+      filter.$or = [
+        { title: new RegExp(search, "i") },
+        { description: new RegExp(search, "i") },
+      ];
+    }
+
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .populate("worker", "username")
+        .sort("-createdAt")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Product.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: products,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Delete product and associated data
+ * @route   DELETE /api/v1/admin/products/:id
+ * @access  Private (Admin)
+ */
+export const deleteProduct = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const product = await Product.findById(req.params.id).session(session);
+
+    if (!product) {
+      throw createHttpError(404, "Product not found");
+    }
+
+    // Delete product images
+    if (product.photos?.length) {
+      const publicIds = product.photos
+        .map((photo) => photo.public_id)
+        .filter(Boolean);
+      await cloudinary.api.delete_resources(publicIds);
+    }
+
+    // Delete product and reservations
+    await Promise.all([
+      Product.deleteOne({ _id: product._id }).session(session),
+      Reservation.deleteMany({ product: product._id }).session(session),
+    ]);
+
+    await session.commitTransaction();
+
+    res.json({
+      success: true,
+      message: "Product and associated data deleted",
+      data: null,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+};

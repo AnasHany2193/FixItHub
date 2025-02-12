@@ -1788,6 +1788,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReportResponse'
  
+  /api/v1/admin/products:
+    get:
+      tags: [Admin]
+      summary: List products
+      description: Filter and search products
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, archived]
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  /api/v1/admin/products/{id}:
+    delete:
+      tags: [Admin]
+      summary: Delete product
+      description: Remove product and associated data
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
   # ... other path definitions ...
 
 # ===================================================
@@ -2805,6 +2869,19 @@ components:
           type: string
           maxLength: 500
       required: [actionType]
+
+    ProductListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+    
     # Add other schemas as needed
 
   responses:
