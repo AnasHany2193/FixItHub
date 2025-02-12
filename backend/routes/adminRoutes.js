@@ -20,6 +20,7 @@ import {
   getRepairs,
   getRepairDetails,
   deleteRepair,
+  adminDeleteReview,
 } from "../controllers/adminController.js";
 
 // ===================================================
@@ -201,4 +202,20 @@ router.delete(
   deleteRepair
 );
 
+// ===================================================
+//                 REVIEW MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Delete review
+ * @route   DELETE /api/v1/admin/reviews/:id
+ * @access  Private (Admin)
+ */
+router.delete(
+  "/reviews/:id",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  adminDeleteReview
+);
 export default router;

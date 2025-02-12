@@ -756,3 +756,52 @@ export const deleteRepair = async (req, res, next) => {
     session.endSession();
   }
 };
+
+// ===================================================
+//                 REVIEW MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Delete any review (Admin only)
+ * @route   DELETE /api/v1/admin/reviews/:id
+ * @access  Private (Admin)
+ */
+export const adminDeleteReview = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const review = await Review.findById(req.params.id).session(session);
+
+    if (!review) throw createHttpError(404, "Review not found");
+
+    // Delete review and update ratings
+    await Review.deleteOne({ _id: review._id }).session(session);
+    await session.commitTransaction();
+
+    // Log admin action
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: {
+        adminLogs: {
+          action: "REVIEW_DELETION",
+          targetReview: review._id,
+          details: {
+            type: review.kind,
+            rating: review.rating,
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Review deleted by admin",
+      data: null,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+};

@@ -1954,6 +1954,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
 
+  /api/v1/admin/reviews/{id}:
+    delete:
+      tags: [Admin]
+      summary: Delete review
+      description: Remove review and update ratings
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Review deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
   # ... other path definitions ...
 
 # ===================================================
@@ -3059,6 +3081,16 @@ components:
                   type: number
                 processingTime:
                   type: number
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Successfully"
 
     # Add other schemas as needed
 
