@@ -22,15 +22,24 @@ info:
   version: 1.0.0
   description: |
     ## FixItHub API Documentation
-    Platform for buying, selling, and repairing used products
+    Marketplace platform connecting customers with repair professionals
+    
+    ### Key Features:
+    - Repair Request Auctions
+    - Product Marketplace
+    - Worker Verification System
+    - Secure Payment Processing
+    - Review & Rating System
 
     ### Project Status
     - Development: Active
     - Environment: Production
+    - API Version: 1.0.0
 
   contact:
     name: FixItHub Support
     email: support@fixithub.com
+    url: https://fixithub.com/support
   license:
     name: Proprietary
     url: https://fixithub.com/terms
@@ -47,34 +56,34 @@ servers:
 # Tags help organize endpoints into logical groups
 # Add new tags here when creating new endpoint categories
 tags:
-  - name: Service Health
-    description: Service status monitoring
   - name: Root
-    description: Base API endpoints
-  - name: Users
-    description: User profile management and listings
+    description: Base API endpoints and health checks
   - name: Authentication
     description: User registration, login, and session management
   - name: Password Management
     description: Password reset and recovery operations
-  - name: Auctions
-    description: Auction listing and management operations
-  - name: Bids
-    description: Bid submission and management operations
-  - name: Media
-    description: Handle multiple image uploads and return Cloudinary URLs
+  - name: Users
+    description: User profile management and listings
   - name: Repairs
     description: Repair request lifecycle management
+  - name: Auctions
+    description: Auction listing and bidding operations
+  - name: Bids
+    description: Bid submission and management
   - name: Products
     description: Product listing and inventory management
   - name: Payments
-    description: Payment processing operations
+    description: Secure payment processing
   - name: Reviews
-    description: Review management and queries
+    description: Review management and rating system
   - name: Reports
-    description: Content and behavior reporting
+    description: Content moderation and reporting
+  - name: Media
+    description: Image uploads and Cloudinary integration
   - name: Admin
-    description: Administrative operations
+    description: Administrative operations and moderation
+  - name: Service Health
+    description: System monitoring and status checks
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -3233,7 +3242,7 @@ components:
                 lowestBid:
                   type: number
                 timeRemaining:
-                  type: string
+                  type: string   
     # Add other schemas as needed
 
   responses:
