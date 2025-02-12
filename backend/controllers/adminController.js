@@ -480,7 +480,7 @@ export const getProducts = async (req, res, next) => {
       Product.countDocuments(filter),
     ]);
 
-    res.json({
+    res.status(200).json({
       success: true,
       data: products,
       pagination: {
@@ -489,6 +489,71 @@ export const getProducts = async (req, res, next) => {
         total,
         totalPages: Math.ceil(total / limit),
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get product details with extended information
+ * @route   GET /api/v1/admin/products/:id
+ * @access  Private (Admin)
+ */
+export const getProductDetails = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate("worker", "username email")
+      .populate({
+        path: "reservations",
+        select: "user quantity status createdAt",
+        options: { limit: 10, sort: "-createdAt" },
+        populate: {
+          path: "user",
+          select: "username profile.avatar",
+        },
+      })
+      .lean();
+
+    if (!product) {
+      return next(createHttpError(404, "Product not found"));
+    }
+
+    // Get sales statistics
+    const salesStats = await Reservation.aggregate([
+      { $match: { product: product._id, status: "completed" } },
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: "$quantity" },
+          totalRevenue: { $sum: "$totalPrice" },
+        },
+      },
+    ]);
+
+    // Get review statistics
+    const reviewStats = await Review.aggregate([
+      { $match: { product: product._id } },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: "$rating" },
+          totalReviews: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const productDetails = {
+      ...product,
+      stats: {
+        sales: salesStats[0] || { totalSales: 0, totalRevenue: 0 },
+        reviews: reviewStats[0] || { averageRating: 0, totalReviews: 0 },
+      },
+    };
+
+    res.status(200).json({
+      success: true,
+      data: productDetails,
     });
   } catch (error) {
     next(error);
@@ -527,9 +592,9 @@ export const deleteProduct = async (req, res, next) => {
 
     await session.commitTransaction();
 
-    res.json({
+    res.status(200).json({
       success: true,
-      message: "Product and associated data deleted",
+      message: "Product and associated reservations deleted 🗑️",
       data: null,
     });
   } catch (error) {

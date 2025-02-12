@@ -1831,6 +1831,27 @@ paths:
                 $ref: '#/components/schemas/ProductListResponse'
 
   /api/v1/admin/products/{id}:
+    get:
+      tags: [Admin]
+      summary: Get product details
+      description: View product with sales and review stats
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetailsResponse'
+
     delete:
       tags: [Admin]
       summary: Delete product
@@ -2881,6 +2902,44 @@ components:
             $ref: '#/components/schemas/Product'
         pagination:
           $ref: '#/components/schemas/Pagination'
+
+    ProductDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            _id:
+              type: string
+            title:
+              type: string
+            price:
+              type: number
+            stats:
+              type: object
+              properties:
+                sales:
+                  type: object
+                  properties:
+                    totalSales:
+                      type: integer
+                    totalRevenue:
+                      type: number
+                reviews:
+                  type: object
+                  properties:
+                    averageRating:
+                      type: number
+                    totalReviews:
+                      type: integer
+            reservations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Reservation'
+            worker:
+              $ref: '#/components/schemas/UserPreview'
     
     # Add other schemas as needed
 

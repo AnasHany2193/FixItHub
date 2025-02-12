@@ -16,6 +16,7 @@ import {
   getReportDetails,
   getProducts,
   deleteProduct,
+  getProductDetails,
 } from "../controllers/adminController.js";
 
 // ===================================================
@@ -139,6 +140,19 @@ router.post(
  * @access  Private (Admin)
  */
 router.get("/products", protect, requireAdmin, apiLimiter, getProducts);
+
+/**
+ * @desc    Get product details
+ * @route   GET /api/v1/admin/products/:id
+ * @access  Private (Admin)
+ */
+router.get(
+  "/products/:id",
+  protect,
+  requireAdmin,
+  apiLimiter,
+  getProductDetails
+);
 
 /**
  * @desc    Delete product
