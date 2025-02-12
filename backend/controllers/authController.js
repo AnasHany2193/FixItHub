@@ -14,13 +14,14 @@ import {
   sendWelcomeEmail,
 } from "../services/emailService.js";
 
+// ===================================================
+//                 AUTHENTICATION FLOW
+// ===================================================
+
 /**
- * @desc    Register new user with role-based validation
+ * @desc    Register new user (customer/worker)
+ * @route   POST /api/v1/auth/register
  * @access  Public
- * @param   {String} req.body.role - User role (customer/worker)
- * @throws  {403} If attempting admin registration
- * @throws  {409} If email/username exists
- * @note    Worker registration requires documents (schema-validated)
  */
 export const register = async (req, res, next) => {
   const { username, email, password, role, skills, experience, documents } =
@@ -80,10 +81,9 @@ export const register = async (req, res, next) => {
 };
 
 /**
- * @desc    Verify user email via OTP
+ * @desc    Verify user email with OTP
+ * @route   POST /api/v1/auth/verify-otp
  * @access  Public
- * @param   {String} req.body.code - 6-digit OTP
- * @note    Triggers welcome email on success
  */
 export const verifyOTP = async (req, res, next) => {
   const { email, code } = req.body;
@@ -120,7 +120,11 @@ export const verifyOTP = async (req, res, next) => {
   }
 };
 
-//
+/**
+ * @desc    Resend OTP to unverified users
+ * @route   POST /api/v1/auth/resend-otp
+ * @access  Public
+ */
 export const resendOTP = async (req, res, next) => {
   const { email } = req.body;
   try {
@@ -146,10 +150,9 @@ export const resendOTP = async (req, res, next) => {
 };
 
 /**
- * @desc    Login user with credentials
+ * @desc    Authenticate user and issue tokens
+ * @route   POST /api/v1/auth/login
  * @access  Public
- * @rate    20 requests/15min
- * @note    Requires email verification first
  */
 export const login = async (req, res, next) => {
   try {
@@ -221,7 +224,44 @@ export const login = async (req, res, next) => {
   }
 };
 
-//
+/**
+ * @desc    Terminate user session
+ * @route   POST /api/v1/auth/logout
+ * @access  Private
+ */
+export const logout = async (req, res, next) => {
+  try {
+    // Atomic update to increment tokenVersion
+    await User.findByIdAndUpdate(
+      req.user._id,
+      { $inc: { tokenVersion: 1 } }, // Atomic increment
+      { new: true }
+    );
+
+    // Clear refresh token cookie
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully ツ" });
+  } catch (err) {
+    next(err); // Pass the error to the centralized error handler
+  }
+};
+
+// ===================================================
+//                  TOKEN MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Refresh access token using refresh token
+ * @route   POST /api/v1/auth/refresh-token
+ * @access  Public
+ */
 export const refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.cookies;
@@ -267,7 +307,15 @@ export const refreshToken = async (req, res, next) => {
   }
 };
 
-//
+// ===================================================
+//                  PASSWORD RECOVERY
+// ===================================================
+
+/**
+ * @desc    Initiate password reset flow
+ * @route   POST /api/v1/auth/forgot-password
+ * @access  Public
+ */
 export const forgotPassword = async (req, res, next) => {
   const { email } = req.body;
   try {
@@ -299,7 +347,11 @@ export const forgotPassword = async (req, res, next) => {
   }
 };
 
-//
+/**
+ * @desc    Complete password reset with OTP
+ * @route   POST /api/v1/auth/reset-password
+ * @access  Public
+ */
 export const resetPassword = async (req, res, next) => {
   const { email, code, newPassword } = req.body;
   try {
@@ -333,29 +385,5 @@ export const resetPassword = async (req, res, next) => {
       .json({ success: true, message: "Password reset successful" });
   } catch (err) {
     next(err);
-  }
-};
-
-export const logout = async (req, res, next) => {
-  try {
-    // Atomic update to increment tokenVersion
-    await User.findByIdAndUpdate(
-      req.user._id,
-      { $inc: { tokenVersion: 1 } }, // Atomic increment
-      { new: true }
-    );
-
-    // Clear refresh token cookie
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
-
-    res
-      .status(200)
-      .json({ success: true, message: "Logged out successfully ツ" });
-  } catch (err) {
-    next(err); // Pass the error to the centralized error handler
   }
 };

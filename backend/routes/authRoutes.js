@@ -1,5 +1,12 @@
 import express from "express";
 
+// Middlewares
+import { protect } from "../middlewares/authMiddleware.js";
+import {
+  authLimiter,
+  sensitiveActionLimiter,
+} from "./../middlewares/rateLimiter.js";
+
 // Controllers
 import {
   register,
@@ -11,13 +18,6 @@ import {
   forgotPassword,
   resetPassword,
 } from "../controllers/authController.js";
-
-// Middlewares
-import { protect } from "../middlewares/authMiddleware.js";
-import {
-  authLimiter,
-  sensitiveActionLimiter,
-} from "./../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
