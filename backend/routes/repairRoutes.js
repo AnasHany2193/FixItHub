@@ -1,4 +1,9 @@
 import express from "express";
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
+import {
+  apiLimiter,
+  sensitiveActionLimiter,
+} from "../middlewares/rateLimiter.js";
 import {
   cancelAndReturnItem,
   cancelRepairRequest,
@@ -12,48 +17,151 @@ import {
   updateRepairStatus,
   updateShippingStatus,
 } from "../controllers/repairController.js";
-import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", protect, roleCheck("customer"), createRepairRequest);
+// ===================================================
+//                 CUSTOMER ROUTES
+// ===================================================
 
-router.get("/", protect, roleCheck("customer"), getRepairRequests);
+/**
+ * @desc    Create new repair request with auction
+ * @route   POST /api/v1/repairs
+ * @access  Private (Customer)
+ */
+router.post(
+  "/",
+  protect,
+  roleCheck("customer"),
+  sensitiveActionLimiter,
+  createRepairRequest
+);
 
-router.patch("/:id/status", protect, roleCheck("customer"), updateRepairStatus);
+/**
+ * @desc    Get customer's active repair requests
+ * @route   GET /api/v1/repairs
+ * @access  Private (Customer)
+ */
+router.get("/", protect, roleCheck("customer"), apiLimiter, getRepairRequests);
 
+/**
+ * @desc    Update repair request status
+ * @route   PATCH /api/v1/repairs/:id/status
+ * @access  Private (Customer)
+ */
+router.patch(
+  "/:id/status",
+  protect,
+  roleCheck("customer"),
+  sensitiveActionLimiter,
+  updateRepairStatus
+);
+
+/**
+ * @desc    Cancel repair request and auction
+ * @route   PATCH /api/v1/repairs/:id/cancel
+ * @access  Private (Customer)
+ */
 router.patch(
   "/:id/cancel",
   protect,
   roleCheck("customer"),
+  sensitiveActionLimiter,
   cancelRepairRequest
 );
 
-router.get("/auctions", protect, roleCheck("customer"), getCustomerAuctions);
-
+/**
+ * @desc    Get customer's active auctions
+ * @route   GET /api/v1/repairs/auctions
+ * @access  Private (Customer)
+ */
 router.get(
-  "/customer/history",
+  "/auctions",
   protect,
   roleCheck("customer"),
+  apiLimiter,
+  getCustomerAuctions
+);
+
+/**
+ * @desc    Get customer's repair history
+ * @route   GET /api/v1/repairs/history
+ * @access  Private (Customer)
+ */
+router.get(
+  "/history",
+  protect,
+  roleCheck("customer"),
+  apiLimiter,
   getCustomerHistory
 );
 
-router.patch("/:id/complete", protect, roleCheck("worker"), completeRepair);
+// ===================================================
+//                  WORKER ROUTES
+// ===================================================
 
+/**
+ * @desc    Mark repair as completed
+ * @route   PATCH /api/v1/repairs/:id/complete
+ * @access  Private (Worker)
+ */
+router.patch(
+  "/:id/complete",
+  protect,
+  roleCheck("worker"),
+  sensitiveActionLimiter,
+  completeRepair
+);
+
+/**
+ * @desc    Update shipping status
+ * @route   PATCH /api/v1/repairs/:id/shipping
+ * @access  Private (Worker)
+ */
 router.patch(
   "/:id/shipping",
   protect,
   roleCheck("worker"),
+  sensitiveActionLimiter,
   updateShippingStatus
 );
 
-router.get("/worker", protect, roleCheck("worker"), getWorkerRepairs);
-
-router.get("/worker/history", protect, roleCheck("worker"), getWorkerHistory);
-router.patch(
-  "/:id/cancel-and-return",
+/**
+ * @desc    Get worker's active repairs
+ * @route   GET /api/v1/repairs/worker
+ * @access  Private (Worker)
+ */
+router.get(
+  "/worker",
   protect,
   roleCheck("worker"),
+  apiLimiter,
+  getWorkerRepairs
+);
+
+/**
+ * @desc    Get worker's repair history
+ * @route   GET /api/v1/repairs/worker/history
+ * @access  Private (Worker)
+ */
+router.get(
+  "/worker/history",
+  protect,
+  roleCheck("worker"),
+  apiLimiter,
+  getWorkerHistory
+);
+
+/**
+ * @desc    Initiate item return to customer
+ * @route   PATCH /api/v1/repairs/:id/return
+ * @access  Private (Worker)
+ */
+router.patch(
+  "/:id/return",
+  protect,
+  roleCheck("worker"),
+  sensitiveActionLimiter,
   cancelAndReturnItem
 );
 

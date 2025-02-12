@@ -63,6 +63,8 @@ tags:
     description: Bid submission and management operations
   - name: Media
     description: Handle multiple image uploads and return Cloudinary URLs
+  - name: Repairs
+    description: Repair request lifecycle management
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -651,6 +653,262 @@ paths:
         "403":
           description: Not auction owner
 
+  /api/v1/repairs:
+    post:
+      tags: [Repairs]
+      summary: Create repair request
+      description: Customer creates new repair request with associated auction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RepairRequestCreate"
+      responses:
+        "201":
+          description: Repair request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairRequestResponse"
+        "400":
+          description: Invalid request data
+        "429":
+          $ref: "#/components/responses/TooManyRequestsError"
+
+    get:
+      tags: [Repairs]
+      summary: Get active repairs
+      description: List customer's active repair requests
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, auction_open, in_progress]
+      responses:
+        "200":
+          description: Repairs retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairListResponse"
+
+  /api/v1/repairs/{id}/status:
+    patch:
+      tags: [Repairs]
+      summary: Update repair status
+      description: Customer updates repair request status
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [cancelled, paused]
+              required: [status]
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairRequestResponse"
+
+  /api/v1/repairs/{id}/cancel:
+    patch:
+      tags: [Repairs]
+      summary: Cancel repair request
+      description: Customer cancels repair and associated auction
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Repair cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancellationResponse"
+
+  /api/v1/repairs/auctions:
+    get:
+      tags: [Repairs]
+      summary: Get customer auctions
+      description: List customer's active repair auctions
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Auctions retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionListResponse"
+
+  /api/v1/repairs/history:
+    get:
+      tags: [Repairs]
+      summary: Get repair history
+      description: Customer's historical repair requests
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [completed, cancelled, returned]
+        - in: query
+          name: bidStatus
+          schema:
+            type: string
+            enum: [pending, accepted, rejected]
+      responses:
+        "200":
+          description: History retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairHistoryResponse"
+
+  /api/v1/repairs/{id}/complete:
+    patch:
+      tags: [Repairs]
+      summary: Complete repair
+      description: Worker marks repair as completed
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Repair completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairRequestResponse"
+
+  /api/v1/repairs/{id}/shipping:
+    patch:
+      tags: [Repairs]
+      summary: Update shipping status
+      description: Worker updates item shipping status
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [shipped, in_transit, delivered]
+                location:
+                  type: string
+              required: [status, location]
+      responses:
+        "200":
+          description: Shipping updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShippingUpdateResponse"
+
+  /api/v1/repairs/worker:
+    get:
+      tags: [Repairs]
+      summary: Get worker's active repairs
+      description: List repairs assigned to worker
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Repairs retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairListResponse"
+
+  /api/v1/repairs/worker/history:
+    get:
+      tags: [Repairs]
+      summary: Get worker's repair history
+      description: Historical repairs completed by worker
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [completed, returned]
+      responses:
+        "200":
+          description: History retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepairHistoryResponse"
+
+  /api/v1/repairs/{id}/return:
+    patch:
+      tags: [Repairs]
+      summary: Initiate item return
+      description: Worker returns item to customer
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Return initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReturnResponse"
+
   # ... other path definitions ...
 
 # ===================================================
@@ -1059,6 +1317,135 @@ components:
               $ref: "#/components/schemas/BidDetails"
             repair:
               $ref: "#/components/schemas/RepairRequestSummary"
+
+    RepairRequestCreate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          example: "Laptop Screen Replacement"
+        category:
+          type: string
+          enum: [electronics, furniture, appliances, other]
+        issueDescription:
+          type: string
+          minLength: 20
+          example: "Broken LCD panel with cracked glass"
+        itemType:
+          type: string
+          example: "MacBook Pro 16-inch 2023"
+        startingMaxPrice:
+          type: number
+          minimum: 1
+          example: 299.99
+        expiresAt:
+          type: string
+          format: date-time
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+        shippingRequired:
+          type: boolean
+          default: false
+      required:
+        - title
+        - category
+        - issueDescription
+        - itemType
+        - startingMaxPrice
+        - expiresAt
+        - imageUrls
+
+    RepairRequestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            repairRequest:
+              $ref: "#/components/schemas/RepairDetails"
+            auction:
+              $ref: "#/components/schemas/AuctionDetails"
+
+    RepairDetails:
+      type: object
+      properties:
+        _id:
+          type: string
+        status:
+          type: string
+          enum:
+            [
+              pending,
+              auction_open,
+              in_progress,
+              completed,
+              cancelled,
+              returning_to_customer,
+            ]
+        trackingUpdates:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrackingUpdate"
+
+    TrackingUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            [
+              received,
+              diagnosing,
+              repairing,
+              quality_check,
+              shipped,
+              return_initiated,
+            ]
+        location:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    CancellationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            repair:
+              $ref: "#/components/schemas/RepairDetails"
+            auction:
+              $ref: "#/components/schemas/AuctionDetails"
+
+    ReturnResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+            tracking:
+              type: array
+              items:
+                $ref: "#/components/schemas/TrackingUpdate"
 
     # Add other schemas as needed
 
