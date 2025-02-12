@@ -69,7 +69,9 @@ tags:
     description: Product listing and inventory management
   - name: Payments
     description: Payment processing operations
-    
+  - name: Reviews
+    description: Review management and queries
+
 # ===================================================
 #                API ENDPOINT DEFINITIONS
 # ===================================================
@@ -1244,6 +1246,179 @@ paths:
         '400':
           description: Invalid webhook signature
   
+  /api/v1/reviews/workers:
+    post:
+      tags: [Reviews]
+      summary: Create worker review
+      description: Submit review for completed repair service
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerReviewRequest'
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+        '400':
+          description: Invalid input
+        '403':
+          description: Not authorized to review
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/reviews/products:
+    post:
+      tags: [Reviews]
+      summary: Create product review
+      description: Submit review for purchased product
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductReviewRequest'
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+        '400':
+          description: Invalid input
+        '403':
+          description: Not authorized to review
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/reviews/{reviewId}:
+    put:
+      tags: [Reviews]
+      summary: Update review
+      description: Modify existing review
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewUpdate'
+      responses:
+        '200':
+          description: Review updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+        '403':
+          description: Not review owner
+        '404':
+          description: Review not found
+
+    delete:
+      tags: [Reviews]
+      summary: Delete review
+      description: Remove existing review
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: reviewId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Review deleted
+        '403':
+          description: Not review owner
+        '404':
+          description: Review not found
+
+  /api/v1/reviews/workers/{workerId}:
+    get:
+      tags: [Reviews]
+      summary: Get worker reviews
+      description: List reviews for a worker
+      parameters:
+        - in: path
+          name: workerId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Reviews retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+
+  /api/v1/reviews/products/{productId}:
+    get:
+      tags: [Reviews]
+      summary: Get product reviews
+      description: List reviews for a product
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Reviews retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponse'
+
   # ... other path definitions ...
 
 # ===================================================
@@ -1964,6 +2139,123 @@ components:
             currency:
               type: string
               example: "usd"
+
+    WorkerReviewRequest:
+      type: object
+      properties:
+        repairId:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 4.5
+        comment:
+          type: string
+          maxLength: 500
+          example: "Great service!"
+      required: [repairId, rating]
+
+    ProductReviewRequest:
+      type: object
+      properties:
+        reservationId:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439012"
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 4
+        comment:
+          type: string
+          maxLength: 500
+          example: "Product as described"
+      required: [reservationId, rating]
+
+    ReviewUpdate:
+      type: object
+      properties:
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          example: 4
+        comment:
+          type: string
+          maxLength: 500
+          example: "Updated review comment"
+
+    ReviewResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Review'
+
+    ReviewListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            reviews:
+              type: array
+              items:
+                $ref: '#/components/schemas/Review'
+            average:
+              type: number
+              example: 4.2
+            total:
+              type: integer
+              example: 15
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 15
+
+    Review:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439013"
+        kind:
+          type: string
+          enum: [WorkerReview, ProductReview]
+        rating:
+          type: number
+          example: 4.5
+        comment:
+          type: string
+          example: "Excellent service!"
+        customer:
+          type: object
+          properties:
+            username:
+              type: string
+              example: "john_doe"
+            avatar:
+              type: string
+              format: uri
+        createdAt:
+          type: string
+          format: date-time
 
     # Add other schemas as needed
 

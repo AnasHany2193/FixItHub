@@ -1,7 +1,8 @@
 import express from "express";
 
-import { protect, roleCheck } from "../middlewares/authMiddleware.js";
+import { apiLimiter } from "./../middlewares/rateLimiter.js";
 import { validateReview } from "../middlewares/reviewValidation.js";
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 import {
   createWorkerReview,
   createProductReview,
@@ -12,10 +13,44 @@ import {
 
 const router = express.Router();
 
-router.post("/workers", protect, roleCheck("customer"), createWorkerReview);
-router.post("/products", protect, roleCheck("customer"), createProductReview);
+// ===================================================
+//                 REVIEW CREATION
+// ===================================================
+/**
+ * @desc    Create worker review
+ * @route   POST /api/v1/reviews/workers
+ * @access  Private (Customer)
+ */
+router.post(
+  "/workers",
+  apiLimiter,
+  protect,
+  roleCheck("customer"),
+  createWorkerReview
+);
 
-router.delete("/:reviewId", protect, roleCheck("customer"), deleteReview);
+/**
+ * @desc    Create product review
+ * @route   POST /api/v1/reviews/products
+ * @access  Private (Customer)
+ */
+router.post(
+  "/products",
+  apiLimiter,
+  protect,
+  roleCheck("customer"),
+  createProductReview
+);
+
+// ===================================================
+//                 REVIEW MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Update existing review
+ * @route   PUT /api/v1/reviews/:reviewId
+ * @access  Private (Review Owner)
+ */
 router.put(
   "/:reviewId",
   protect,
@@ -24,7 +59,29 @@ router.put(
   updateReview
 );
 
-router.get("/workers/:workerId", getReviews("WorkerReview"));
-router.get("/products/:productId", getReviews("ProductReview"));
+/**
+ * @desc    Delete review
+ * @route   DELETE /api/v1/reviews/:reviewId
+ * @access  Private (Review Owner)
+ */
+router.delete("/:reviewId", protect, roleCheck("customer"), deleteReview);
+
+// ===================================================
+//                 PUBLIC REVIEW QUERIES
+// ===================================================
+
+/**
+ * @desc    Get worker reviews
+ * @route   GET /api/v1/reviews/workers/:workerId
+ * @access  Public
+ */
+router.get("/workers/:workerId", apiLimiter, getReviews("WorkerReview"));
+
+/**
+ * @desc    Get product reviews
+ * @route   GET /api/v1/reviews/products/:productId
+ * @access  Public
+ */
+router.get("/products/:productId", apiLimiter, getReviews("ProductReview"));
 
 export default router;

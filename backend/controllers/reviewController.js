@@ -273,7 +273,17 @@ const setupChangeStream = () => {
 };
 setupChangeStream();
 
-// ===================== Validation Helpers =====================
+// ===================================================
+//                 VALIDATION HELPERS
+// ===================================================
+
+/**
+ * @desc    Validate customer's right to review an entity
+ * @param   {string} customerId - Authenticated customer ID
+ * @param   {string} entityId - ID of entity being reviewed
+ * @param   {MongooseModel} model - Model to check (RepairRequest/Reservation)
+ * @throws  {HttpError} 403 if validation fails
+ */
 const validateReviewOwnership = async (customerId, entityId, model) => {
   const exists = await model.exists({
     _id: entityId,
