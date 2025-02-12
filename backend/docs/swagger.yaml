@@ -71,6 +71,8 @@ tags:
     description: Payment processing operations
   - name: Reviews
     description: Review management and queries
+  - name: Reports
+    description: Content and behavior reporting
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -1419,6 +1421,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReviewListResponse'
 
+  /api/v1/reports:
+    post:
+      tags: [Reports]
+      summary: Create report
+      description: Submit content/behavior report
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreateRequest'
+      responses:
+        '201':
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '400':
+          description: Invalid report data
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/reports/my-reports:
+    get:
+      tags: [Reports]
+      summary: Get user reports
+      description: List reports submitted by authenticated user
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Reports retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportListResponse'
+
+  /api/v1/reports/{id}:
+    get:
+      tags: [Reports]
+      summary: Get report details
+      description: View details of specific report
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '404':
+          description: Report not found
+
   # ... other path definitions ...
 
 # ===================================================
@@ -2256,6 +2336,67 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    ReportCreateRequest:
+      type: object
+      properties:
+        contentId:
+          type: string
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+        contentType:
+          type: string
+          enum: [Review, User, Product, Repair]
+          example: "Review"
+        reason:
+          type: string
+          enum: [spam, inappropriate, harassment, other]
+          example: "inappropriate"
+        details:
+          type: string
+          maxLength: 500
+          example: "Contains offensive language"
+      required: [contentId, contentType, reason]
+
+    ReportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            _id:
+              type: string
+            status:
+              type: string
+              enum: [pending, investigating, resolved]
+            contentType:
+              type: string
+            reason:
+              type: string
+            createdAt:
+              type: string
+              format: date-time
+
+    ReportListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportResponse'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
 
     # Add other schemas as needed
 
