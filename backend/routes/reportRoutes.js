@@ -1,6 +1,4 @@
-// routes/reportRoutes.js
 import express from "express";
-const router = express.Router();
 import { protect } from "../middlewares/authMiddleware.js";
 import { validateReport } from "../middlewares/reportValidation.js";
 import {
@@ -8,6 +6,8 @@ import {
   getUserReports,
   getReportDetails,
 } from "../controllers/reportController.js";
+
+const router = express.Router();
 
 // User endpoints
 router.post("/", protect, validateReport, createReport);
