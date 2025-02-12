@@ -65,6 +65,8 @@ tags:
     description: Handle multiple image uploads and return Cloudinary URLs
   - name: Repairs
     description: Repair request lifecycle management
+  - name: Products
+    description: Product listing and inventory management
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -909,6 +911,249 @@ paths:
               schema:
                 $ref: "#/components/schemas/ReturnResponse"
 
+  /api/v1/products:
+    post:
+      tags: [Products]
+      summary: Create new product
+      description: Create product listing (Approved workers only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateRequest"
+      responses:
+        "201":
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+        "400":
+          description: Invalid input data
+        "429":
+          $ref: "#/components/responses/TooManyRequestsError"
+
+    get:
+      tags: [Products]
+      summary: Search products
+      description: Public product search with filters and geolocation
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          description: Search keywords
+        - in: query
+          name: lng
+          schema:
+            type: number
+            format: float
+          description: Longitude for location-based search
+        - in: query
+          name: lat
+          schema:
+            type: number
+            format: float
+          description: Latitude for location-based search
+        - in: query
+          name: radius
+          schema:
+            type: integer
+            default: 5000
+          description: Search radius in meters
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Items per page
+        - in: query
+          name: minPrice
+          schema:
+            type: number
+          description: Minimum price filter
+        - in: query
+          name: maxPrice
+          schema:
+            type: number
+          description: Maximum price filter
+      responses:
+        "200":
+          description: Products found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedProducts"
+
+  /api/v1/products/{id}:
+    patch:
+      tags: [Products]
+      summary: Update product
+      description: Update product details (Owner only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductUpdateRequest"
+      responses:
+        "200":
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResponse"
+
+    delete:
+      tags: [Products]
+      summary: Delete product
+      description: Delete product and reservations (Owner only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Product deleted
+        "404":
+          description: Product not found
+
+    get:
+      tags: [Products]
+      summary: Get product details
+      description: Public product details with view tracking
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetails"
+
+  /api/v1/products/worker:
+    get:
+      tags: [Products]
+      summary: Get worker's products
+      description: List products created by authenticated worker
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Products retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+
+  /api/v1/products/{id}/stock:
+    patch:
+      tags: [Products]
+      summary: Update stock
+      description: Modify product stock levels (Owner only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StockUpdateRequest"
+      responses:
+        "200":
+          description: Stock updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StockResponse"
+
+  /api/v1/products/{id}/reservations:
+    post:
+      tags: [Products]
+      summary: Reserve stock
+      description: Create temporary stock reservation
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationRequest"
+      responses:
+        "201":
+          description: Stock reserved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReservationResponse"
+
+  /api/v1/products/{id}/similar:
+    get:
+      tags: [Products]
+      summary: Get similar products
+      description: Find similar products based on category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Similar products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+
   # ... other path definitions ...
 
 # ===================================================
@@ -1446,6 +1691,170 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/TrackingUpdate"
+
+    ProductCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 100
+          example: "Professional Camera Lens"
+        description:
+          type: string
+          maxLength: 1000
+          example: "High-quality DSLR lens with image stabilization"
+        price:
+          type: number
+          minimum: 0.01
+          example: 299.99
+        stock:
+          type: integer
+          minimum: 0
+          example: 10
+        category:
+          type: string
+          enum: [electronics, furniture, appliances, other]
+          example: "electronics"
+        imageUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+          minItems: 1
+          maxItems: 5
+          example: ["https://res.cloudinary.com/demo/image/upload/lens.jpg"]
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [Point]
+              default: "Point"
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+          example:
+            type: "Point"
+            coordinates: [-118.2437, 34.0522]
+      required:
+        - title
+        - price
+        - stock
+        - category
+        - imageUrls
+
+    ProductResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: "507f1f77bcf86cd799439011"
+            title:
+              type: string
+            price:
+              type: number
+            availableStock:
+              type: integer
+
+    PaginatedProducts:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDetails'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+
+    ProductDetails:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        price:
+          type: number
+        availableStock:
+          type: integer
+        worker:
+          $ref: '#/components/schemas/WorkerPreview'
+        photos:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    WorkerPreview:
+      type: object
+      properties:
+        _id:
+          type: string
+        username:
+          type: string
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+
+    StockUpdateRequest:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [restock, adjust]
+          example: "restock"
+        quantity:
+          type: number
+          minimum: 1
+          example: 5
+      required:
+        - action
+        - quantity
+
+    ReservationRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+      required:
+        - quantity
+
+    ReservationResponse:
+      type: object
+      properties:
+        reservationId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        expiresAt:
+          type: string
+          format: date-time
+        availableStock:
+          type: integer
 
     # Add other schemas as needed
 
