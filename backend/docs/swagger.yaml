@@ -797,3 +797,102 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PaginatedCustomers"
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user (Public 🔓)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegistration"
+      responses:
+        201:
+          $ref: "#/components/responses/RegistrationSuccess"
+
+  /auth/verify-otp:
+    post:
+      tags: [Authentication]
+      summary: Verify OTP (Public 🔓)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OTPVerification"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+
+  /auth/resend-otp:
+    post:
+      tags: [Authentication]
+      summary: Resend OTP (Public 🔓)
+      x-rate-limit: 3 requests/hour
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResendOTPRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login (Public 🔓)
+      x-rate-limit: 20 requests/15min
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/LoginSuccess"
+
+  /auth/refresh-token:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token (Public 🔓)
+      responses:
+        200:
+          $ref: "#/components/responses/TokenRefresh"
+
+  /auth/forgot-password:
+    post:
+      tags: [Authentication]
+      summary: Request password reset (Public 🔓)
+      x-rate-limit: 5 requests/hour
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordRequest"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+
+  /auth/reset-password:
+    post:
+      tags: [Authentication]
+      summary: Reset password (Public 🔓)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordReset"
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout user (Authenticated 🔐)
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          $ref: "#/components/responses/Success"

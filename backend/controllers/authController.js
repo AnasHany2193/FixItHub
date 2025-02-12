@@ -2,10 +2,10 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import createHttpError from "http-errors";
 
-import cloudinary from "../config/cloudinary.js";
-
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
+import cloudinary from "../config/cloudinary.js";
+
 import {
   sendPasswordResetOtpEmail,
   sendResendOtpEmail,
@@ -14,7 +14,14 @@ import {
   sendWelcomeEmail,
 } from "../services/emailService.js";
 
-//
+/**
+ * @desc    Register new user with role-based validation
+ * @access  Public
+ * @param   {String} req.body.role - User role (customer/worker)
+ * @throws  {403} If attempting admin registration
+ * @throws  {409} If email/username exists
+ * @note    Worker registration requires documents (schema-validated)
+ */
 export const register = async (req, res, next) => {
   const { username, email, password, role, skills, experience, documents } =
     req.body;
@@ -23,20 +30,6 @@ export const register = async (req, res, next) => {
   try {
     // Prevent direct admin registration
     if (role === "admin") throw createHttpError(403, "Nice try 😉");
-
-    // Check if the user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }], // Check for email OR username
-    });
-    if (existingUser)
-      throw createHttpError(409, "Email or username already registered");
-
-    // Validate worker documents
-    if (role === "worker") {
-      if (!documents?.length) {
-        throw createHttpError(400, "At least 1 document is required");
-      }
-    }
 
     // Create unverified user (worker status defaults to 'pending')
     user = await User.create({
@@ -86,7 +79,12 @@ export const register = async (req, res, next) => {
   }
 };
 
-//
+/**
+ * @desc    Verify user email via OTP
+ * @access  Public
+ * @param   {String} req.body.code - 6-digit OTP
+ * @note    Triggers welcome email on success
+ */
 export const verifyOTP = async (req, res, next) => {
   const { email, code } = req.body;
   try {
@@ -147,7 +145,12 @@ export const resendOTP = async (req, res, next) => {
   }
 };
 
-//
+/**
+ * @desc    Login user with credentials
+ * @access  Public
+ * @rate    20 requests/15min
+ * @note    Requires email verification first
+ */
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -210,7 +213,6 @@ export const login = async (req, res, next) => {
       })
       .json({
         success: true,
-        accessToken, // Delete Later
         user,
         message: welcomeMessage,
       });
