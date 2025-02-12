@@ -16,6 +16,16 @@ import {
   workerLookupPipeline,
 } from "../services/helperFunctions.js";
 
+// ===================================================
+//                 PRODUCT CRUD OPERATIONS
+// ===================================================
+
+/**
+ * @desc    Create new product listing
+ * @route   POST /api/v1/products
+ * @access  Private (Approved Worker)
+ * @note    Validates worker approval status
+ */
 export const createProduct = async (req, res, next) => {
   try {
     // Destructure with location handling
@@ -63,6 +73,7 @@ export const createProduct = async (req, res, next) => {
       location,
     });
 
+    // 📧 Should send product listing confirmation email to worker
     res.status(201).json({
       success: true,
       message: "Product listed successfully! 🎉",
@@ -73,6 +84,11 @@ export const createProduct = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Update existing product
+ * @route   PATCH /api/v1/products/:id
+ * @access  Private (Product Owner)
+ */
 export const updateProduct = async (req, res, next) => {
   try {
     const { lng, lat, imageUrls, ...updateData } = req.body;
@@ -107,6 +123,7 @@ export const updateProduct = async (req, res, next) => {
     if (!product)
       return next(createHttpError(404, "Product not found or no permission"));
 
+    // 📧 Should send update notification to customers with reservations
     res.status(200).json({
       success: true,
       message: "Product updated successfully 🔄",
@@ -117,6 +134,11 @@ export const updateProduct = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Delete product and associated reservations
+ * @route   DELETE /api/v1/products/:id
+ * @access  Private (Product Owner)
+ */
 export const deleteProduct = async (req, res, next) => {
   try {
     // Validate and delete product
@@ -135,6 +157,7 @@ export const deleteProduct = async (req, res, next) => {
     if (remainingReservations > 0)
       console.error(`Failed to delete ${remainingReservations} reservations`);
 
+    // 📧 Should send deletion notice to customers with reservations
     res.status(200).json({
       success: true,
       message: "Product and associated reservations deleted 🗑️",
@@ -145,6 +168,15 @@ export const deleteProduct = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 PRODUCT QUERIES
+// ===================================================
+
+/**
+ * @desc    Get worker's product listings
+ * @route   GET /api/v1/products/worker
+ * @access  Private (Worker)
+ */
 export const getWorkerProducts = async (req, res, next) => {
   try {
     // Validate worker exists
@@ -169,6 +201,11 @@ export const getWorkerProducts = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Search products with filters and geolocation
+ * @route   GET /api/v1/products/search
+ * @access  Public
+ */
 export const searchProducts = async (req, res, next) => {
   try {
     const {
@@ -259,6 +296,44 @@ export const searchProducts = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get product details with availability
+ * @route   GET /api/v1/products/:id
+ * @access  Public
+ */
+export const getProductDetails = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .select("-reservedStock")
+      .populate("worker", "username profile.avatar rating.average")
+      .populate("repairRequest", "title")
+      .lean();
+
+    if (!product) return next(createHttpError(404, "Product not found"));
+
+    res.status(200).json({
+      success: true,
+      message: "Product details retrieved successfully 🔍",
+      data: {
+        ...product,
+        availableStock: product.stock - product.reservedStock,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ===================================================
+//                 STOCK MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Reserve product stock
+ * @route   POST /api/v1/products/:id/reserve
+ * @access  Private (Customer)
+ * @note    Uses atomic update for stock reservation
+ */
 export const reserveStock = async (req, res, next) => {
   try {
     const quantity = parseInt(req.body.quantity);
@@ -288,6 +363,7 @@ export const reserveStock = async (req, res, next) => {
 
     if (!updatedProduct) throw createHttpError(400, "Not enough stock");
 
+    // 📧 Should send reservation confirmation email
     res.json({
       success: true,
       data: {
@@ -302,38 +378,11 @@ export const reserveStock = async (req, res, next) => {
   }
 };
 
-export const trackProductView = async (req, res, next) => {
-  try {
-    await Product.updateOne({ _id: req.params.id }, { $inc: { views: 1 } });
-    next();
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getProductDetails = async (req, res, next) => {
-  try {
-    const product = await Product.findById(req.params.id)
-      .select("-reservedStock")
-      .populate("worker", "username profile.avatar rating.average")
-      .populate("repairRequest", "title")
-      .lean();
-
-    if (!product) return next(createHttpError(404, "Product not found"));
-
-    res.status(200).json({
-      success: true,
-      message: "Product details retrieved successfully 🔍",
-      data: {
-        ...product,
-        availableStock: product.stock - product.reservedStock,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+/**
+ * @desc    Update product stock levels
+ * @route   PATCH /api/v1/products/:id/stock
+ * @access  Private (Product Owner)
+ */
 export const updateStock = async (req, res, next) => {
   try {
     const { action, quantity } = req.body;
@@ -362,6 +411,7 @@ export const updateStock = async (req, res, next) => {
     if (!product)
       return next(createHttpError(404, "Product not found or unauthorized"));
 
+    // 📧 Should send low stock alerts when applicable
     res.status(200).json({
       success: true,
       message: `Stock ${action} successful. Current stock: ${product.stock}`,
@@ -375,6 +425,29 @@ export const updateStock = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 PRODUCT ANALYTICS
+// ===================================================
+
+/**
+ * @desc    Track product view count
+ * @route   USE /api/v1/products/:id/view
+ * @access  Public
+ */
+export const trackProductView = async (req, res, next) => {
+  try {
+    await Product.updateOne({ _id: req.params.id }, { $inc: { views: 1 } });
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get similar products
+ * @route   GET /api/v1/products/:id/similar
+ * @access  Public
+ */
 export const getSimilarProducts = async (req, res, next) => {
   try {
     const baseProduct = await Product.findById(req.params.id);
