@@ -1,6 +1,10 @@
 import express from "express";
 
-import { protect } from "../middlewares/authMiddleware.js";
+import { protect, requireAdmin } from "../middlewares/authMiddleware.js";
+import {
+  adminActionLimiter,
+  apiLimiter,
+} from "./../middlewares/rateLimiter.js";
 import {
   getMyProfile,
   updateMyProfile,
@@ -11,14 +15,20 @@ import {
 
 const router = express.Router();
 
-router.get("/me", protect, getMyProfile);
-
-router.patch("/me", protect, updateMyProfile);
-
+// Authenticated routes
 router.get("/:id", protect, getUserProfile);
+router.get("/workers", protect, apiLimiter, getAllWorkers);
 
-router.get("/workers", protect, getAllWorkers);
+router.get("/me", protect, apiLimiter, getMyProfile);
+router.patch("/me", protect, apiLimiter, updateMyProfile);
 
-router.get("/customers", protect, getAllCustomers);
+// Admin-only routes
+router.get(
+  "/customers",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  getAllCustomers
+);
 
 export default router;

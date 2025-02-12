@@ -693,3 +693,107 @@ paths:
           description: Invalid file type
         500:
           description: Server error
+
+  /users/{id}:
+    get:
+      tags: [User]
+      summary: Get user profile (Authenticated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: mongoId
+      responses:
+        200:
+          description: Public user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
+
+  /users/workers:
+    get:
+      tags: [Public]
+      summary: List approved workers (Rate Limited)
+      description: |
+        Public endpoint with rate limiting
+        - 100 requests/15 minutes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+      responses:
+        200:
+          description: Paginated workers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedWorkers"
+
+  /users/me:
+    get:
+      tags: [User]
+      summary: Get my profile (Authenticated)
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Full user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+    patch:
+      tags: [User]
+      summary: Update my profile (Authenticated)
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        200:
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/customers:
+    get:
+      tags: [Admin]
+      summary: List all customers (Admin Only)
+      description: |
+        Admin-only endpoint with strict rate limiting
+        - 30 requests/minute
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Paginated customers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedCustomers"

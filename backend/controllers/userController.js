@@ -2,10 +2,8 @@ import User from "../models/User.js";
 import createHttpError from "http-errors";
 
 /**
- * @desc    Get current user's profile
- * @route   GET /api/v1/users/me
- * @access  Private
- * @returns {Object} User profile data (excluding sensitive fields)
+ * @desc    Get authenticated user's profile
+ * @access  Private (All roles)
  */
 export const getMyProfile = async (req, res, next) => {
   try {
@@ -26,12 +24,9 @@ export const getMyProfile = async (req, res, next) => {
 };
 
 /**
- * @desc    Update current user's profile
- * @route   PATCH /api/v1/users/me
- * @access  Private
- * @param   {Object} req.body - Allowed fields: profile.bio, profile.phone,
- *                              profile.address, profile.socialMedia, profile.avatar
- * @returns {Object} Updated user profile
+ * @desc    Update authenticated user's profile
+ * @access  Private (All roles)
+ * @note    Email changes should trigger verification
  */
 export const updateMyProfile = async (req, res, next) => {
   try {
@@ -69,11 +64,8 @@ export const updateMyProfile = async (req, res, next) => {
 };
 
 /**
- * @desc    Get public profile of any user
- * @route   GET /api/v1/users/:id
+ * @desc    Get public profile by ID
  * @access  Public
- * @param   {string} req.params.id - User ID
- * @returns {Object} Public user data (role-specific filtering)
  */
 export const getUserProfile = async (req, res, next) => {
   try {
@@ -93,15 +85,8 @@ export const getUserProfile = async (req, res, next) => {
 };
 
 /**
- * @desc    Get all approved service workers with filters
- * @route   GET /api/v1/users/workers
+ * @desc    Get paginated list of approved workers
  * @access  Public
- * @param   {string} [req.query.skills] - Comma-separated list of skills
- * @param   {number} [req.query.minRating] - Minimum rating (0-5)
- * @param   {string} [req.query.availability] - Availability status
- * @param   {number} [req.query.page=1] - Pagination page
- * @param   {number} [req.query.limit=10] - Items per page
- * @returns {Object} Paginated list of workers
  */
 export const getAllWorkers = async (req, res, next) => {
   try {
@@ -144,13 +129,8 @@ export const getAllWorkers = async (req, res, next) => {
 };
 
 /**
- * @desc    Get all customer accounts with location filter
- * @route   GET /api/v1/users/customers
- * @access  Public
- * @param   {string} [req.query.city] - Filter by city (case-insensitive)
- * @param   {number} [req.query.page=1] - Pagination page
- * @param   {number} [req.query.limit=10] - Items per page
- * @returns {Object} Paginated list of customers
+ * @desc    Get paginated list of customers (Admin only)
+ * @access  Private (Admin)
  */
 export const getAllCustomers = async (req, res, next) => {
   try {
