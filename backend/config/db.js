@@ -18,8 +18,8 @@ const connectDB = async () => {
   const connectionOptions = {
     dbName: "fixithub",
     autoIndex: process.env.NODE_ENV === "development",
-    bufferCommands: false, // Disable mongoose buffering
-    serverSelectionTimeoutMS: 5000,
+    // bufferCommands: false, // Disable mongoose buffering
+    // serverSelectionTimeoutMS: 10000,
     heartbeatFrequencyMS: 10000,
   };
 

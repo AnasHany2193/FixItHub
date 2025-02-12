@@ -57,6 +57,12 @@ tags:
     description: User registration, login, and session management
   - name: Password Management
     description: Password reset and recovery operations
+  - name: Auctions
+    description: Auction listing and management operations
+  - name: Bids
+    description: Bid submission and management operations
+  - name: Media
+    description: Handle multiple image uploads and return Cloudinary URLs
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -297,24 +303,24 @@ paths:
                     format: binary
                   description: Array of image files (max 5)
       responses:
-        '200':
+        "200":
           description: Image upload successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadResponse'
-        '400':
+                $ref: "#/components/schemas/UploadResponse"
+        "400":
           description: Invalid file upload
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Image processing error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/v1/auth/register:
     post:
@@ -327,20 +333,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegistrationRequest'
+              $ref: "#/components/schemas/RegistrationRequest"
       responses:
-        '201':
+        "201":
           description: Registration successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '403':
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "403":
           description: Admin registration attempt
-        '429':
-          $ref: '#/components/responses/TooManyRequestsError'
+        "429":
+          $ref: "#/components/responses/TooManyRequestsError"
 
   /api/v1/auth/verify-otp:
     post:
@@ -353,17 +359,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/OTPVerificationRequest'
+              $ref: "#/components/schemas/OTPVerificationRequest"
       responses:
-        '200':
+        "200":
           description: Email verified successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
           description: Invalid/expired OTP
-        '404':
+        "404":
           description: User not found
 
   /api/v1/auth/resend-otp:
@@ -384,16 +390,16 @@ paths:
                   format: email
               required: [email]
       responses:
-        '200':
+        "200":
           description: New OTP sent successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
           description: User already verified
-        '429':
-          $ref: '#/components/responses/TooManyRequestsError'
+        "429":
+          $ref: "#/components/responses/TooManyRequestsError"
 
   /api/v1/auth/login:
     post:
@@ -406,22 +412,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: "#/components/schemas/LoginResponse"
           headers:
             Set-Cookie:
               schema:
                 type: string
                 example: "refreshToken=abcde12345; Path=/; HttpOnly; Secure; SameSite=Strict"
-        '401':
+        "401":
           description: Invalid credentials
-        '403':
+        "403":
           description: Email not verified
 
   /api/v1/auth/refresh-token:
@@ -431,7 +437,7 @@ paths:
       description: Generate new access token using refresh token
       security: []
       responses:
-        '200':
+        "200":
           description: New access token issued
           content:
             application/json:
@@ -440,7 +446,7 @@ paths:
                 properties:
                   accessToken:
                     type: string
-        '401':
+        "401":
           description: Invalid/expired refresh token
 
   /api/v1/auth/forgot-password:
@@ -454,16 +460,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ForgotPasswordRequest'
+              $ref: "#/components/schemas/ForgotPasswordRequest"
       responses:
-        '200':
+        "200":
           description: OTP sent if email exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequestsError'
+                $ref: "#/components/schemas/SuccessResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequestsError"
 
   /api/v1/auth/reset-password:
     post:
@@ -476,15 +482,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ResetPasswordRequest'
+              $ref: "#/components/schemas/ResetPasswordRequest"
       responses:
-        '200':
+        "200":
           description: Password reset successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '400':
+                $ref: "#/components/schemas/SuccessResponse"
+        "400":
           description: Invalid OTP or weak password
 
   /api/v1/auth/logout:
@@ -495,14 +501,155 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Logout successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /api/v1/auctions/available:
+    get:
+      tags: [Auctions]
+      summary: Get available auctions
+      description: List open auctions visible to workers
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: includeCustomer
+          schema:
+            type: boolean
+            default: false
+          description: Include customer details (admin only)
+      responses:
+        "200":
+          description: List of available auctions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionListResponse"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          description: No auctions found
+
+  /api/v1/auctions/{auctionId}/bids:
+    post:
+      tags: [Bids]
+      summary: Submit new bid
+      description: Place bid on open auction (Worker only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: auctionId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BidSubmissionRequest"
+      responses:
+        "201":
+          description: Bid submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidResponse"
+        "400":
+          description: Invalid bid amount
+        "429":
+          $ref: "#/components/responses/TooManyRequestsError"
+
+    get:
+      tags: [Bids]
+      summary: Get auction bids
+      description: List all bids for specific auction
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: auctionId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Bids retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuctionBidsResponse"
+        "404":
+          description: Auction not found
+
+  /api/v1/auctions/{auctionId}/bids/{bidId}:
+    patch:
+      tags: [Bids]
+      summary: Update bid
+      description: Modify existing bid (Worker only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: auctionId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+        - in: path
+          name: bidId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BidSubmissionRequest"
+      responses:
+        "200":
+          description: Bid updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BidResponse"
+        "403":
+          description: Not bid owner
+
+  /api/v1/auctions/{auctionId}/accept:
+    post:
+      tags: [Auctions]
+      summary: Accept lowest bid
+      description: Customer accepts winning bid and starts repair
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: auctionId
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+      responses:
+        "200":
+          description: Bid accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptanceResponse"
+        "403":
+          description: Not auction owner
 
   # ... other path definitions ...
 
@@ -522,12 +669,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: Use JWT token for authentication
-
-  responses:
-    UnauthorizedError:
-      description: Missing or invalid authentication
-    NotFoundError:
-      description: The requested resource was not found
 
   schemas:
     Address:
@@ -693,11 +834,11 @@ components:
         urls:
           type: array
           items:
-            $ref: '#/components/schemas/UploadResult'
+            $ref: "#/components/schemas/UploadResult"
         message:
           type: string
           example: "Uploaded"
-    
+
     UploadResult:
       type: object
       properties:
@@ -742,7 +883,7 @@ components:
         documents:
           type: array
           items:
-            $ref: '#/components/schemas/CloudinaryDocument'
+            $ref: "#/components/schemas/CloudinaryDocument"
       required: [username, email, password, role]
 
     LoginRequest:
@@ -764,7 +905,7 @@ components:
           type: boolean
           example: true
         user:
-          $ref: '#/components/schemas/PrivateUser'
+          $ref: "#/components/schemas/PrivateUser"
         message:
           type: string
           example: "Welcome to FixItHub!"
@@ -784,6 +925,141 @@ components:
           minLength: 6
       required: [email, code, newPassword]
 
+    AuctionListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        count:
+          type: integer
+          example: 5
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuctionDetails"
+
+    AuctionDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        startingMaxPrice:
+          type: number
+          example: 199.99
+        expiresAt:
+          type: string
+          format: date-time
+        currentLowestBid:
+          type: number
+          example: 149.99
+        repairRequest:
+          $ref: "#/components/schemas/RepairRequestSummary"
+
+    RepairRequestSummary:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Smartphone Screen Replacement"
+        category:
+          type: string
+          example: "electronics"
+        itemType:
+          type: string
+          example: "iPhone 12 Pro"
+        photos:
+          type: array
+          items:
+            type: string
+            format: uri
+        createdAt:
+          type: string
+          format: date-time
+
+    BidSubmissionRequest:
+      type: object
+      properties:
+        bidPrice:
+          type: number
+          minimum: 0.01
+          example: 129.99
+        estimatedTimeDays:
+          type: integer
+          minimum: 1
+          example: 3
+      required: [bidPrice, estimatedTimeDays]
+
+    BidResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Bid submitted successfully"
+        data:
+          type: object
+          properties:
+            yourBid:
+              type: number
+              example: 129.99
+            currentLowestBid:
+              type: number
+              example: 120.50
+
+    AuctionBidsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BidDetails"
+
+    BidDetails:
+      type: object
+      properties:
+        _id:
+          type: string
+        bidPrice:
+          type: number
+        estimatedTimeDays:
+          type: integer
+        worker:
+          $ref: "#/components/schemas/WorkerPreview"
+        isLowest:
+          type: boolean
+
+    WorkerPreview:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "tech_master"
+        avatar:
+          type: string
+          format: uri
+        rating:
+          type: number
+          example: 4.8
+
+    AcceptanceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            acceptedBid:
+              $ref: "#/components/schemas/BidDetails"
+            repair:
+              $ref: "#/components/schemas/RepairRequestSummary"
+
     # Add other schemas as needed
 
   responses:
@@ -792,7 +1068,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
+
+    UnauthorizedError:
+      description: Missing or invalid authentication
+
+    NotFoundError:
+      description: The requested resource was not found
 
 security:
   - BearerAuth: []
