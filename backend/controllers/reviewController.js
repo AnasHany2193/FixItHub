@@ -4,18 +4,16 @@ import Review from "../models/Review.js";
 import Reservation from "../models/Reservation.js";
 import RepairRequest from "../models/RepairRequest.js";
 
-// ===================== Validation Helpers =====================
-const validateReviewOwnership = async (customerId, entityId, model) => {
-  const exists = await model.exists({
-    _id: entityId,
-    customer: customerId,
-    status: "completed",
-  });
-  if (!exists) throw createHttpError(403, "Not authorized to review this");
-};
+// ===================================================
+//                 REVIEW CREATION
+// ===================================================
 
-// ===================== Controller Methods =====================
-// Create Worker Review
+/**
+ * @desc    Create worker review
+ * @route   POST /api/v1/reviews/workers
+ * @access  Private (Customer)
+ * @note    Requires completed repair request
+ */
 export const createWorkerReview = async (req, res, next) => {
   try {
     const { repairId, rating, comment } = req.body;
@@ -36,6 +34,7 @@ export const createWorkerReview = async (req, res, next) => {
       worker: repair.worker,
     });
 
+    // 📧 Should send notification email to worker
     res.status(201).json({
       success: true,
       data: review,
@@ -46,7 +45,12 @@ export const createWorkerReview = async (req, res, next) => {
   }
 };
 
-// Create Product Review
+/**
+ * @desc    Create product review
+ * @route   POST /api/v1/reviews/products
+ * @access  Private (Customer)
+ * @note    Requires completed reservation
+ */
 export const createProductReview = async (req, res, next) => {
   try {
     const { reservationId } = req.body;
@@ -68,6 +72,7 @@ export const createProductReview = async (req, res, next) => {
       reservation: reservationId,
     });
 
+    // 📧 Should send notification email to product owner
     res.status(201).json({
       success: true,
       data: review,
@@ -78,7 +83,15 @@ export const createProductReview = async (req, res, next) => {
   }
 };
 
-// Update Review
+// ===================================================
+//                 REVIEW MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Update existing review
+ * @route   PATCH /api/v1/reviews/:reviewId
+ * @access  Private (Review Owner)
+ */
 export const updateReview = async (req, res, next) => {
   try {
     const review = await Review.findOne({
@@ -95,6 +108,7 @@ export const updateReview = async (req, res, next) => {
     const updatedReview = await review.save();
     await updateAssociatedRating(updatedReview);
 
+    // 📧 Should send update notification to reviewee
     res.json({
       success: true,
       data: updatedReview,
@@ -105,7 +119,11 @@ export const updateReview = async (req, res, next) => {
   }
 };
 
-// Delete Review
+/**
+ * @desc    Delete review
+ * @route   DELETE /api/v1/reviews/:reviewId
+ * @access  Private (Review Owner)
+ */
 export const deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findOneAndDelete({
@@ -116,6 +134,7 @@ export const deleteReview = async (req, res, next) => {
     if (!review) throw createHttpError(404, "Review not found");
     await updateAssociatedRating(review);
 
+    // 📧 Should send deletion notification to reviewee
     res.json({
       success: true,
       data: null,
@@ -126,7 +145,16 @@ export const deleteReview = async (req, res, next) => {
   }
 };
 
-// Add getReviews controller
+// ===================================================
+//                 REVIEW QUERIES
+// ===================================================
+
+/**
+ * @desc    Get reviews for worker/product
+ * @route   GET /api/v1/reviews/workers/:workerId
+ * @route   GET /api/v1/reviews/products/:productId
+ * @access  Public
+ */
 export const getReviews = (kind) => async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
@@ -169,7 +197,14 @@ export const getReviews = (kind) => async (req, res, next) => {
   }
 };
 
-// ===================== Rating Utilities =====================
+// ===================================================
+//                 RATING MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Update associated entity's rating stats
+ * @note    Automatically triggered on review changes
+ */
 const updateAssociatedRating = async (review) => {
   const targetModel = review.kind === "WorkerReview" ? "User" : "Product";
   const targetId =
@@ -199,7 +234,14 @@ const updateAssociatedRating = async (review) => {
     );
 };
 
-// ===================== Change Stream Setup =====================
+// ===================================================
+//                 REAL-TIME UPDATES
+// ===================================================
+
+/**
+ * @desc    Watch for review changes and update ratings
+ * @note    Uses MongoDB change streams for real-time sync
+ */
 const setupChangeStream = () => {
   const changeStream = Review.watch([], { fullDocument: "updateLookup" });
 
@@ -229,5 +271,14 @@ const setupChangeStream = () => {
     setTimeout(setupChangeStream, 5000);
   });
 };
-
 setupChangeStream();
+
+// ===================== Validation Helpers =====================
+const validateReviewOwnership = async (customerId, entityId, model) => {
+  const exists = await model.exists({
+    _id: entityId,
+    customer: customerId,
+    status: "completed",
+  });
+  if (!exists) throw createHttpError(403, "Not authorized to review this");
+};
