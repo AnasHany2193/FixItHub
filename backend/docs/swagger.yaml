@@ -1976,6 +1976,109 @@ paths:
               schema:
                 $ref: '#/components/schemas/SuccessResponse'
 
+  /api/v1/admin/auctions:
+    get:
+      tags: [Admin]
+      summary: List auctions
+      description: Filter and manage auctions
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [open, closed]
+        - in: query
+          name: repairStatus
+          schema:
+            type: string
+            enum: [pending, in_progress, completed]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Auctions list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuctionListResponse'
+
+  /api/v1/admin/auctions/{id}:
+    get:
+      tags: [Admin]
+      summary: Get auction details
+      description: View auction with bids and statistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Auction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuctionDetailsResponse'
+
+    delete:
+      tags: [Admin]
+      summary: Delete auction
+      description: Remove auction and associated bids
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Auction deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+
+  /api/v1/admin/auctions/{id}/restart:
+    post:
+      tags: [Admin]
+      summary: Restart auction
+      description: Reopen closed auction and delete existing bids
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+      responses:
+        '200':
+          description: Auction restarted with cleared bids
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuctionResponse'
   # ... other path definitions ...
 
 # ===================================================
@@ -3092,6 +3195,45 @@ components:
           type: string
           example: "Successfully"
 
+    AuctionListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Auction'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    AuctionDetailsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            auction:
+              $ref: '#/components/schemas/Auction'
+            repairRequest:
+              $ref: '#/components/schemas/RepairRequest'
+            bids:
+              type: array
+              items:
+                $ref: '#/components/schemas/Bid'
+            stats:
+              type: object
+              properties:
+                totalBids:
+                  type: integer
+                averageBid:
+                  type: number
+                lowestBid:
+                  type: number
+                timeRemaining:
+                  type: string
     # Add other schemas as needed
 
   responses:

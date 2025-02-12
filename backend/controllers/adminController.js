@@ -805,3 +805,208 @@ export const adminDeleteReview = async (req, res, next) => {
     session.endSession();
   }
 };
+
+// ===================================================
+//                 AUCTION MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get all auctions with filters
+ * @route   GET /api/v1/admin/auctions
+ * @access  Private (Admin)
+ */
+export const getAuctions = async (req, res, next) => {
+  try {
+    const { status, repairStatus, page = 1, limit = 20 } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (repairStatus) {
+      filter.repairRequest = await RepairRequest.find({
+        status: repairStatus,
+      }).distinct("_id");
+    }
+
+    const [auctions, total] = await Promise.all([
+      Auction.find(filter)
+        .populate({
+          path: "repairRequest",
+          select: "title status",
+        })
+        .populate({
+          path: "currentLowestBid",
+          select: "bidPrice worker",
+        })
+        .sort("-createdAt")
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Auction.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: auctions,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get auction details
+ * @route   GET /api/v1/admin/auctions/:id
+ * @access  Private (Admin)
+ */
+export const getAuctionDetails = async (req, res, next) => {
+  try {
+    const auction = await Auction.findById(req.params.id)
+      .populate({
+        path: "repairRequest",
+        select: "title description status",
+      })
+      .populate({
+        path: "bids",
+        select: "worker bidPrice status submittedAt",
+        populate: {
+          path: "worker",
+          select: "username rating",
+        },
+      })
+      .populate("currentLowestBid")
+      .lean();
+
+    if (!auction) {
+      return next(createHttpError(404, "Auction not found"));
+    }
+
+    // Calculate time remaining
+    const timeRemaining = auction.expiresAt - Date.now();
+    const hoursRemaining = Math.ceil(timeRemaining / (1000 * 60 * 60));
+
+    // Get bid statistics
+    const bidStats = await Bid.aggregate([
+      { $match: { auction: auction._id } },
+      {
+        $group: {
+          _id: null,
+          totalBids: { $sum: 1 },
+          averageBid: { $avg: "$bidPrice" },
+          lowestBid: { $min: "$bidPrice" },
+        },
+      },
+    ]);
+
+    const auctionDetails = {
+      ...auction,
+      stats: bidStats[0] || {
+        totalBids: 0,
+        averageBid: 0,
+        lowestBid: 0,
+      },
+      timeRemaining: hoursRemaining > 0 ? `${hoursRemaining}h` : "Expired",
+    };
+
+    res.json({
+      success: true,
+      data: auctionDetails,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Restart closed auction and delete existing bids
+ * @route   POST /api/v1/admin/auctions/:id/restart
+ * @access  Private (Admin)
+ */
+export const restartAuction = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const auction = await Auction.findById(req.params.id).session(session);
+
+    if (!auction) throw createHttpError(404, "Auction not found");
+
+    if (auction.status === "open")
+      throw createHttpError(400, "Auction is already active");
+
+    // Delete all existing bids
+    await Bid.deleteMany({ auction: auction._id }).session(session);
+
+    // Reset auction state
+    const updatedAuction = await Auction.findByIdAndUpdate(
+      auction._id,
+      {
+        status: "open",
+        expiresAt: Date.now() + 72 * 60 * 60 * 1000, // 72 hours from now
+        $set: { bids: [], currentLowestBid: null },
+      },
+      { new: true, session }
+    );
+
+    await session.commitTransaction();
+
+    res.json({
+      success: true,
+      message: "Auction restarted with cleared bids",
+      data: updatedAuction,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+};
+
+/**
+ * @desc    Delete auction and associated data
+ * @route   DELETE /api/v1/admin/auctions/:id
+ * @access  Private (Admin)
+ */
+export const deleteAuction = async (req, res, next) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const auction = await Auction.findById(req.params.id).session(session);
+
+    if (!auction) {
+      throw createHttpError(404, "Auction not found");
+    }
+
+    // Delete associated data
+    await Promise.all([
+      Bid.deleteMany({ auction: auction._id }).session(session),
+      RepairRequest.updateOne(
+        { _id: auction.repairRequest },
+        { $unset: { auction: 1 } }
+      ).session(session),
+    ]);
+
+    // Delete auction
+    await Auction.deleteOne({ _id: auction._id }).session(session);
+
+    await session.commitTransaction();
+
+    res.json({
+      success: true,
+      message: "Auction and associated data deleted",
+      data: null,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+};

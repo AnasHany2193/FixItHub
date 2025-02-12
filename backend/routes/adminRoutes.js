@@ -21,6 +21,10 @@ import {
   getRepairDetails,
   deleteRepair,
   adminDeleteReview,
+  getAuctions,
+  getAuctionDetails,
+  restartAuction,
+  deleteAuction,
 } from "../controllers/adminController.js";
 
 // ===================================================
@@ -218,4 +222,55 @@ router.delete(
   adminActionLimiter,
   adminDeleteReview
 );
+
+// ===================================================
+//                 AUCTION MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get auctions
+ * @route   GET /api/v1/admin/auctions
+ * @access  Private (Admin)
+ */
+router.get("/auctions", protect, requireAdmin, apiLimiter, getAuctions);
+
+/**
+ * @desc    Get auction details
+ * @route   GET /api/v1/admin/auctions/:id
+ * @access  Private (Admin)
+ */
+router.get(
+  "/auctions/:id",
+  protect,
+  requireAdmin,
+  apiLimiter,
+  getAuctionDetails
+);
+
+/**
+ * @desc    Restart auction
+ * @route   POST /api/v1/admin/auctions/:id/restart
+ * @access  Private (Admin)
+ */
+router.post(
+  "/auctions/:id/restart",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  restartAuction
+);
+
+/**
+ * @desc    Delete auction
+ * @route   DELETE /api/v1/admin/auctions/:id
+ * @access  Private (Admin)
+ */
+router.delete(
+  "/auctions/:id",
+  protect,
+  requireAdmin,
+  adminActionLimiter,
+  deleteAuction
+);
+
 export default router;
