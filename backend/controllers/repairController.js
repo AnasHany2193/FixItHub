@@ -3,6 +3,16 @@ import createHttpError from "http-errors";
 import Auction from "../models/Auction.js";
 import RepairRequest from "../models/RepairRequest.js";
 
+// ===================================================
+//                REPAIR REQUEST FLOW
+// ===================================================
+
+/**
+ * @desc    Create new repair request with auction
+ * @route   POST /api/v1/repairs
+ * @access  Private (Customer)
+ * @note    Creates associated auction automatically
+ */
 export const createRepairRequest = async (req, res, next) => {
   try {
     const {
@@ -46,6 +56,7 @@ export const createRepairRequest = async (req, res, next) => {
     repairRequest.auction = auction._id;
     await repairRequest.save();
 
+    // 📧 Should send confirmation email to customer
     res.status(201).json({
       success: true,
       data: {
@@ -62,6 +73,11 @@ export const createRepairRequest = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get user's repair requests
+ * @route   GET /api/v1/repairs
+ * @access  Private (Customer)
+ */
 export const getRepairRequests = async (req, res, next) => {
   try {
     const { status } = req.query;
@@ -95,6 +111,15 @@ export const getRepairRequests = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 REPAIR MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Update repair request status
+ * @route   PATCH /api/v1/repairs/:id/status
+ * @access  Private (Customer)
+ */
 export const updateRepairStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -106,6 +131,7 @@ export const updateRepairStatus = async (req, res, next) => {
 
     if (!repairRequest) throw createHttpError(404, "Repair request not found");
 
+    // 📧 Should send status update email to worker/customer
     res.status(200).json({
       success: true,
       data: repairRequest,
@@ -116,6 +142,11 @@ export const updateRepairStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Mark repair as completed
+ * @route   POST /api/v1/repairs/:id/complete
+ * @access  Private (Worker)
+ */
 export const completeRepair = async (req, res, next) => {
   try {
     const repairRequest = await RepairRequest.findOne({
@@ -135,6 +166,7 @@ export const completeRepair = async (req, res, next) => {
 
     await repairRequest.save();
 
+    // 📧 Should send completion email to customer
     res.status(200).json({
       success: true,
       message: "Repair marked as completed",
@@ -145,6 +177,11 @@ export const completeRepair = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Update shipping tracking
+ * @route   POST /api/v1/repairs/:id/shipping
+ * @access  Private (Worker)
+ */
 export const updateShippingStatus = async (req, res, next) => {
   try {
     const { status, location } = req.body;
@@ -164,6 +201,7 @@ export const updateShippingStatus = async (req, res, next) => {
     repairRequest.trackingUpdates.push({ status, location });
     await repairRequest.save();
 
+    // 📧 Should send shipping update email to customer
     res.status(200).json({
       success: true,
       message: "Shipping status updated",
@@ -174,6 +212,15 @@ export const updateShippingStatus = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 WORKER DASHBOARD
+// ===================================================
+
+/**
+ * @desc    Get worker's assigned repairs
+ * @route   GET /api/v1/repairs/worker
+ * @access  Private (Worker)
+ */
 export const getWorkerRepairs = async (req, res, next) => {
   try {
     const { status } = req.query;
@@ -204,6 +251,15 @@ export const getWorkerRepairs = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 REPAIR HISTORY
+// ===================================================
+
+/**
+ * @desc    Get worker's completed repair history
+ * @route   GET /api/v1/repairs/worker/history
+ * @access  Private (Worker)
+ */
 export const getWorkerHistory = async (req, res, next) => {
   try {
     const { status } = req.query;
@@ -234,6 +290,11 @@ export const getWorkerHistory = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get customer's repair history with filters
+ * @route   GET /api/v1/repairs/customer/history
+ * @access  Private (Customer)
+ */
 export const getCustomerHistory = async (req, res, next) => {
   try {
     const { status, bidStatus } = req.query;
@@ -268,6 +329,15 @@ export const getCustomerHistory = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 AUCTION MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    Get customer's active auctions
+ * @route   GET /api/v1/repairs/customer/auctions
+ * @access  Private (Customer)
+ */
 export const getCustomerAuctions = async (req, res, next) => {
   try {
     const repairs = await RepairRequest.find({
@@ -289,6 +359,16 @@ export const getCustomerAuctions = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 REPAIR CANCELLATION
+// ===================================================
+
+/**
+ * @desc    Cancel repair request and associated auction
+ * @route   DELETE /api/v1/repairs/:id
+ * @access  Private (Customer)
+ * @note    Sends cancellation email to customer
+ */
 export const cancelRepairRequest = async (req, res, next) => {
   try {
     // 1. Find and cancel the repair request
@@ -322,6 +402,8 @@ export const cancelRepairRequest = async (req, res, next) => {
       );
     }
 
+    // 📧 Should send cancellation email to customer
+
     // 3. Return combined response
     res.status(200).json({
       success: true,
@@ -340,6 +422,12 @@ export const cancelRepairRequest = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Initiate item return to customer
+ * @route   POST /api/v1/repairs/:id/return
+ * @access  Private (Worker)
+ * @note    Sends return notification to customer
+ */
 export const cancelAndReturnItem = async (req, res, next) => {
   try {
     const repairRequest = await RepairRequest.findOne({
@@ -360,6 +448,7 @@ export const cancelAndReturnItem = async (req, res, next) => {
 
     await repairRequest.save();
 
+    // 📧 Should send return notification email
     res.status(200).json({
       success: true,
       message: "Return process initiated",
