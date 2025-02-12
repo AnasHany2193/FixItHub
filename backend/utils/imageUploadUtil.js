@@ -1,29 +1,52 @@
+// imageUploadUtil.js
 import multer from "multer";
 import cloudinary from "../config/cloudinary.js";
 import createHttpError from "http-errors";
+import { fileTypeFromBuffer } from "file-type";
+
+// Allowed MIME types and extensions
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp"]);
 
 /**
- * @desc    Upload file to Cloudinary
+ * @desc    Secure image upload to Cloudinary with validation
  * @param   {string} file - Data URI of the file
+ * @param   {Object} [options] - Upload options
  * @returns {Promise<Object>} Cloudinary upload result
+ * @throws  {BadRequest} For invalid files
+ * @throws  {BadGateway} For Cloudinary errors
  */
 export const imageUploadUtil = async (file) => {
   try {
+    // Validate file signature
+    const buffer = Buffer.from(file.split(",")[1], "base64");
+    const type = await fileTypeFromBuffer(buffer);
+
+    if (!type || !ALLOWED_TYPES.has(type.mime))
+      throw createHttpError.BadRequest(
+        `Invalid file type. Allowed: ${[...ALLOWED_EXTENSIONS].join(", ")}`
+      );
+
     return await cloudinary.uploader.upload(file, {
-      resource_type: "auto",
-      remove_exif: true,
+      resource_type: "image",
+      folder: options.folder || "fixithub/public",
+      allowed_formats: ["jpg", "jpeg", "png", "webp"],
+      format: "auto",
       quality: "auto:best",
-      fetch_format: "auto",
+      face_aware_optimization: true,
       invalidate: true,
+      remove_exif: true,
+      ...options,
     });
   } catch (error) {
-    throw createHttpError.BadGateway("Cloudinary service unavailable", {
-      originalError: error,
+    if (error instanceof createHttpError.HttpError) throw error;
+    throw createHttpError.BadGateway("Image upload service unavailable", {
+      originalError: error.message,
     });
   }
 };
 
-// Multer configuration
+// Configure multer with enhanced validation
 const storage = new multer.memoryStorage();
 export const upload = multer({
   storage,
@@ -31,10 +54,21 @@ export const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB
     files: 5,
   },
-  fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) {
-      return cb(createHttpError.BadRequest("Only image files allowed"));
-    }
-    cb(null, true);
+  fileFilter: async (req, file, cb) => {
+    try {
+      // Validate file content
+      const buffer = file.buffer;
+      const type = await fileTypeFromBuffer(buffer);
+
+      if (!type || !ALLOWED_TYPES.has(type.mime))
+        return cb(
+          createHttpError.BadRequest(
+            `Invalid file type. Allowed: ${[...ALLOWED_EXTENSIONS].join(", ")}`
+          )
+        );
+
+      cb(null, true);
+    } catch (error) {}
+    cb(createHttpError.BadRequest("Invalid file content"));
   },
 }).array("images");
