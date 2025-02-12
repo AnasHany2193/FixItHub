@@ -22,7 +22,6 @@ const transporter = nodemailer.createTransport({
     user: process.env.FIXITHUB_GMAIL_USER,
     pass: process.env.FIXITHUB_GMAIL_PASSWORD,
   },
-  logger: true,
   debug: process.env.NODE_ENV === "development",
 });
 
