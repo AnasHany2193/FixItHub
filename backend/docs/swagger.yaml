@@ -1,90 +1,389 @@
+################################################################################
+#                                                                              #
+#                        SWAGGER/OPENAPI 3.0 SPECIFICATION                     #
+#                                                                              #
+#                               FIXITHUB API v1.0                             #
+#                                                                              #
+#      ███████╗██╗██╗  ██╗██╗████████╗██╗  ██╗██╗   ██╗██████╗                 #
+#      ██╔════╝██║╚██╗██╔╝██║╚══██╔══╝██║  ██║██║   ██║██╔══██╗                #
+#      █████╗  ██║ ╚███╔╝ ██║   ██║   ███████║██║   ██║██████╔╝                #
+#      ██╔══╝  ██║ ██╔██╗ ██║   ██║   ██╔══██║██║   ██║██╔══██╗                #
+#      ██║     ██║██╔╝ ██╗██║   ██║   ██║  ██║╚██████╔╝██║  ██║                #
+#      ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝                #
+#                                                                              #
+################################################################################
+
+# ===================================================
+#                   API METADATA
+# ===================================================
 openapi: 3.0.3
 info:
   title: FixItHub API
   version: 1.0.0
   description: |
-    Marketplace connecting users with repair service providers and refurbished products.
-    Features include auction-based repair requests, product listings, and secure file uploads.
+    ## FixItHub API Documentation
+    Platform for buying, selling, and repairing used products
+
+    ### Project Status
+    - Development: Active
+    - Environment: Production
+
+  contact:
+    name: FixItHub Support
+    email: support@fixithub.com
+  license:
+    name: Proprietary
+    url: https://fixithub.com/terms
+
 servers:
-  - url: http://localhost:5000/api/v1
+  - url: http://localhost:5000
     description: Local development server
-  - url: https://api.fixithub.com/api/v1
+  - url: https://api.fixithub.com
     description: Production server
 
-# ======================
-# Common Components
-# ======================
+# ===================================================
+#                 API TAGS DEFINITION
+# ===================================================
+# Tags help organize endpoints into logical groups
+# Add new tags here when creating new endpoint categories
+tags:
+  - name: Service Health
+    description: Service status monitoring
+  - name: Root
+    description: Base API endpoints
+  - name: Users
+    description: User profile management and listings
+
+# ===================================================
+#                API ENDPOINT DEFINITIONS
+# ===================================================
+# Paths define your API endpoints and operations
+# Group related endpoints using tags
+# Maintain consistent parameter naming conventions
+paths:
+  /:
+    get:
+      tags: [Root]
+      summary: API Root
+      description: Returns basic API information
+      responses:
+        "200":
+          description: API root information
+          content:
+            text/html:
+              example: |
+                <h1>FixItHub API Service</h1>
+                <p>Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Backend System 🚀</p>
+                <ul>
+                  <li><a href="/api-docs">API Documentation</a></li>
+                  <li><a href="/api/v1/health">Service Health</a></li>
+                </ul>
+
+  /api/v1/health:
+    get:
+      tags: [Service Health]
+      summary: Service Health Check
+      description: Returns current service status and database connectivity
+      responses:
+        "200":
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  db:
+                    type: string
+                    example: connected
+                  version:
+                    type: string
+                    example: 1.0.0
+                  environment:
+                    type: string
+                    example: development
+                required:
+                  - status
+                  - db
+                  - version
+                  - environment
+
+  /api/v1/users/me:
+    get:
+      tags: [Users]
+      summary: Get authenticated user's profile
+      description: Retrieve complete profile details for the logged-in user
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrivateUser"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+    patch:
+      tags: [Users]
+      summary: Update user profile
+      description: Update profile information for authenticated user
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                profile.bio:
+                  type: string
+                  maxLength: 500
+                profile.phone:
+                  type: string
+                profile.address:
+                  $ref: "#/components/schemas/Address"
+                profile.socialMedia:
+                  $ref: "#/components/schemas/SocialMedia"
+                profile.avatar:
+                  type: string
+                  format: uri
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrivateUser"
+        "400":
+          description: Invalid update data
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /api/v1/users/workers:
+    get:
+      tags: [Users]
+      summary: List approved workers
+      description: Get paginated list of approved service providers with filtering
+      parameters:
+        - in: query
+          name: skills
+          schema:
+            type: string
+          description: Comma-separated list of skills
+        - in: query
+          name: minRating
+          schema:
+            type: number
+            minimum: 0
+            maximum: 5
+          description: Minimum average rating
+        - in: query
+          name: availability
+          schema:
+            type: string
+            enum: [full-time, part-time]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: List of workers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedWorkers"
+
+  /api/v1/users/customers:
+    get:
+      tags: [Users]
+      summary: List customers (Admin only)
+      description: Get paginated list of registered customers
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: city
+          schema:
+            type: string
+          description: Filter by city
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedCustomers"
+        "403":
+          description: Admin privileges required
+
+  /api/v1/users/{id}:
+    get:
+      tags: [Users]
+      summary: Get public user profile
+      description: Retrieve public profile information for any user
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-fA-F]{24}$"
+          description: Valid MongoDB ObjectId
+      responses:
+        "200":
+          description: Public user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
+        "404":
+          description: User not found
+
+  /api/v1/upload:
+    post:
+      tags: [Media]
+      summary: Upload image files
+      description: Handle multiple image uploads and return Cloudinary URLs
+      parameters:
+        - in: header
+          name: Content-Type
+          required: true
+          schema:
+            type: string
+            example: multipart/form-data
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Array of image files (max 5)
+      responses:
+        '200':
+          description: Image upload successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Invalid file upload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Image processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ... other path definitions ...
+
+# ===================================================
+#           GLOBAL COMPONENTS & SCHEMAS
+# ===================================================
+# Reusable components for:
+# - Schemas (data models)
+# - Parameters
+# - Responses
+# - Security Schemes
+# - Examples
 components:
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: token
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: Use JWT token for authentication
+
+  responses:
+    UnauthorizedError:
+      description: Missing or invalid authentication
+    NotFoundError:
+      description: The requested resource was not found
 
   schemas:
-    User:
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          maxLength: 2
+        zip:
+          type: string
+        country:
+          type: string
+          default: "US"
+
+    SocialMedia:
+      type: object
+      properties:
+        website:
+          type: string
+          format: uri
+        linkedin:
+          type: string
+          format: uri
+        twitter:
+          type: string
+          format: uri
+
+    PublicUser:
       type: object
       properties:
         _id:
           type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
         username:
           type: string
-          minLength: 3
-          maxLength: 30
-          example: tech_repair_guru
-        email:
-          type: string
-          format: email
-          example: user@fixithub.com
         role:
           type: string
           enum: [customer, worker, admin]
-          default: customer
         profile:
           type: object
           properties:
             avatar:
-              type: object
-              properties:
-                url:
-                  type: string
-                  format: uri
-                  example: https://res.cloudinary.com/demo/image/upload/d_avatar.png/non_existing_id.png
-                public_id:
-                  type: string
-                  example: sample_public_id
-            phone:
               type: string
-              example: +1234567890
-            address:
-              type: object
-              properties:
-                street: { type: string }
-                city: { type: string }
-                state:
-                  type: string
-                  maxLength: 2
-                  example: NY
-                zip: { type: string }
-                country:
-                  type: string
-                  default: US
-            bio:
-              type: string
-              maxLength: 500
-              example: Certified electronics repair specialist
-            socialMedia:
-              type: object
-              properties:
-                website: { type: string, format: uri }
-                linkedin: { type: string, format: uri }
-                twitter: { type: string, format: uri }
+        rating:
+          $ref: "#/components/schemas/Rating"
         workerApplication:
           type: object
           properties:
@@ -92,541 +391,105 @@ components:
               type: array
               items:
                 type: string
-                example: electronics
-            certifications:
-              type: array
-              items: { type: string }
-            experience:
+
+    PrivateUser:
+      allOf:
+        - $ref: "#/components/schemas/PublicUser"
+        - type: object
+          properties:
+            email:
               type: string
-              enum: [beginner, intermediate, expert]
+              format: email
             status:
               type: string
-              enum: [pending, approved, rejected]
-            documents:
-              type: array
-              items:
-                type: object
-                properties:
-                  url: { type: string, format: uri }
-                  public_id: { type: string }
-            workHistory:
-              type: array
-              items:
-                type: object
-                properties:
-                  position: { type: string }
-                  company: { type: string }
-                  startYear:
-                    type: integer
-                    minimum: 1900
-                    example: 2018
-                  endYear:
-                    type: integer
-                    minimum: 1900
-                    example: 2023
-            availability:
+              enum: [active, banned, pending, deactivated]
+            createdAt:
               type: string
-              enum: [full-time, part-time, unavailable]
-        stats:
-          type: object
-          properties:
-            completedRepairs:
-              type: integer
-              minimum: 0
-              example: 42
-            completedSales:
-              type: integer
-              minimum: 0
-              example: 15
-            responseRate:
-              type: number
-              minimum: 0
-              maximum: 100
-              example: 92.5
-        rating:
-          type: object
-          properties:
-            average:
-              type: number
-              minimum: 0
-              maximum: 5
-              example: 4.5
-            count:
-              type: integer
-              minimum: 0
-              example: 24
-        location:
-          type: object
-          properties:
-            type:
+              format: date-time
+            lastLogin:
               type: string
-              enum: [Point]
-            coordinates:
-              type: array
-              items: { type: number }
-              minItems: 2
-              maxItems: 2
-              example: [-73.935242, 40.730610]
-        status:
-          type: string
-          enum: [active, banned, pending, deactivated]
-          default: active
+              format: date-time
 
-    OTP:
+    Rating:
       type: object
-      description: One-Time Password document with security features
       properties:
-        userId:
-          type: string
-          format: mongoId
-          description: Associated user reference
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        code:
-          type: string
-          description: Hashed 6-digit OTP code
-          example: $2a$12$S4CX5hLfYw4R2kZq3XvJ7e
-        expiresAt:
-          type: string
-          format: date-time
-          description: Auto-expiration timestamp (TTL index)
-          example: 2024-05-15T12:00:00Z
-        type:
-          type: string
-          enum: [verification, passwordReset]
-          default: verification
-          description: OTP usage context
-        attempts:
+        average:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+        count:
           type: integer
           minimum: 0
-          maximum: 3
-          default: 0
-          description: Failed validation attempts
-      required:
-        - userId
-        - code
-        - expiresAt
-        - type
 
-    Bid:
+    PaginatedWorkers:
       type: object
       properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        worker:
-          $ref: "#/components/schemas/User/properties/_id"
-        bidPrice:
-          type: number
-          minimum: 0.01
-          example: 149.99
-        estimatedTimeDays:
-          type: integer
-          minimum: 1
-          example: 3
-        auction:
-          $ref: "#/components/schemas/Auction/properties/_id"
-        status:
-          type: string
-          enum: [pending, accepted, rejected]
-          default: pending
-        submittedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - worker
-        - bidPrice
-        - estimatedTimeDays
-        - auction
-        - status
-
-    Auction:
-      type: object
-      properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        repairRequest:
-          $ref: "#/components/schemas/RepairRequest/properties/_id"
-        startingMaxPrice:
-          type: number
-          minimum: 1
-          example: 200.00
-        status:
-          type: string
-          enum: [open, closed]
-          default: open
-        expiresAt:
-          type: string
-          format: date-time
-          description: Future date for open auctions
-        bids:
-          type: array
-          items:
-            $ref: "#/components/schemas/Bid/properties/_id"
-        currentLowestBid:
-          $ref: "#/components/schemas/Bid/properties/_id"
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - repairRequest
-        - startingMaxPrice
-        - status
-        - expiresAt
-
-    RepairRequest:
-      type: object
-      properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        customer:
-          $ref: "#/components/schemas/User/properties/_id"
-        title:
-          type: string
-          minLength: 1
-          maxLength: 100
-          example: iPhone 12 Screen Replacement
-        category:
-          type: string
-          enum: [electronics, furniture, appliances, other]
-          example: electronics
-        issueDescription:
-          type: string
-          minLength: 20
-          example: Cracked screen with touch functionality issues
-        worker:
-          $ref: "#/components/schemas/User/properties/_id"
-        itemType:
-          type: string
-          maxLength: 50
-          example: iPhone 12 Pro Max
-        photos:
-          type: array
-          items:
-            $ref: "#/components/schemas/CloudinaryImage"
-          maxItems: 5
-        shippingRequired:
+        success:
           type: boolean
-          default: false
-        status:
-          type: string
-          enum:
-            [
-              pending,
-              auction_open,
-              in_progress,
-              completed,
-              cancelled,
-              returning_to_customer,
-            ]
-          default: pending
-          x-updatable: true
-        paymentStatus:
-          type: string
-          enum: [pending, paid, failed, refunded]
-          default: pending
-        paymentAmount:
-          type: number
-          minimum: 0
-          example: 149.99
-        trackingUpdates:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicUser"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    PaginatedCustomers:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
           type: array
           items:
             type: object
             properties:
-              status:
+              _id:
                 type: string
-                enum:
-                  [
-                    received,
-                    diagnosing,
-                    repairing,
-                    quality_check,
-                    shipped,
-                    payment_received,
-                    payment_failed,
-                  ]
-                x-updatable: true
-              location:
+              username:
                 type: string
-                maxLength: 100
-                example: New York Repair Center
-                x-updatable: true
-              timestamp:
+              profile:
+                type: object
+                properties:
+                  address:
+                    $ref: "#/components/schemas/Address"
+              createdAt:
                 type: string
                 format: date-time
-          x-updatable: false # Managed through dedicated endpoints
-        bids:
-          type: array
-          items:
-            $ref: "#/components/schemas/Bid/properties/_id"
-          x-updatable: false
-        auction:
-          $ref: "#/components/schemas/Auction/properties/_id"
-          x-updatable: false
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - customer
-        - title
-        - category
-        - issueDescription
-        - itemType
-        - status
-        - paymentStatus
-      x-usage:
-        create:
-          required: [customer, title, category, issueDescription, itemType]
-        update:
-          allowedFields: [status, trackingUpdates]
+              lastLogin:
+                type: string
+                format: date-time
+        pagination:
+          $ref: "#/components/schemas/Pagination"
 
-    Reservation:
+    Pagination:
       type: object
       properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        product:
-          $ref: "#/components/schemas/Product/properties/_id"
-        user:
-          $ref: "#/components/schemas/User/properties/_id"
-        status:
-          type: string
-          enum: [active, completed, expired]
-          default: active
-        quantity:
+        page:
           type: integer
-          minimum: 1
-          example: 2
-        expiresAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - product
-        - user
-        - quantity
-        - expiresAt
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
 
-    Product:
+    ErrorResponse:
       type: object
       properties:
-        _id:
+        success:
+          type: boolean
+          example: false
+        error:
           type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        title:
-          type: string
-          maxLength: 100
-          example: iPhone 12 Pro Max Refurbished
-        description:
-          type: string
-          maxLength: 1000
-          example: Factory-refurbished device with 1-year warranty
-        type:
-          type: string
-          enum: [product, spare_part]
-          default: product
-        category:
-          type: string
-          enum: [electronics, furniture, appliances, other]
-          example: electronics
-        condition:
-          type: string
-          enum: [new, refurbished, used]
-          example: refurbished
-        price:
-          type: number
-          minimum: 0
-          example: 599.99
-        photos:
-          type: array
-          items:
-            $ref: "#/components/schemas/CloudinaryImage"
-          maxItems: 5
-        stock:
-          type: integer
-          minimum: 0
-          example: 10
-        reservedStock:
-          type: integer
-          minimum: 0
-          example: 2
-        worker:
-          $ref: "#/components/schemas/User/properties/_id"
-        status:
-          type: string
-          enum: [active, archived]
-          default: active
-        location:
-          $ref: "#/components/schemas/GeoJSONPoint"
-        availableStock:
-          type: integer
-          readOnly: true
-          example: 8
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - title
-        - description
-        - type
-        - category
-        - condition
-        - price
-        - stock
-        - worker
-
-    BaseReview:
-      type: object
-      properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        rating:
-          type: integer
-          minimum: 1
-          maximum: 5
-          example: 5
-        comment:
-          type: string
-          maxLength: 500
-          example: Excellent service!
-        customer:
-          $ref: "#/components/schemas/User/properties/_id"
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-
-    WorkerReview:
-      allOf:
-        - $ref: "#/components/schemas/BaseReview"
-        - type: object
-          properties:
-            worker:
-              $ref: "#/components/schemas/User/properties/_id"
-            repairRequest:
-              $ref: "#/components/schemas/RepairRequest/properties/_id"
-          required:
-            - worker
-            - repairRequest
-
-    ProductReview:
-      allOf:
-        - $ref: "#/components/schemas/BaseReview"
-        - type: object
-          properties:
-            product:
-              $ref: "#/components/schemas/Product/properties/_id"
-            reservation:
-              $ref: "#/components/schemas/Reservation/properties/_id"
-          required:
-            - product
-            - reservation
-
-    Report:
-      type: object
-      properties:
-        _id:
-          type: string
-          format: mongoId
-          example: 65f8d7e8cdf1b203f8d7e8cd
-        reporter:
-          $ref: "#/components/schemas/User/properties/_id"
-        contentType:
-          type: string
-          enum: [product, repair, review, user]
-          example: review
-        contentId:
-          type: string
-          format: mongoId
-          description: |
-            Reference to reported content:
-            - product: Product ID
-            - repair: RepairRequest ID
-            - review: Review ID
-            - user: User ID
-        reason:
-          type: string
-          enum:
-            [
-              spam,
-              inappropriate,
-              fraudulent,
-              false_information,
-              harassment,
-              other,
-            ]
-          example: inappropriate
-        description:
-          type: string
-          maxLength: 500
-          example: Contains offensive language
-        status:
-          type: string
-          enum: [pending, under_review, resolved, dismissed]
-          default: pending
-        resolvedBy:
-          $ref: "#/components/schemas/User/properties/_id"
-        actionsTaken:
+          example: "Validation failed"
+        details:
           type: array
           items:
             type: string
-            enum: [remove_content, warn_user, ban_user, no_action]
-          example: [warn_user]
-        resolutionNotes:
-          type: string
-          example: Issued warning to user
-        resolvedAt:
-          type: string
-          format: date-time
-        createdAt:
-          type: string
-          format: date-time
-          readOnly: true
-        updatedAt:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-        - reporter
-        - contentType
-        - contentId
-        - reason
-        - status
+          example: ["username must be at least 3 characters"]
 
-    ImageUploadResponse:
+    UploadResponse:
       type: object
       properties:
         success:
@@ -638,436 +501,28 @@ components:
         urls:
           type: array
           items:
-            type: object
-            properties:
-              url:
-                type: string
-                format: uri
-                example: "https://res.cloudinary.com/demo/image/upload/v123/example.jpg"
-              resourceType:
-                type: string
-                example: "image"
-              bytes:
-                type: integer
-                example: 102400
+            $ref: '#/components/schemas/UploadResult'
         message:
           type: string
           example: "Uploaded"
-
-    PublicUser:
+    
+    UploadResult:
       type: object
       properties:
-        _id:
+        url:
           type: string
-          format: mongoId
-        username:
+          format: uri
+          example: "https://res.cloudinary.com/demo/image/upload/v123/example.jpg"
+        resourceType:
           type: string
-        role:
-          type: string
-        profile.avatar:
-          $ref: "#/components/schemas/CloudinaryImage"
-        rating:
-          $ref: "#/components/schemas/Rating"
-        workerApplication.skills:
-          type: array
-          items: { type: string }
+          example: "image"
+        bytes:
+          type: integer
+          example: 102400
 
-    UserRegistration:
-      type: object
-      properties:
-        username: { $ref: "#/components/schemas/User/properties/username" }
-        email: { $ref: "#/components/schemas/User/properties/email" }
-        password:
-          type: string
-          format: password
-          minLength: 8
-        role: { $ref: "#/components/schemas/User/properties/role" }
-        skills:
-          {
-            $ref: "#/components/schemas/User/properties/workerApplication/properties/skills",
-          }
-        experience:
-          {
-            $ref: "#/components/schemas/User/properties/workerApplication/properties/experience",
-          }
-        documents:
-          {
-            $ref: "#/components/schemas/User/properties/workerApplication/properties/documents",
-          }
-
-    UserUpdate:
-      type: object
-      properties:
-        profile.bio:
-          {
-            $ref: "#/components/schemas/User/properties/profile/properties/bio",
-          }
-        profile.phone:
-          {
-            $ref: "#/components/schemas/User/properties/profile/properties/phone",
-          }
-        profile.address:
-          {
-            $ref: "#/components/schemas/User/properties/profile/properties/address",
-          }
-        profile.socialMedia:
-          {
-            $ref: "#/components/schemas/User/properties/profile/properties/socialMedia",
-          }
-        profile.avatar:
-          {
-            $ref: "#/components/schemas/User/properties/profile/properties/avatar",
-          }
-
-    PaginatedWorkers:
-      type: object
-      properties:
-        data:
-          type: array
-          items: { $ref: "#/components/schemas/PublicUser" }
-        pagination: { $ref: "#/components/schemas/Pagination" }
-
-    PaginatedCustomers:
-      type: object
-      properties:
-        data:
-          type: array
-          items: { $ref: "#/components/schemas/PublicUser" }
-        pagination: { $ref: "#/components/schemas/Pagination" }
-
-    Pagination:
-      type: object
-      properties:
-        page: { type: integer }
-        limit: { type: integer }
-        total: { type: integer }
-        totalPages: { type: integer }
-
-    CloudinaryImage:
-      type: object
-      properties:
-        url: { type: string, format: uri }
-        public_id: { type: string }
-
-    GeoJSONPoint:
-      type: object
-      properties:
-        type: { type: string, enum: [Point] }
-        coordinates:
-          type: array
-          items: { type: number }
-          minItems: 2
-          maxItems: 2
-
-    ErrorResponse:
-      type: object
-      properties:
-        success: { type: boolean, default: false }
-        error: { type: string }
-        details: { type: object }
-
-  # Add these under responses
   responses:
-    RegistrationSuccess:
-      description: User registration successful
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success: { type: boolean }
-              message: { type: string }
+    TooManyRequestsError:
+      description: Rate limit exceeded
 
-    Success:
-      description: Generic success response
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success: { type: boolean }
-              message: { type: string }
-
-    LoginSuccess:
-      description: Login successful
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success: { type: boolean }
-              user: { $ref: "#/components/schemas/User" }
-              message: { type: string }
-
-    TokenRefresh:
-      description: New access token generated
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              success: { type: boolean }
-              accessToken: { type: string }
-
-    BadRequest:
-      description: Invalid request format
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-
-    Unauthorized:
-      description: Missing or invalid authentication
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-
-    Forbidden:
-      description: Insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: "#/components/schemas/ErrorResponse"
-# ======================
-# API Endpoints
-# ======================
-paths:
-  /upload:
-    post:
-      tags: [Media]
-      summary: Upload images
-      description: |
-        Public image upload endpoint for all users
-        - Max 5 images per request
-        - Supported formats: JPG, PNG, WEBP
-        - Max file size: 5MB
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                images:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-      responses:
-        200:
-          description: Images uploaded successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ImageUploadResponse"
-        400:
-          description: No files uploaded
-        413:
-          description: File too large
-        415:
-          description: Invalid file type
-        500:
-          description: Server error
-
-  /users/{id}:
-    get:
-      tags: [User]
-      summary: Get user profile (Authenticated)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: mongoId
-      responses:
-        200:
-          description: Public user profile
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PublicUser"
-
-  /users/workers:
-    get:
-      tags: [Public]
-      summary: List approved workers (Rate Limited)
-      description: |
-        Public endpoint with rate limiting
-        - 100 requests/15 minutes
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 50
-      responses:
-        200:
-          description: Paginated workers list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedWorkers"
-
-  /users/me:
-    get:
-      tags: [User]
-      summary: Get my profile (Authenticated)
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Full user profile
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-
-    patch:
-      tags: [User]
-      summary: Update my profile (Authenticated)
-      security:
-        - bearerAuth: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserUpdate"
-      responses:
-        200:
-          description: Updated user profile
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-
-  /users/customers:
-    get:
-      tags: [Admin]
-      summary: List all customers (Admin Only)
-      description: |
-        Admin-only endpoint with strict rate limiting
-        - 30 requests/minute
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-      responses:
-        200:
-          description: Paginated customers list
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedCustomers"
-
-  /auth/register:
-    post:
-      tags: [Authentication]
-      summary: Register new user (Public 🔓)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserRegistration"
-      responses:
-        201:
-          $ref: "#/components/responses/RegistrationSuccess"
-
-  /auth/verify-otp:
-    post:
-      tags: [Authentication]
-      summary: Verify OTP (Public 🔓)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/OTPVerification"
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
-
-  /auth/resend-otp:
-    post:
-      tags: [Authentication]
-      summary: Resend OTP (Public 🔓)
-      x-rate-limit: 3 requests/hour
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ResendOTPRequest"
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
-
-  /auth/login:
-    post:
-      tags: [Authentication]
-      summary: User login (Public 🔓)
-      x-rate-limit: 20 requests/15min
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/LoginRequest"
-      responses:
-        200:
-          $ref: "#/components/responses/LoginSuccess"
-
-  /auth/refresh-token:
-    post:
-      tags: [Authentication]
-      summary: Refresh access token (Public 🔓)
-      responses:
-        200:
-          $ref: "#/components/responses/TokenRefresh"
-
-  /auth/forgot-password:
-    post:
-      tags: [Authentication]
-      summary: Request password reset (Public 🔓)
-      x-rate-limit: 5 requests/hour
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ForgotPasswordRequest"
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
-
-  /auth/reset-password:
-    post:
-      tags: [Authentication]
-      summary: Reset password (Public 🔓)
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PasswordReset"
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
-
-  /auth/logout:
-    post:
-      tags: [Authentication]
-      summary: Logout user (Authenticated 🔐)
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
+security:
+  - BearerAuth: []
