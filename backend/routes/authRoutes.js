@@ -1,18 +1,15 @@
 import express from "express";
-
-// Middlewares
 import { protect } from "../middlewares/authMiddleware.js";
 import {
+  apiLimiter,
   authLimiter,
   sensitiveActionLimiter,
 } from "./../middlewares/rateLimiter.js";
-
-// Controllers
 import {
-  register,
-  verifyOTP,
   login,
   logout,
+  register,
+  verifyOTP,
   resendOTP,
   refreshToken,
   forgotPassword,
@@ -21,20 +18,32 @@ import {
 
 const router = express.Router();
 
-router.post("/register", authLimiter, register);
+// ===================================================
+//                 REGISTRATION FLOW
+// ===================================================
+router.post("/register", authLimiter, register); // 🛡️ Rate limited
 
-router.post("/verify-otp", verifyOTP);
+// ===================================================
+//                  VERIFICATION FLOW
+// ===================================================
+router.post("/verify-otp", apiLimiter, verifyOTP); // 🔄 Standard API rate limit
+router.post("/resend-otp", sensitiveActionLimiter, resendOTP); // 🛡️ Strict rate limit
 
-router.post("/resend-otp", resendOTP);
+// ===================================================
+//                  AUTHENTICATION
+// ===================================================
+router.post("/login", authLimiter, login); // 🛡️ Rate limited
+router.post("/refresh-token", apiLimiter, refreshToken); // 🔄 Standard limit
 
-router.post("/login", authLimiter, login);
+// ===================================================
+//                 PASSWORD MANAGEMENT
+// ===================================================
+router.post("/forgot-password", sensitiveActionLimiter, forgotPassword); // 🛡️ Strict limit
+router.post("/reset-password", sensitiveActionLimiter, resetPassword); // 🛡️ Strict limit
 
-router.post("/refresh-token", refreshToken);
-
-router.post("/reset-password", resetPassword);
-
-router.post("/forgot-password", sensitiveActionLimiter, forgotPassword);
-
-router.post("/logout", protect, logout);
+// ===================================================
+//                  SESSION MANAGEMENT
+// ===================================================
+router.post("/logout", protect, logout); // 🔒 Requires valid JWT
 
 export default router;

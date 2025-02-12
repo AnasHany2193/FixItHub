@@ -53,6 +53,10 @@ tags:
     description: Base API endpoints
   - name: Users
     description: User profile management and listings
+  - name: Authentication
+    description: User registration, login, and session management
+  - name: Password Management
+    description: Password reset and recovery operations
 
 # ===================================================
 #                API ENDPOINT DEFINITIONS
@@ -312,6 +316,194 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/v1/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register new user
+      description: Create customer/worker account (admin registration disabled)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequest'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '403':
+          description: Admin registration attempt
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/auth/verify-otp:
+    post:
+      tags: [Authentication]
+      summary: Verify email with OTP
+      description: Confirm user email using one-time password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPVerificationRequest'
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid/expired OTP
+        '404':
+          description: User not found
+
+  /api/v1/auth/resend-otp:
+    post:
+      tags: [Authentication]
+      summary: Resend verification OTP
+      description: Request new OTP for email verification
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required: [email]
+      responses:
+        '200':
+          description: New OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: User already verified
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      summary: User login
+      description: Authenticate user and issue access/refresh tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "refreshToken=abcde12345; Path=/; HttpOnly; Secure; SameSite=Strict"
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Email not verified
+
+  /api/v1/auth/refresh-token:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Generate new access token using refresh token
+      security: []
+      responses:
+        '200':
+          description: New access token issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Invalid/expired refresh token
+
+  /api/v1/auth/forgot-password:
+    post:
+      tags: [Password Management]
+      summary: Initiate password reset
+      description: Send password reset OTP to registered email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: OTP sent if email exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /api/v1/auth/reset-password:
+    post:
+      tags: [Password Management]
+      summary: Complete password reset
+      description: Verify OTP and set new password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Invalid OTP or weak password
+
+  /api/v1/auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Terminate session
+      description: Invalidate refresh token and clear cookies
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
   # ... other path definitions ...
 
 # ===================================================
@@ -520,9 +712,87 @@ components:
           type: integer
           example: 102400
 
+    RegistrationRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          example: "john_doe"
+        email:
+          type: string
+          format: email
+          example: "user@fixithub.com"
+        password:
+          type: string
+          minLength: 6
+          example: "SecurePass123!"
+        role:
+          type: string
+          enum: [customer, worker]
+          default: "customer"
+        skills:
+          type: array
+          items:
+            type: string
+          example: ["electronics", "plumbing"]
+        experience:
+          type: string
+          enum: [beginner, intermediate, expert]
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CloudinaryDocument'
+      required: [username, email, password, role]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@fixithub.com"
+        password:
+          type: string
+          example: "SecurePass123!"
+      required: [email, password]
+
+    LoginResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        user:
+          $ref: '#/components/schemas/PrivateUser'
+        message:
+          type: string
+          example: "Welcome to FixItHub!"
+
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+        newPassword:
+          type: string
+          minLength: 6
+      required: [email, code, newPassword]
+
+    # Add other schemas as needed
+
   responses:
     TooManyRequestsError:
-      description: Rate limit exceeded
+      description: "Rate limit exceeded - try again later"
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
 
 security:
   - BearerAuth: []
