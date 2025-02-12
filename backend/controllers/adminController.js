@@ -1,15 +1,27 @@
-import mongoose from "mongoose";
 import createHttpError from "http-errors";
 
-import User from "../models/User.js";
 import cloudinary from "../config/cloudinary.js";
 import { sendApprovalEmail } from "../services/emailService.js";
 import {
+  sendUserWarning,
   banReportedUser,
   handleContentRemoval,
-  sendUserWarning,
 } from "../utils/reportHandlers.js";
 
+import User from "../models/User.js";
+import Review from "../models/Review.js";
+import Product from "../models/Product.js";
+import RepairRequest from "../models/RepairRequest.js";
+
+// ===================================================
+//                 USER MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    List users with filters
+ * @route   GET /api/v1/admin/users
+ * @access  Private (Admin)
+ */
 export const listUsers = async (req, res, next) => {
   try {
     const { role, status, search, page = 1, limit = 20 } = req.query;
@@ -48,6 +60,11 @@ export const listUsers = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Update user status
+ * @route   PATCH /api/v1/admin/users/:userId/status
+ * @access  Private (Admin)
+ */
 export const updateUserStatus = async (req, res, next) => {
   try {
     const { userId } = req.params;
@@ -80,6 +97,7 @@ export const updateUserStatus = async (req, res, next) => {
       },
     });
 
+    // 📧 Should send status change email to user
     res.json({
       success: true,
       message: `User status updated to ${status}`,
@@ -90,6 +108,11 @@ export const updateUserStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get detailed user profile
+ * @route   GET /api/v1/admin/users/:userId
+ * @access  Private (Admin)
+ */
 export const getUserDetails = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.userId)
@@ -131,6 +154,15 @@ export const getUserDetails = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 WORKER APPLICATIONS
+// ===================================================
+
+/**
+ * @desc    Get worker applications
+ * @route   GET /api/v1/admin/applications
+ * @access  Private (Admin)
+ */
 export const getWorkerApplications = async (req, res, next) => {
   try {
     const { status = "pending", page = 1, limit = 10 } = req.query;
@@ -166,6 +198,11 @@ export const getWorkerApplications = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Process worker application
+ * @route   PATCH /api/v1/admin/applications/:userId
+ * @access  Private (Admin)
+ */
 export const processApplication = async (req, res, next) => {
   try {
     const { userId } = req.params;
@@ -195,6 +232,7 @@ export const processApplication = async (req, res, next) => {
       if (publicIds.length) await cloudinary.api.delete_resources(publicIds);
     }
 
+    // 📧 Uses sendApprovalEmail (emailService)
     res.json({
       success: true,
       message: `Application ${status} successfully`,
@@ -209,6 +247,15 @@ export const processApplication = async (req, res, next) => {
   }
 };
 
+// ===================================================
+//                 REPORT MANAGEMENT
+// ===================================================
+
+/**
+ * @desc    List reports with filters
+ * @route   GET /api/v1/admin/reports
+ * @access  Private (Admin)
+ */
 export const getReports = async (req, res, next) => {
   try {
     const { status, type, page = 1, limit = 20 } = req.query;
@@ -243,6 +290,66 @@ export const getReports = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Get detailed report information
+ * @route   GET /api/v1/admin/reports/:id
+ * @access  Private (Admin)
+ */
+export const getReportDetails = async (req, res, next) => {
+  try {
+    const report = await Report.findById(req.params.id)
+      .populate("reporter", "username email")
+      .populate("contentId")
+      .populate("resolvedBy", "username")
+      .lean();
+
+    if (!report) return next(createHttpError(404, "Report not found"));
+
+    // Get related content details
+    let contentDetails;
+    switch (report.contentType) {
+      case "User":
+        contentDetails = await User.findById(report.contentId)
+          .select("username email status")
+          .lean();
+        break;
+      case "Product":
+        contentDetails = await Product.findById(report.contentId)
+          .select("title price status")
+          .lean();
+        break;
+      case "Repair":
+        contentDetails = await RepairRequest.findById(report.contentId)
+          .select("title status")
+          .lean();
+        break;
+      case "Review":
+        contentDetails = await Review.findById(report.contentId)
+          .select("rating comment status")
+          .lean();
+        break;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...report,
+        contentDetails,
+        history: await ReportHistory.find({ report: report._id }).sort(
+          "-createdAt"
+        ),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Update report status
+ * @route   PATCH /api/v1/admin/reports/:id/status
+ * @access  Private (Admin)
+ */
 export const updateReportStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -271,6 +378,7 @@ export const updateReportStatus = async (req, res, next) => {
       },
     });
 
+    // 📧 Should send status update to reporter
     res.json({
       success: true,
       message: `Report status updated to ${status}`,
@@ -281,6 +389,11 @@ export const updateReportStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * @desc    Take action on reported content
+ * @route   POST /api/v1/admin/reports/:id/actions
+ * @access  Private (Admin)
+ */
 export const takeReportAction = async (req, res, next) => {
   try {
     const { actionType } = req.body;
@@ -323,6 +436,7 @@ export const takeReportAction = async (req, res, next) => {
       { new: true }
     );
 
+    // 📧 Uses sendUserWarning/banReportedUser (emailService)
     res.json({
       success: true,
       message: `Action ${actionType} completed`,

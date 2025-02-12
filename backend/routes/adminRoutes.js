@@ -4,7 +4,6 @@ const router = express.Router();
 import { adminActionLimiter } from "../middlewares/rateLimiter.js";
 import { protect, requireAdmin } from "../middlewares/authMiddleware.js";
 
-import { getReportDetails } from "./../controllers/reportController.js";
 import {
   listUsers,
   getUserDetails,
@@ -38,7 +37,6 @@ router.patch(
 );
 
 router.get("/reports", protect, requireAdmin, adminActionLimiter, getReports);
-router.get("/reports/:id", protect, requireAdmin, getReportDetails);
 router.patch(
   "/reports/:id",
   protect,
