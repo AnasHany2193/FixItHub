@@ -654,6 +654,181 @@ components:
           type: string
           example: "Uploaded"
 
+    PublicUser:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: mongoId
+        username:
+          type: string
+        role:
+          type: string
+        profile.avatar:
+          $ref: "#/components/schemas/CloudinaryImage"
+        rating:
+          $ref: "#/components/schemas/Rating"
+        workerApplication.skills:
+          type: array
+          items: { type: string }
+
+    UserRegistration:
+      type: object
+      properties:
+        username: { $ref: "#/components/schemas/User/properties/username" }
+        email: { $ref: "#/components/schemas/User/properties/email" }
+        password:
+          type: string
+          format: password
+          minLength: 8
+        role: { $ref: "#/components/schemas/User/properties/role" }
+        skills:
+          {
+            $ref: "#/components/schemas/User/properties/workerApplication/properties/skills",
+          }
+        experience:
+          {
+            $ref: "#/components/schemas/User/properties/workerApplication/properties/experience",
+          }
+        documents:
+          {
+            $ref: "#/components/schemas/User/properties/workerApplication/properties/documents",
+          }
+
+    UserUpdate:
+      type: object
+      properties:
+        profile.bio:
+          {
+            $ref: "#/components/schemas/User/properties/profile/properties/bio",
+          }
+        profile.phone:
+          {
+            $ref: "#/components/schemas/User/properties/profile/properties/phone",
+          }
+        profile.address:
+          {
+            $ref: "#/components/schemas/User/properties/profile/properties/address",
+          }
+        profile.socialMedia:
+          {
+            $ref: "#/components/schemas/User/properties/profile/properties/socialMedia",
+          }
+        profile.avatar:
+          {
+            $ref: "#/components/schemas/User/properties/profile/properties/avatar",
+          }
+
+    PaginatedWorkers:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/PublicUser" }
+        pagination: { $ref: "#/components/schemas/Pagination" }
+
+    PaginatedCustomers:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/PublicUser" }
+        pagination: { $ref: "#/components/schemas/Pagination" }
+
+    Pagination:
+      type: object
+      properties:
+        page: { type: integer }
+        limit: { type: integer }
+        total: { type: integer }
+        totalPages: { type: integer }
+
+    CloudinaryImage:
+      type: object
+      properties:
+        url: { type: string, format: uri }
+        public_id: { type: string }
+
+    GeoJSONPoint:
+      type: object
+      properties:
+        type: { type: string, enum: [Point] }
+        coordinates:
+          type: array
+          items: { type: number }
+          minItems: 2
+          maxItems: 2
+
+    ErrorResponse:
+      type: object
+      properties:
+        success: { type: boolean, default: false }
+        error: { type: string }
+        details: { type: object }
+
+  # Add these under responses
+  responses:
+    RegistrationSuccess:
+      description: User registration successful
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean }
+              message: { type: string }
+
+    Success:
+      description: Generic success response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean }
+              message: { type: string }
+
+    LoginSuccess:
+      description: Login successful
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean }
+              user: { $ref: "#/components/schemas/User" }
+              message: { type: string }
+
+    TokenRefresh:
+      description: New access token generated
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean }
+              accessToken: { type: string }
+
+    BadRequest:
+      description: Invalid request format
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 # ======================
 # API Endpoints
 # ======================
