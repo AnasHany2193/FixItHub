@@ -5,6 +5,20 @@ import {
   RoleGuard,
 } from "./components/auth/RouteGuards";
 
+import LoginPage from "./pages/auth/LoginPage";
+import SignupPage from "./pages/auth/SignupPage";
+
+import DashboardLayout from "./components/layout/DashboardLayout";
+import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import WorkerDashboard from "./pages/worker/WorkerDashboard";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+
+import Layout from "./components/layout/Layout";
+import HomePage from "./pages/public/HomePage";
+import AboutPage from "./pages/public/AboutPage";
+import ContactPage from "./pages/public/ContactPage";
+import NotFoundPage from "./pages/public/NotFoundPage";
+
 function App() {
   return (
     <Routes>

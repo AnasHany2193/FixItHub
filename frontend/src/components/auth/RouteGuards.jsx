@@ -1,5 +1,5 @@
 import { useUser } from "@/hooks/useAuth";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet } from "react-router-dom";
 import { LoadingSpinner } from "../common/LoadingSpinner";
 
 export const AuthGuard = () => {
