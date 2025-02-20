@@ -25,26 +25,26 @@ export const AuthLayout = () => {
         />
 
         <motion.div
-          className="absolute w-32 h-32 bg-purple-500 rounded-full md:w-48 md:h-48 top-1/2 right-1/2 filter blur-xl md:blur-3xl"
-          animate={{
-            scale: [1, 0.8, 1],
-            x: [-50, 50, -50],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-
-        <motion.div
-          className="absolute w-40 h-40 bg-blue-500 rounded-full -right-4 md:-right-8 bottom-4 filter blur-xl md:blur-3xl"
+          className="absolute w-40 h-40 bg-blue-500 rounded-full top-1/2 right-1/2 filter blur-xl md:blur-3xl"
           animate={{
             y: [0, -100, 0],
             scale: [1, 1.1, 1],
           }}
           transition={{
             duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+
+        <motion.div
+          className="absolute w-32 h-32 bg-purple-500 rounded-full md:w-48 md:h-48 -right-4 md:-right-8 bottom-4 filter blur-xl md:blur-3xl"
+          animate={{
+            scale: [1, 0.8, 1],
+            x: [-50, 50, -50],
+          }}
+          transition={{
+            duration: 12,
             repeat: Infinity,
             ease: "easeInOut",
           }}
@@ -59,22 +59,10 @@ export const AuthLayout = () => {
         transition={{ duration: 0.5 }}
       >
         {/* Logo with enhanced spacing */}
-        <div className="mb-6 md:mb-10">
-          <TextLogo className="text-xl md:text-3xl" />
-          <p className="mt-2 text-xs font-semibold text-gray-600 md:mt-4 md:text-sm dark:text-white/60">
-            Your Trusted Repair Marketplace
-          </p>
-        </div>
+        <TextLogo className="mb-6 text-xl md:text-3xl md:mb-10" />
 
-        {/* Form container */}
-        <motion.div
-          className="p-4 border shadow-2xl md:p-8 bg-white/80 dark:bg-white/5 backdrop-blur-lg rounded-xl md:rounded-2xl border-gray-200/50 dark:border-white/10"
-          initial={{ scale: 0.95 }}
-          animate={{ scale: 1 }}
-        >
-          {/* This renders the child routes (login/signup/verify/opt/forget-reset password components) */}
-          <Outlet />
-        </motion.div>
+        {/* This renders the child routes (login/signup/verify/opt/forget-reset password components) */}
+        <Outlet />
 
         {/* Auth navigation links */}
         <div className="mt-4 space-y-2 text-xs md:mt-8 md:text-sm">
