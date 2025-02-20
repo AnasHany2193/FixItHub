@@ -22,5 +22,8 @@ export const useLogin = () => {
       localStorage.setItem("accessToken", data.data.accessToken);
       queryClient.invalidateQueries(["currentUser"]); // Add this
     },
+    onError: (error) => {
+      console.error("Login error:", error.message);
+    },
   });
 };
