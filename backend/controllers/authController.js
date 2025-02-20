@@ -205,13 +205,13 @@ export const login = async (req, res, next) => {
       .cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Modified
         maxAge: 15 * 60 * 1000, // 15 minutes
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Modified
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .json({
@@ -286,12 +286,12 @@ export const refreshToken = async (req, res, next) => {
       .cookie("accessToken", newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         maxAge: 15 * 60 * 1000,
       })
       .json({
         success: true,
-        accessToken: newAccessToken, // Delete Later
+        // accessToken: newAccessToken, // Delete Later
       });
   } catch (err) {
     // Handle specific JWT errors

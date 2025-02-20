@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { useLogout, useUser } from "@/hooks/useAuth";
 
 const AuthContext = createContext();
@@ -6,23 +6,29 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const userQuery = useUser();
   const logoutMutation = useLogout();
-  // Prevent initial fetch when no token exists
+
+  // Prevent infinite retries
+  // In AuthProvider component
+  useEffect(() => {
+    if (userQuery.error?.response?.status === 401) {
+      userQuery.remove();
+      window.location.href = "/";
+    }
+  }, [userQuery]);
+
+  useEffect(() => {
+    userQuery.refetch();
+  }, [userQuery]);
+
   const value = {
-    // User query state
     user: userQuery.data,
     isLoading: userQuery.isLoading,
     error: userQuery.error,
     isAuthenticated: !!userQuery.data,
-
-    // Auth actions
-    logout: async () => {
-      await logoutMutation.mutateAsync();
-      userQuery.remove(); // Clear user query cache
-    },
-
-    // Refresh user data
+    logout: () => logoutMutation.mutate(),
     refreshUser: userQuery.refetch,
   };
+
   console.log("value", value);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

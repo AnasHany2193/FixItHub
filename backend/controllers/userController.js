@@ -69,7 +69,7 @@ export const updateMyProfile = async (req, res, next) => {
  */
 export const getUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id)
+    const user = await User.findById(req.user._id)
       .select("username role profile.avatar rating workerApplication.skills")
       .lean();
 

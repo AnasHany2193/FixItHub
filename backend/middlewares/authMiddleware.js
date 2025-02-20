@@ -10,8 +10,7 @@ import User from "../models/User.js";
  */
 export const protect = async (req, res, next) => {
   // Check both Authorization header and cookies
-  const token = req.headers.authorization?.split(" ")[1] || req.cookies?.token;
-
+  const token = req.cookies?.accessToken;
   if (!token) return next(createHttpError(401, "Authentication required"));
 
   try {

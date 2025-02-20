@@ -1,19 +1,15 @@
 import { Link, Outlet } from "react-router-dom";
 import ThemeToggle from "../common/ThemeToggle";
-import { useUser } from "@/hooks/useAuth";
 import { LogOut, Moon, Sun, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
+import { LoadingSpinner } from "../common/LoadingSpinner";
 
 export default function Layout() {
-  const { data: user } = useUser();
+  const { isLoading, user, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
-
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    window.location.href = "/";
-  };
-
+  console.log("user", user);
   return (
     <div className="min-h-screen">
       <nav className="sticky top-0 z-50 bg-white shadow-sm dark:bg-gray-800">
@@ -55,17 +51,19 @@ export default function Layout() {
                 )}
               </Button>
 
-              {user ? (
+              {isLoading ? (
+                <LoadingSpinner />
+              ) : user ? (
                 <div className="relative group">
                   <Button variant="ghost" size="icon">
                     <User className="w-5 h-5" />
                   </Button>
                   <div className="absolute right-0 w-48 py-1 mt-2 transition-opacity bg-white rounded-md shadow-lg opacity-0 dark:bg-gray-800 group-hover:opacity-100">
                     <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-                      Hi, {user.username}
+                      Hi, {user?.username}
                     </div>
                     <button
-                      onClick={handleLogout}
+                      onClick={logout}
                       className="w-full px-4 py-2 text-sm text-left text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <LogOut className="inline w-4 h-4 mr-2" />

@@ -1,8 +1,8 @@
-import apiClient from "./client";
+import axiosClient from "./client";
 
 export const login = async (credentials) => {
   try {
-    const { data } = await apiClient.post("/auth/login", credentials);
+    const { data } = await axiosClient.post("/auth/login", credentials);
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Login failed");
@@ -10,19 +10,15 @@ export const login = async (credentials) => {
 };
 
 export const logout = async () => {
-  try {
-    // Call your backend logout endpoint if exists
-    await apiClient.post("/auth/logout");
-  } finally {
-    // Always clear client-side token
-    localStorage.removeItem("accessToken");
-  }
+  // Always clear client-side token
+  localStorage.removeItem("accessToken");
+  // Call your backend logout endpoint if exists
+  await axiosClient.post("/auth/logout");
 };
 
 export const getCurrentUser = async () => {
   try {
-    const { data } = await apiClient.get("/users/me");
-    console.log("data", data);
+    const { data } = await axiosClient.get("/users/me");
     return data;
   } catch {
     return null;
