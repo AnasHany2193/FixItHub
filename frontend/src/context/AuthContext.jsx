@@ -21,15 +21,13 @@ export const AuthProvider = ({ children }) => {
   }, [userQuery]);
 
   const value = {
-    user: userQuery.data,
+    user: userQuery.data?.data,
     isLoading: userQuery.isLoading,
     error: userQuery.error,
     isAuthenticated: !!userQuery.data,
     logout: () => logoutMutation.mutate(),
     refreshUser: userQuery.refetch,
   };
-
-  console.log("value", value);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

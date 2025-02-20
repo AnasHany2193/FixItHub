@@ -9,7 +9,7 @@ import { LoadingSpinner } from "../common/LoadingSpinner";
 export default function Layout() {
   const { isLoading, user, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
-  console.log("user", user);
+
   return (
     <div className="min-h-screen">
       <nav className="sticky top-0 z-50 bg-white shadow-sm dark:bg-gray-800">

@@ -5,8 +5,25 @@ import { useToast } from "./useToast";
 export const useUser = () => {
   return useQuery({
     queryKey: ["currentUser"],
-    queryFn: getCurrentUser,
+    queryFn: async () => {
+      // Check cached data validity
+      const cachedData = localStorage.getItem("cachedUser");
+      const cacheTimestamp = localStorage.getItem("userCacheTime");
+
+      if (cachedData && cacheTimestamp && Date.now() - cacheTimestamp < 300_000)
+        return JSON.parse(cachedData);
+
+      // Fetch fresh data and cache
+      const freshData = await getCurrentUser();
+      localStorage.setItem("cachedUser", JSON.stringify(freshData));
+      localStorage.setItem("userCacheTime", Date.now());
+      return freshData;
+    },
     staleTime: 1000 * 60 * 15, // 15 minutes matches access token expiry
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 401) return false;
+      return failureCount < 2;
+    },
   });
 };
 
