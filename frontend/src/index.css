@@ -114,11 +114,11 @@
   &:after {
     content: "";
     position: absolute;
+    width: 0;
+    height: 1.5px;
     bottom: -2px;
     left: 0;
-    width: 0;
-    height: 1px;
-    background: currentColor;
+    background-color: currentColor;
     transition: width 0.3s ease;
   }
   &:hover:after {

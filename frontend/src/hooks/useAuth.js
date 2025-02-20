@@ -5,7 +5,7 @@ export const useUser = () => {
   return useQuery({
     queryKey: ["currentUser"],
     queryFn: getCurrentUser,
-    enabled: !!localStorage.getItem("accessToken"), // Add this line
+    enabled: !!localStorage.getItem("accessToken"),
     retry: (failureCount, error) => {
       if (error?.response?.status === 401) return false;
       return failureCount < 2;

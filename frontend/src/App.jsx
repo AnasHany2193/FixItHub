@@ -5,6 +5,7 @@ import {
   RoleGuard,
 } from "./components/auth/RouteGuards";
 
+import AuthLayout from "./components/layout/AuthLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 
@@ -18,7 +19,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import { AuthLayout } from "./components/layout/AuthLayout";
 
 function App() {
   return (
@@ -54,6 +54,7 @@ function App() {
 
       {/* Common Public Routes */}
       <Route element={<Layout />}>
+        <Route index element={<HomePage />} />
         <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />

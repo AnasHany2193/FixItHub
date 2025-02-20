@@ -44,69 +44,59 @@ export const LoginForm = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full"
+      className="w-full space-y-6"
     >
-      <div className="p-8 border border-purple-100 shadow-xl rounded-2xl backdrop-blur-lg bg-white/80 dark:bg-purple-900/20 dark:border-purple-800/50">
-        <div className="mb-8 space-y-1 text-center">
-          <h2 className="text-3xl font-bold text-transparent bg-gradient-to-r from-purple-600 to-indigo-500 bg-clip-text">
-            Welcome Back
-          </h2>
-          <p className="text-purple-600 dark:text-purple-300">
-            Sign in to continue to FixItHub
-          </p>
-        </div>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Email Field */}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-purple-900 dark:text-purple-100">
-                    Email
-                  </FormLabel>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Email Field */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 dark:text-gray-300">
+                  Email Address
+                </FormLabel>
+                <FormControl>
                   <div className="relative">
-                    <Mail className="absolute w-5 h-5 text-purple-400 -translate-y-1/2 left-3 top-1/2 dark:text-purple-500" />
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        disabled={isPending}
-                        placeholder="email@example.com"
-                        className="pl-10 text-gray-600 border-2 border-purple-200 dark:text-white/70 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:border-purple-700/50 dark:bg-purple-900/30 dark:focus:ring-purple-400"
-                      />
-                    </FormControl>
+                    <Mail className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+                    <Input
+                      {...field}
+                      type="email"
+                      disabled={isPending}
+                      autoComplete="email"
+                      placeholder="email@example.com"
+                      className="pl-10 pr-4 transition-colors bg-white border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:bg-indigo-900/20 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                    />
                   </div>
-                  <FormMessage className="dark:text-purple-300" />
-                </FormItem>
-              )}
-            />
+                </FormControl>
+                <FormMessage className="text-sm" />
+              </FormItem>
+            )}
+          />
 
-            {/* Password Field */}
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-purple-900 dark:text-purple-100">
-                    Password
-                  </FormLabel>
+          {/* Password Field */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-gray-700 dark:text-gray-300">
+                  Password
+                </FormLabel>
+                <FormControl>
                   <div className="relative">
-                    <Lock className="absolute w-5 h-5 text-purple-400 -translate-y-1/2 left-3 top-1/2 dark:text-purple-500" />
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="pl-10 text-gray-600 border-2 border-purple-200 dark:text-white/70 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:border-purple-700/50 dark:bg-purple-900/30 dark:focus:ring-purple-400"
-                        disabled={isPending}
-                      />
-                    </FormControl>
+                    <Lock className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="pl-10 pr-4 bg-white border-blue-200 ring-1 focus:ring-2 focus:ring-blue-400 dark:bg-indigo-900/20 dark:border-indigo-700 dark:focus:ring-indigo-400"
+                      disabled={isPending}
+                    />
                     <button
                       type="button"
-                      className="absolute text-purple-400 -translate-y-1/2 right-3 top-1/2 hover:text-purple-500 dark:text-purple-500 dark:hover:text-purple-400"
+                      className="absolute p-1 text-gray-400 transition-colors -translate-y-1/2 rounded-md right-3 top-1/2 hover:text-blue-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-700/30"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
@@ -116,25 +106,26 @@ export const LoginForm = () => {
                       )}
                     </button>
                   </div>
-                  <FormMessage className="dark:text-purple-300" />
-                </FormItem>
-              )}
-            />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-12 text-lg font-semibold transition-all bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-purple-700 hover:to-indigo-600 dark:from-purple-700 dark:to-indigo-600 dark:hover:from-purple-600 dark:hover:to-indigo-500"
-              disabled={isPending}
-            >
-              {isPending ? (
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              ) : null}
-              {isPending ? "Signing In..." : "Continue"}
-            </Button>
-          </form>
-        </Form>
-      </div>
+          {/* Login Button */}
+          <Button
+            type="submit"
+            className="w-full font-semibold transition-colors bg-blue-600 dark:text-white h-11 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+            disabled={isPending}
+          >
+            {isPending ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              "Log In"
+            )}
+          </Button>
+        </form>
+      </Form>
     </motion.div>
   );
 };
