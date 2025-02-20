@@ -22,9 +22,10 @@ export const useLogin = () => {
       // Fix data structure access
       localStorage.setItem("accessToken", data.accessToken);
       queryClient.invalidateQueries(["currentUser"]);
+      console.log("success", data.message);
     },
     onError: (error) => {
-      console.error("Login error:", error.message);
+      console.error("Error", error.message);
     },
   });
 };

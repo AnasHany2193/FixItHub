@@ -22,6 +22,7 @@ export const logout = async () => {
 export const getCurrentUser = async () => {
   try {
     const { data } = await apiClient.get("/users/me");
+    console.log("data", data);
     return data;
   } catch {
     return null;

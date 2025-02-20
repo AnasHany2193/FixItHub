@@ -6,7 +6,6 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const userQuery = useUser();
   const logoutMutation = useLogout();
-
   // Prevent initial fetch when no token exists
   const value = {
     // User query state
@@ -24,6 +23,7 @@ export const AuthProvider = ({ children }) => {
     // Refresh user data
     refreshUser: userQuery.refetch,
   };
+  console.log("value", value);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

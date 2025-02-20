@@ -1,6 +1,8 @@
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
+import { Toaster } from "./components/ui/toaster";
+
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { QueryProvider } from "./providers/QueryClientProvider";
@@ -14,6 +16,7 @@ createRoot(document.getElementById("root")).render(
       <QueryProvider>
         <AuthProvider>
           <App />
+          <Toaster />
         </AuthProvider>
       </QueryProvider>
     </BrowserRouter>
