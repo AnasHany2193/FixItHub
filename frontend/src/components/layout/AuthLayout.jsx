@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 
 import { TextLogo } from "../common/Logo";
 import ThemeToggle from "../common/ThemeToggle";
 
 export const AuthLayout = () => {
+  const { pathname } = useLocation();
+
   return (
     <div className="relative flex items-center justify-center min-h-screen p-4 overflow-hidden text-gray-900 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 font-JosefinSans">
       {/* Animated background elements */}
@@ -77,7 +79,7 @@ export const AuthLayout = () => {
         {/* Auth navigation links */}
         <div className="mt-4 space-y-2 text-xs md:mt-8 md:text-sm">
           <p className="font-bold text-gray-600 dark:text-white/70">
-            {window.location.pathname.includes("login") ? (
+            {pathname.includes("login") ? (
               <>
                 New to FixItHub?{" "}
                 <Link
