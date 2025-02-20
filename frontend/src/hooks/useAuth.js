@@ -1,4 +1,4 @@
-import { getCurrentUser, login } from "@/api/auth";
+import { getCurrentUser, login, logout } from "@/api/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUser = () => {
@@ -19,11 +19,27 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      localStorage.setItem("accessToken", data.data.accessToken);
-      queryClient.invalidateQueries(["currentUser"]); // Add this
+      // Fix data structure access
+      localStorage.setItem("accessToken", data.accessToken);
+      queryClient.invalidateQueries(["currentUser"]);
     },
     onError: (error) => {
       console.error("Login error:", error.message);
+    },
+  });
+};
+
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      queryClient.removeQueries(["currentUser"]);
+      queryClient.clear();
+    },
+    onError: (error) => {
+      console.error("Logout error:", error.message);
     },
   });
 };

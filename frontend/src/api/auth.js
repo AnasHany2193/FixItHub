@@ -9,6 +9,16 @@ export const login = async (credentials) => {
   }
 };
 
+export const logout = async () => {
+  try {
+    // Call your backend logout endpoint if exists
+    await apiClient.post("/auth/logout");
+  } finally {
+    // Always clear client-side token
+    localStorage.removeItem("accessToken");
+  }
+};
+
 export const getCurrentUser = async () => {
   try {
     const { data } = await apiClient.get("/users/me");
