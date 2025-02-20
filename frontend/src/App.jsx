@@ -18,14 +18,17 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import { AuthLayout } from "./components/layout/AuthLayout";
 
 function App() {
   return (
     <Routes>
       {/* Public Routes */}
       <Route element={<PublicGuard />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+        </Route>
       </Route>
 
       {/* Protected Routes */}
