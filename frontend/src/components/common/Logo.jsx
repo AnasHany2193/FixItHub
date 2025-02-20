@@ -8,25 +8,25 @@ export const Logo = ({ className }) => {
       className={`relative ${className}`}
       initial={{ opacity: 0, scale: 0.5 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
     >
       {/* Main logo icon */}
       <motion.div
-        className="relative"
+        className="relative group"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         <Wrench
-          className="w-full h-full text-emerald-500"
-          strokeWidth={2}
+          className="w-full h-full transition-colors text-emerald-400 group-hover:text-emerald-300"
+          strokeWidth={2.5}
           aria-hidden="true"
         />
 
         {/* Shield badge */}
         <motion.div
-          className="absolute p-1 bg-white rounded-full shadow-lg -top-2 -right-3 dark:bg-slate-900"
+          className="absolute -top-3 -right-3 bg-white/80 dark:bg-slate-900/80 p-1.5 rounded-full shadow-lg backdrop-blur-sm"
           animate={{
-            y: [0, -5, 0],
+            y: [0, -8, 0],
             rotate: [0, 15, -15, 0],
           }}
           transition={{
@@ -36,9 +36,9 @@ export const Logo = ({ className }) => {
           }}
         >
           <Shield
-            className="w-3 h-3 text-emerald-500"
+            className="w-3 h-3 text-emerald-400"
             fill="currentColor"
-            strokeWidth={1}
+            strokeWidth={1.5}
           />
         </motion.div>
       </motion.div>
@@ -59,12 +59,12 @@ export const Logo = ({ className }) => {
 export const TextLogo = ({ className }) => {
   return (
     <motion.div
-      className={`flex items-center gap-2 ${className} gap-3 justify-center`}
+      className={`flex items-center ${className} gap-3 justify-center`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
     >
-      <Logo className="w-8 h-8" />
-      <span className="text-2xl font-bold text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text">
+      <Logo className="w-10 h-10" />
+      <span className="text-3xl font-bold text-transparent bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text">
         FixItHub
       </span>
     </motion.div>

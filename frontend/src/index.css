@@ -108,3 +108,20 @@
     --chart-5: 340 75% 55%;
   }
 }
+
+.link-underline {
+  position: relative;
+  &:after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: currentColor;
+    transition: width 0.3s ease;
+  }
+  &:hover:after {
+    width: 100%;
+  }
+}
