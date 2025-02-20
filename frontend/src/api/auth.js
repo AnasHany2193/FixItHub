@@ -5,5 +5,11 @@ export const login = async (credentials) => {
 };
 
 export const getCurrentUser = async () => {
-  return apiClient.get("/users/me");
+  try {
+    const { data } = await apiClient.get("/users/me");
+    return data;
+  } catch (error) {
+    console.log("error", error);
+    return null;
+  }
 };

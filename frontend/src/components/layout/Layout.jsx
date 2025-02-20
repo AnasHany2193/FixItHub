@@ -6,8 +6,7 @@ import { Button } from "../ui/button";
 import { useTheme } from "@/context/ThemeContext";
 
 export default function Layout() {
-  // const { data: user } = useUser();
-  const user = null;
+  const { data: user } = useUser();
   const { darkMode, toggleDarkMode } = useTheme();
 
   const handleLogout = () => {

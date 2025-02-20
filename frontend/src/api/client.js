@@ -23,7 +23,10 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("accessToken");
-      window.location.href = "/";
+      // Only redirect if not already on auth pages
+      if (!window.location.pathname.startsWith("/auth")) {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
