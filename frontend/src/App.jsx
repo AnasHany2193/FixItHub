@@ -19,6 +19,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<VerifyOTPPage />} />
         </Route>
       </Route>
 

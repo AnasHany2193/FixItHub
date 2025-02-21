@@ -33,3 +33,24 @@ export const getCurrentUser = async () => {
     return null;
   }
 };
+
+export const verifyOTP = async ({ email, code }) => {
+  try {
+    const { data } = await axiosClient.post("/auth/verify-otp", {
+      email,
+      code,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "OTP verification failed");
+  }
+};
+
+export const resendOTP = async (email) => {
+  try {
+    const { data } = await axiosClient.post("/auth/resend-otp", { email });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to resend OTP");
+  }
+};

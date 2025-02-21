@@ -1,6 +1,13 @@
 import { useToast } from "./useToast";
 import { uploadImage } from "@/api/upload";
-import { getCurrentUser, login, logout, register } from "@/api/auth";
+import {
+  getCurrentUser,
+  login,
+  logout,
+  register,
+  resendOTP,
+  verifyOTP,
+} from "@/api/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUser = () => {
@@ -105,10 +112,7 @@ export const useRegister = () => {
           data.message || "Please check your email to verify your account",
       });
 
-      // Redirect to OTP verification page "Later"
-      // window.location.href = `/verify-email?email=${encodeURIComponent(
-      //   data.email || ""
-      // )}`;
+      window.location.href = "/verify-email";
     },
     onError: (error) => {
       toast({
@@ -138,6 +142,51 @@ export const useUpload = () => {
       toast({
         variant: "error",
         title: "Upload Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useVerifyOTP = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: verifyOTP,
+    onSuccess: (data) => {
+      toast({
+        variant: "success",
+        title: "Email Verified!",
+        description:
+          data.message || "Your email has been successfully verified",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Verification Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useResendOTP = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: resendOTP,
+    onSuccess: (data) => {
+      toast({
+        variant: "success",
+        title: "OTP Resent!",
+        description: data.message || "New OTP sent to your email",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Resend Failed",
         description: error.message,
       });
     },
