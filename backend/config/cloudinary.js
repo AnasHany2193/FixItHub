@@ -10,7 +10,8 @@ const requiredConfig = [
 
 const missingVars = requiredConfig.filter((key) => !process.env[key]);
 if (missingVars.length > 0)
-  throw createHttpError.InternalServerError(
+  throw createHttpError(
+    500,
     `Cloudinary configuration error: Missing ${missingVars.join(", ")} in environment variables`
   );
 

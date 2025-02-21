@@ -120,11 +120,11 @@ const routeConfig = [
   { path: "/auth", route: authRoutes },
   { path: "/users", route: userRoutes },
   { path: "/admin", route: adminRoutes },
+  { path: "/upload", route: uploadRoutes },
   { path: "/reviews", route: reviewRoutes },
   { path: "/reports", route: reportRoutes },
   { path: "/repairs", route: repairRoutes },
   { path: "/payment", route: paymentRoutes },
-  { path: "/document", route: uploadRoutes },
   { path: "/auctions", route: auctionRoutes },
   { path: "/products", route: productRoutes },
 ];
