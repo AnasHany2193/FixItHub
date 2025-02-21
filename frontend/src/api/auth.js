@@ -55,3 +55,12 @@ export const resendOTP = async (email) => {
     throw new Error(error.response?.data?.error || "Failed to resend OTP");
   }
 };
+
+export const forgotPassword = async (email) => {
+  try {
+    const { data } = await axiosClient.post("/auth/forgot-password", email);
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Password reset failed");
+  }
+};

@@ -1,6 +1,7 @@
 import { useToast } from "./useToast";
 import { uploadImage } from "@/api/upload";
 import {
+  forgotPassword,
   getCurrentUser,
   login,
   logout,
@@ -191,6 +192,29 @@ export const useResendOTP = () => {
       toast({
         variant: "error",
         title: "Resend Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useForgotPassword = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: forgotPassword,
+    onSuccess: (data) => {
+      toast({
+        variant: "success",
+        title: "OTP Sent",
+        description: data.message || "Check your email for the reset OTP",
+      });
+      window.location.href = "/reset-password";
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Password Reset Failed",
         description: error.message,
       });
     },

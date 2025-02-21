@@ -21,6 +21,7 @@ import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
 import ResendOtpPage from "./pages/auth/ResendOtpPage";
+import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/verify-email" element={<VerifyOTPPage />} />
           <Route path="/resend-otp" element={<ResendOtpPage />} />
+          <Route path="/forgot-password" element={<ForgetPasswordPage />} />
         </Route>
       </Route>
 
