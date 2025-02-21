@@ -1,5 +1,14 @@
 import axiosClient from "./client";
 
+export const register = async (credentials) => {
+  try {
+    const { data } = await axiosClient.post("/auth/register", credentials);
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Registration failed");
+  }
+};
+
 export const login = async (credentials) => {
   try {
     const { data } = await axiosClient.post("/auth/login", credentials);

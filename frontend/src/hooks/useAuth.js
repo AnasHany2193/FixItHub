@@ -1,4 +1,4 @@
-import { getCurrentUser, login, logout } from "@/api/auth";
+import { getCurrentUser, login, logout, register } from "@/api/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./useToast";
 
@@ -89,6 +89,36 @@ export const useLogout = () => {
         description: error.message,
       });
       window.location.href = "/login";
+    },
+  });
+};
+
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: register,
+    onSuccess: (data) => {
+      console.log("useRegister", data);
+      // Set user data immediately after successful registration
+      queryClient.setQueryData(["currentUser"], data.user);
+
+      // Invalidate queries to ensure fresh state
+      queryClient.invalidateQueries(["currentUser"], { exact: true });
+
+      toast({
+        variant: "success",
+        title: "Registration Successful",
+        description: data.message || "Welcome to FixItHub!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Registration Failed",
+        description: error.message,
+      });
     },
   });
 };
