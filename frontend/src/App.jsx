@@ -20,6 +20,7 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
+import ResendOtpPage from "./pages/auth/ResendOtpPage";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/verify-email" element={<VerifyOTPPage />} />
+          <Route path="/resend-otp" element={<ResendOtpPage />} />
         </Route>
       </Route>
 

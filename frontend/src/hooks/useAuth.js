@@ -160,6 +160,8 @@ export const useVerifyOTP = () => {
         description:
           data.message || "Your email has been successfully verified",
       });
+
+      window.location.href = "/login";
     },
     onError: (error) => {
       toast({
@@ -182,6 +184,8 @@ export const useResendOTP = () => {
         title: "OTP Resent!",
         description: data.message || "New OTP sent to your email",
       });
+
+      window.location.href = "/verify-email";
     },
     onError: (error) => {
       toast({

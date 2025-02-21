@@ -88,27 +88,32 @@ export const register = async (req, res, next) => {
 export const verifyOTP = async (req, res, next) => {
   const { email, code } = req.body;
   try {
-    // Check if the user already exists
     const existingUser = await User.findOne({ email });
     if (!existingUser) throw createHttpError(404, "User not found");
 
-    // Find the latest OTP for the user
-    const otp = await OTP.findOne({ userId: existingUser._id }).sort({
-      expiresAt: -1,
-    });
-    if (!otp || otp.expiresAt < Date.now())
-      throw createHttpError(400, "OTP expired or invalid");
+    // Find valid OTP using atomic operation
+    const otp = await OTP.findOneAndUpdate(
+      {
+        userId: existingUser._id,
+        expiresAt: { $gt: Date.now() },
+        attempts: { $lt: 3 },
+      },
+      { $inc: { attempts: 1 } },
+      { new: true, sort: { expiresAt: -1 } }
+    );
 
-    // Validate OTP
+    if (!otp)
+      throw createHttpError(400, "OTP expired/invalid or max attempts reached");
+
+    // Validate using schema method
     const isValid = await otp.validateOTP(code);
     if (!isValid) throw createHttpError(400, "Invalid OTP");
 
-    // Mark user as verified
-    existingUser.isVerified = true;
-    await existingUser.save();
-
-    // Delete OTP document after successful verification
-    await OTP.deleteOne({ _id: otp._id });
+    // Cleanup operations
+    await Promise.all([
+      OTP.deleteOne({ _id: otp._id }),
+      User.findByIdAndUpdate(existingUser._id, { isVerified: true }),
+    ]);
 
     // Send a welcome email
     // Optionally, pass user's name if available (e.g., existingUser.username)

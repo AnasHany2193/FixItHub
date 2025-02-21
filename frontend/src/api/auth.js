@@ -48,7 +48,8 @@ export const verifyOTP = async ({ email, code }) => {
 
 export const resendOTP = async (email) => {
   try {
-    const { data } = await axiosClient.post("/auth/resend-otp", { email });
+    console.log("resendOTP", email);
+    const { data } = await axiosClient.post("/auth/resend-otp", email);
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Failed to resend OTP");

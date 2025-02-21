@@ -55,20 +55,10 @@ otpSchema.methods = {
         throw createHttpError.TooManyRequests("OTP attempts exceeded");
 
       const isValid = await bcrypt.compare(candidateCode, this.code);
-      if (!isValid) {
-        this.attempts += 1;
-        await this.save();
-      }
-
       return isValid;
     } catch (error) {
       throw createHttpError.InternalServerError("OTP validation failed");
     }
-  },
-
-  invalidate: async function () {
-    this.expiresAt = Date.now();
-    return this.save();
   },
 };
 
