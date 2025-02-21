@@ -1,7 +1,7 @@
-import { getCurrentUser, login, logout, register } from "@/api/auth";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./useToast";
 import { uploadImage } from "@/api/upload";
+import { getCurrentUser, login, logout, register } from "@/api/auth";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUser = () => {
   const { toast } = useToast();

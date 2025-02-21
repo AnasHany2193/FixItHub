@@ -8,7 +8,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AuthLink } from "@/components/auth/AuthLink";
-import { RoleSelection } from "@/components/auth/RoleSelection";
+
+import RoleSelection from "@/components/auth/RoleSelection";
 import CustomerRegisterForm from "@/components/auth/CustomerRegisterForm";
 import WorkerRegisterForm from "@/components/auth/WorkerRegisterForm";
 

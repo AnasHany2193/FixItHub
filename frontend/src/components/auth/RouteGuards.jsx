@@ -18,8 +18,7 @@ export const PublicGuard = () => {
 
 export const RoleGuard = ({ allowedRoles }) => {
   const { user } = useAuth();
-  console.log("user", user);
-  console.log("allowedRoles", allowedRoles);
+
   if (!allowedRoles.includes(user?.role)) {
     return <Navigate to="/not-found" replace />;
   }

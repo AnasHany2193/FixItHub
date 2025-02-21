@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { User, Briefcase } from "lucide-react";
 
-export const RoleSelection = ({ onSelect }) => (
+const RoleSelection = ({ onSelect }) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -42,3 +42,5 @@ export const RoleSelection = ({ onSelect }) => (
     </motion.div>
   </motion.div>
 );
+
+export default RoleSelection;

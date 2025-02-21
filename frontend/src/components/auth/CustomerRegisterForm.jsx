@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Eye, EyeOff, User, Mail, Lock } from "lucide-react";
+
 import { useRegister } from "@/hooks/useAuth";
+import { LoadingSpinner } from "../common/LoadingSpinner";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -15,7 +17,12 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { LoadingSpinner } from "../common/LoadingSpinner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 const customerSchema = z
   .object({
@@ -24,8 +31,9 @@ const customerSchema = z
     password: z
       .string()
       .min(6, "Password must be at least 6 characters")
-      .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Must contain at least one number"),
+      .regex(/[A-Z]/, "Must contain at least one uppercase letter (A-Z)")
+      .regex(/[a-z]/, "Must contain at least one lowercase letter (a-z)")
+      .regex(/[0-9]/, "Must contain at least one number (0-9)"),
     confirm: z.string().min(6, "Please confirm your password"),
   })
   .refine((data) => data.password === data.confirm, {
@@ -33,21 +41,19 @@ const customerSchema = z
     path: ["confirm"],
   });
 
-const calculatePasswordStrength = (password) => {
-  let strength = 0;
-  if (password.length >= 6) strength++;
-  if (password.length >= 12) strength++;
-  if (/[A-Z]/.test(password)) strength++;
-  if (/[0-9]/.test(password)) strength++;
-  if (/[^A-Za-z0-9]/.test(password)) strength++;
-  return Math.min(strength, 4);
-};
+// Password requirements for validation
+const PASSWORD_REQUIREMENTS = [
+  { label: "6+ characters", regex: /.{6,}/ },
+  { label: "Uppercase (A-Z)", regex: /[A-Z]/ },
+  { label: "Lowercase (a-z)", regex: /[a-z]/ },
+  { label: "Number (0-9)", regex: /[0-9]/ },
+  { label: "Special char", regex: /[^A-Za-z0-9]/ },
+];
 
 const CustomerRegisterForm = ({ onBack }) => {
   const { mutate: registerUser, isPending } = useRegister();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
 
   const form = useForm({
     resolver: zodResolver(customerSchema),
@@ -55,18 +61,20 @@ const CustomerRegisterForm = ({ onBack }) => {
   });
 
   const onSubmit = (values) => registerUser({ ...values, role: "customer" });
-  const password = form.watch("password");
 
-  useEffect(() => {
-    setPasswordStrength(calculatePasswordStrength(password || ""));
-  }, [password]);
+  const password = form.watch("password");
+  const passwordRequirements = useMemo(
+    () =>
+      PASSWORD_REQUIREMENTS.map((req) => ({
+        ...req,
+        met: req.regex.test(password || ""),
+      })),
+    [password]
+  );
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="min-w-full space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-96">
         <Button
           type="button"
           variant="ghost"
@@ -77,16 +85,14 @@ const CustomerRegisterForm = ({ onBack }) => {
           Back to Selection
         </Button>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-6">
           {/* Username Field */}
           <FormField
             control={form.control}
             name="username"
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
-                <FormLabel className="text-gray-700 dark:text-gray-300">
-                  Username
-                </FormLabel>
+                <FormLabel>Username</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -95,7 +101,6 @@ const CustomerRegisterForm = ({ onBack }) => {
                     }
                     placeholder="Enter your username"
                     disabled={isPending}
-                    className="border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
                   />
                 </FormControl>
                 <FormMessage />
@@ -109,9 +114,7 @@ const CustomerRegisterForm = ({ onBack }) => {
             name="email"
             render={({ field }) => (
               <FormItem className="sm:col-span-2">
-                <FormLabel className="text-gray-700 dark:text-gray-300">
-                  Email
-                </FormLabel>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -121,7 +124,6 @@ const CustomerRegisterForm = ({ onBack }) => {
                     }
                     placeholder="email@example.com"
                     disabled={isPending}
-                    className="border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
                   />
                 </FormControl>
                 <FormMessage />
@@ -129,15 +131,13 @@ const CustomerRegisterForm = ({ onBack }) => {
             )}
           />
 
-          {/* Password Field */}
+          {/* Password Fields */}
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-gray-700 dark:text-gray-300">
-                  Password
-                </FormLabel>
+              <FormItem>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
@@ -146,9 +146,9 @@ const CustomerRegisterForm = ({ onBack }) => {
                       startIcon={
                         <Lock className="text-gray-400 dark:text-indigo-300" />
                       }
-                      placeholder="Enter your password"
+                      placeholder="Create password"
                       disabled={isPending}
-                      className="pr-12 border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                      className="pr-12"
                     />
                     <button
                       type="button"
@@ -168,15 +168,12 @@ const CustomerRegisterForm = ({ onBack }) => {
             )}
           />
 
-          {/* Confirm Password Field */}
           <FormField
             control={form.control}
             name="confirm"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-gray-700 dark:text-gray-300">
-                  Confirm Password
-                </FormLabel>
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
@@ -185,9 +182,9 @@ const CustomerRegisterForm = ({ onBack }) => {
                       startIcon={
                         <Lock className="text-gray-400 dark:text-indigo-300" />
                       }
-                      placeholder="Confirm your password"
+                      placeholder="Confirm password"
                       disabled={isPending}
-                      className="pr-12 border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                      className="pr-12"
                     />
                     <button
                       type="button"
@@ -209,39 +206,46 @@ const CustomerRegisterForm = ({ onBack }) => {
             )}
           />
 
-          {/* Password Strength Indicator */}
-          {password && (
-            <div className="sm:col-span-2">
-              <div className="grid grid-cols-4 gap-2 mt-1">
-                {[...Array(4)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      passwordStrength > i
-                        ? "bg-blue-500 dark:bg-indigo-400"
-                        : "bg-gray-200 dark:bg-gray-600"
-                    }`}
-                  />
-                ))}
+          {/* Password Strength */}
+          <TooltipProvider>
+            {password && (
+              <div className="p-4 space-y-2 rounded-lg bg-blue-50 dark:bg-indigo-900/20">
+                <div className="grid grid-cols-5 gap-2">
+                  {passwordRequirements.map((req) => (
+                    <Tooltip key={req.label}>
+                      <TooltipTrigger className="w-full">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            req.met
+                              ? "bg-blue-500 dark:bg-indigo-400"
+                              : "bg-gray-200 dark:bg-gray-600"
+                          }`}
+                        />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {req.met ? "✓ Met: " : "✕ Missing: "}
+                        {req.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Meeting {passwordRequirements.filter((req) => req.met).length}{" "}
+                  of {PASSWORD_REQUIREMENTS.length} requirements
+                </p>
               </div>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                Password strength:{" "}
-                <span className="font-medium text-blue-600 dark:text-indigo-300">
-                  {["Weak", "Fair", "Good", "Strong"][passwordStrength - 1]}
-                </span>
-              </p>
-            </div>
-          )}
-        </div>
+            )}
+          </TooltipProvider>
 
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          className="w-full font-semibold transition-colors bg-blue-600 dark:text-white h-11 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
-          disabled={isPending}
-        >
-          {isPending ? <LoadingSpinner size="sm" /> : "Create Account"}
-        </Button>
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            className="w-full font-semibold transition-colors bg-blue-600 dark:text-white h-11 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+            disabled={isPending}
+          >
+            {isPending ? <LoadingSpinner size="sm" /> : "Create Account"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

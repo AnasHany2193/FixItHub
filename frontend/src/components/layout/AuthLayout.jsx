@@ -44,7 +44,7 @@ export default function AuthLayout() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="relative w-full md:max-w-md px-8 py-3 mx-auto max-w-[95vw] overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly">
+        <Card className="relative w-full md:min-w-md px-8 py-3 mx-auto max-w-[95vw] overflow-auto border border-blue-200 max-h-[90vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly">
           <Outlet />
 
           {/* Add home navigation at bottom */}
