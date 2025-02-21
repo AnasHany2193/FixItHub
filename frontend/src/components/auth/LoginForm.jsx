@@ -58,17 +58,17 @@ export const LoginForm = () => {
                   Email Address
                 </FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Mail className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-                    <Input
-                      {...field}
-                      type="email"
-                      disabled={isPending}
-                      autoComplete="email"
-                      placeholder="email@example.com"
-                      className="pl-10 pr-4 transition-colors bg-white border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:bg-indigo-900/20 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                    />
-                  </div>
+                  <Input
+                    {...field}
+                    type="email"
+                    disabled={isPending}
+                    autoComplete="email"
+                    placeholder="email@example.com"
+                    startIcon={
+                      <Mail className="text-gray-400 dark:text-indigo-300/80" />
+                    }
+                    className="pr-4 transition-colors border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                  />
                 </FormControl>
                 <FormMessage className="text-sm" />
               </FormItem>
@@ -86,13 +86,15 @@ export const LoginForm = () => {
                 </FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Lock className="absolute w-5 h-5 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="pl-10 pr-4 bg-white border-blue-200 ring-1 focus:ring-2 focus:ring-blue-400 dark:bg-indigo-900/20 dark:border-indigo-700 dark:focus:ring-indigo-400"
                       disabled={isPending}
+                      startIcon={
+                        <Lock className="text-gray-400 dark:text-indigo-300/80" />
+                      }
+                      className="pr-4 border-2 border-blue-200/70 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700 dark:focus:ring-indigo-400/20"
                     />
                     <button
                       type="button"
