@@ -43,7 +43,7 @@ axiosClient.interceptors.response.use(
           isRefreshing = false;
           refreshSubscribers = [];
           await axiosClient.post("/auth/logout");
-          window.location.href = "/login";
+          window.location.href = "/";
           return Promise.reject(refreshError);
         }
       }

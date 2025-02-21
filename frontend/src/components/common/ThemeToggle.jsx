@@ -1,19 +1,30 @@
 import { useTheme } from "@/context/ThemeContext";
 import { MoonIcon, SunIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function ThemeToggle() {
   const { darkMode, toggleDarkMode } = useTheme();
 
   return (
-    <button
+    <motion.button
       onClick={toggleDarkMode}
-      className="fixed p-3 text-gray-800 transition-transform bg-gray-200 rounded-full shadow-lg bottom-4 left-4 dark:bg-gray-700 dark:text-gray-200 hover:scale-110"
+      className="fixed z-50 p-2 transition-all duration-300 border rounded-full shadow-lg backdrop-blur-lg bottom-4 left-4 hover:scale-110 focus:outline-none focus:ring-2"
+      style={{
+        borderColor: darkMode
+          ? "rgba(99, 102, 241, 0.2)"
+          : "rgba(96, 165, 250, 0.2)",
+        backgroundColor: darkMode
+          ? "rgba(30, 41, 59, 0.3)"
+          : "rgba(255, 255, 255, 0.3)",
+      }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
     >
       {darkMode ? (
-        <SunIcon className="w-4 h-4" />
+        <SunIcon className="w-5 h-5 text-indigo-300" />
       ) : (
-        <MoonIcon className="w-4 h-4" />
+        <MoonIcon className="w-5 h-5 text-blue-600" />
       )}
-    </button>
+    </motion.button>
   );
 }
