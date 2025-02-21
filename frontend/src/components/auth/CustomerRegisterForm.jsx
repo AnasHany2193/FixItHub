@@ -65,7 +65,7 @@ const CustomerRegisterForm = ({ onBack }) => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-4 min-w-md"
+        className="min-w-full space-y-4"
       >
         <Button
           type="button"
