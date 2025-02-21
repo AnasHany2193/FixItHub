@@ -1,3 +1,4 @@
+import { AuthLink } from "@/components/auth/AuthLink";
 import { LoginForm } from "@/components/auth/LoginForm";
 import {
   CardDescription,
@@ -24,29 +25,12 @@ export default function LoginPage() {
       <LoginForm />
 
       {/* Footer Links */}
-      <CardFooter className="flex flex-col gap-3 p-0 text-sm text-center text-gray-600 dark:text-gray-400">
-        <div className="flex flex-wrap justify-center gap-x-2 gap-y-2">
-          <Link
-            to="/signup"
-            className="relative text-blue-600 transition-colors hover:text-blue-700 dark:text-indigo-400 dark:hover:text-indigo-300 link-underline"
-          >
-            Create Account
-          </Link>
-          <span className="text-gray-400">•</span>
-          <Link
-            to="/forget-password"
-            className="text-blue-600 transition-colors hover:text-blue-700 dark:text-indigo-400 dark:hover:text-indigo-300 link-underline"
-          >
-            Forgot Password?
-          </Link>
-          <span className="text-gray-400">•</span>
-          <Link
-            to="/verify-email"
-            className="text-blue-600 transition-colors hover:text-blue-700 dark:text-indigo-400 dark:hover:text-indigo-300 link-underline"
-          >
-            Resend Verification
-          </Link>
-        </div>
+      <CardFooter className="flex gap-2 p-0 text-sm text-center text-gray-600 dark:text-gray-400">
+        <AuthLink to="/signup">Create Account</AuthLink>
+        <span className="text-gray-400">•</span>
+        <AuthLink to="/forgot-password">Forgot Password?</AuthLink>
+        <span className="text-gray-400">•</span>
+        <AuthLink to="/verify-email">Resend Verification</AuthLink>
       </CardFooter>
     </div>
   );
