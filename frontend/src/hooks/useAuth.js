@@ -94,30 +94,28 @@ export const useLogout = () => {
 };
 
 export const useRegister = () => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
     mutationFn: register,
     onSuccess: (data) => {
-      console.log("useRegister", data);
-      // Set user data immediately after successful registration
-      queryClient.setQueryData(["currentUser"], data.user);
-
-      // Invalidate queries to ensure fresh state
-      queryClient.invalidateQueries(["currentUser"], { exact: true });
-
       toast({
         variant: "success",
-        title: "Registration Successful",
-        description: data.message || "Welcome to FixItHub!",
+        title: "Account Created",
+        description:
+          data.message || "Please check your email to verify your account",
       });
+
+      // Redirect to OTP verification page "Later"
+      // window.location.href = `/verify-email?email=${encodeURIComponent(
+      //   data.email || ""
+      // )}`;
     },
     onError: (error) => {
       toast({
         variant: "error",
         title: "Registration Failed",
-        description: error.message,
+        description: error.response?.data?.error || error.message,
       });
     },
   });
