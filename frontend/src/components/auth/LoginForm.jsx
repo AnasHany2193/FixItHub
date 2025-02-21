@@ -3,7 +3,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 // Components
 import {
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLogin } from "@/hooks/useAuth";
+import { LoadingSpinner } from "../common/LoadingSpinner";
 
 const formSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -120,11 +121,7 @@ export const LoginForm = () => {
             className="w-full font-semibold transition-colors bg-blue-600 dark:text-white h-11 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
             disabled={isPending}
           >
-            {isPending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              "Log In"
-            )}
+            {isPending ? <LoadingSpinner size="sm" /> : "Log In"}
           </Button>
         </form>
       </Form>

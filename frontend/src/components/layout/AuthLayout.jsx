@@ -6,7 +6,7 @@ import ThemeToggle from "../common/ThemeToggle";
 
 export default function AuthLayout() {
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen p-10 overflow-auto font-JosefinSans dark:bg-gradient-to-tl dark:from-indigo-900/95 dark:via-gray-800 dark:to-gray-900 bg-gradient-to-tr from-blue-200 via-gray-100/95 to-gray-200">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen overflow-auto font-JosefinSans dark:bg-gradient-to-tl dark:from-indigo-900/95 dark:via-gray-800 dark:to-gray-900 bg-gradient-to-tr from-blue-200 via-gray-100/95 to-gray-200">
       {/* Animated background container */}
       <div className="absolute inset-0 h-full overflow-hidden">
         <motion.div

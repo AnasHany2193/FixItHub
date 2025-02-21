@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/card";
 import { AuthLink } from "@/components/auth/AuthLink";
 import { RoleSelection } from "@/components/auth/RoleSelection";
-import { CustomerRegisterForm } from "@/components/auth/CustomerRegisterForm";
 import { WorkerRegisterForm } from "@/components/auth/WorkerRegisterForm";
+import CustomerRegisterForm from "@/components/auth/CustomerRegisterForm";
 
 export default function SignupPage() {
   const [selectedRole, setSelectedRole] = useState(null);
