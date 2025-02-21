@@ -8,6 +8,17 @@ export function ThemeProvider({ children }) {
     return savedTheme ? savedTheme === "dark" : false;
   });
 
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      // Add transition class to body
+      document.documentElement.classList.add("theme-transition");
+      setTimeout(() => {
+        document.documentElement.classList.remove("theme-transition");
+      }, 300);
+      return !prev;
+    });
+  };
+
   useEffect(() => {
     const root = document.documentElement;
     if (darkMode) {
@@ -19,13 +30,19 @@ export function ThemeProvider({ children }) {
     }
   }, [darkMode]);
 
-  const toggleDarkMode = () => {
-    setDarkMode((prev) => !prev);
-  };
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.add("theme-transition");
+    root.style.setProperty("--transition-duration", "300ms");
+
+    return () => root.classList.remove("theme-transition");
+  }, []);
 
   return (
     <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
-      {children}
+      <div data-theme={darkMode ? "dark" : "light"} className="theme-container">
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }

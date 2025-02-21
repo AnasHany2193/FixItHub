@@ -125,3 +125,35 @@
     width: 100%;
   }
 }
+
+/* globals.css */
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition-property: color, background-color, border-color, fill, stroke,
+    opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: var(--transition-duration);
+}
+
+.theme-container::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to bottom right,
+    var(--gradient-from),
+    var(--gradient-via),
+    var(--gradient-to)
+  );
+  opacity: 0;
+  transition: opacity var(--transition-duration) ease;
+}
+
+.theme-container[data-theme="dark"]::before {
+  opacity: 1;
+}

@@ -9,6 +9,12 @@ export default {
       fontFamily: {
         JosefinSans: ["Josefin Sans", "sans-serif"],
       },
+      transitionProperty: {
+        theme: "color, background-color, border-color, fill, stroke, opacity",
+      },
+      transitionDuration: {
+        theme: "300ms",
+      },
       scrollBehavior: ["smooth"],
       borderRadius: {
         lg: "var(--radius)",

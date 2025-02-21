@@ -20,11 +20,19 @@ export default function ThemeToggle() {
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
     >
-      {darkMode ? (
-        <SunIcon className="w-5 h-5 text-indigo-300" />
-      ) : (
-        <MoonIcon className="w-5 h-5 text-blue-600" />
-      )}
+      <motion.div
+        key={darkMode ? "sun" : "moon"}
+        initial={{ rotate: -45, opacity: 0 }}
+        animate={{ rotate: 0, opacity: 1 }}
+        exit={{ rotate: 45, opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {darkMode ? (
+          <SunIcon className="w-5 h-5 text-indigo-300" />
+        ) : (
+          <MoonIcon className="w-5 h-5 text-blue-600" />
+        )}
+      </motion.div>
     </motion.button>
   );
 }
