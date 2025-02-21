@@ -1,6 +1,7 @@
 import { getCurrentUser, login, logout, register } from "@/api/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./useToast";
+import { uploadImage } from "@/api/upload";
 
 export const useUser = () => {
   const { toast } = useToast();
@@ -35,8 +36,6 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      console.log("Login data", data);
-
       // ✅ Set cached user data
       queryClient.setQueryData(["currentUser"], data.user);
 
@@ -116,6 +115,30 @@ export const useRegister = () => {
         variant: "error",
         title: "Registration Failed",
         description: error.response?.data?.error || error.message,
+      });
+    },
+  });
+};
+
+export const useUpload = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: uploadImage,
+    onSuccess: (data) => {
+      toast({
+        variant: "success",
+        title: "Upload Successful",
+        description:
+          data.message || "Your image has been uploaded successfully",
+      });
+    },
+    onError: (error) => {
+      console.log("error", error);
+      toast({
+        variant: "error",
+        title: "Upload Failed",
+        description: error.message,
       });
     },
   });

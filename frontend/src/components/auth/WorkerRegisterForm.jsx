@@ -12,8 +12,10 @@ import {
   Mail,
   Lock,
   Briefcase,
+  X,
+  ChevronDown,
 } from "lucide-react";
-import { useRegister } from "@/hooks/useAuth";
+import { useRegister, useUpload } from "@/hooks/useAuth";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -27,6 +29,9 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Label } from "../ui/label";
+import { LoadingSpinner } from "../common/LoadingSpinner";
+import { useToast } from "@/hooks/useToast";
+import { cn } from "@/lib/utils";
 
 const workerSchema = z
   .object({
@@ -57,12 +62,16 @@ const calculatePasswordStrength = (password) => {
 };
 
 const WorkerRegisterForm = ({ onBack }) => {
-  const { mutate: registerUser, isPending } = useRegister();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  const { mutate: registerUser, isPending } = useRegister();
+
   const [documents, setDocuments] = useState([]);
+  const { mutate: uploadDocument, isPending: isUploading } = useUpload();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(workerSchema),
@@ -72,7 +81,7 @@ const WorkerRegisterForm = ({ onBack }) => {
       password: "",
       confirm: "",
       skills: "",
-      experience: "",
+      experience: "beginner",
     },
   });
 
@@ -82,7 +91,38 @@ const WorkerRegisterForm = ({ onBack }) => {
     setPasswordStrength(calculatePasswordStrength(password || ""));
   }, [password]);
 
+  const handleFileUpload = async (file) => {
+    const formData = new FormData();
+    formData.append("image", file); // Field name must match multer's .single('image')
+
+    uploadDocument(formData, {
+      onSuccess: ({ result }) => {
+        console.log("result", result);
+        setDocuments((prev) => [
+          ...prev,
+          {
+            url: result.secure_url,
+            public_id: result.public_id,
+          },
+        ]);
+      },
+    });
+  };
+
+  const removeDocument = (publicId) => {
+    setDocuments((prev) => prev.filter((doc) => doc.public_id !== publicId));
+  };
+
   const onSubmit = (values) => {
+    if (documents.length === 0) {
+      toast({
+        variant: "error",
+        title: "Missing Documents",
+        description: "Please upload at least one verification document",
+      });
+      return;
+    }
+
     registerUser({
       ...values,
       role: "worker",
@@ -93,10 +133,7 @@ const WorkerRegisterForm = ({ onBack }) => {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="min-w-full space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-96">
         <Button
           type="button"
           variant="ghost"
@@ -279,40 +316,80 @@ const WorkerRegisterForm = ({ onBack }) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Professional Experience
+                      Experience Level
                     </FormLabel>
-                    <FormControl>
-                      <Textarea
+                    <div className="relative">
+                      <select
                         {...field}
-                        rows={3}
-                        placeholder="Describe your work experience and qualifications..."
-                        className="border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                      />
-                    </FormControl>
+                        className={cn(
+                          "h-10 w-full rounded-lg border border-blue-200/50 bg-white/80 px-3 py-2 text-base shadow-sm transition-colors",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400",
+                          "dark:border-indigo-800/30 dark:bg-indigo-900/20 dark:focus-visible:ring-indigo-500",
+                          "appearance-none pl-10 pr-8"
+                        )}
+                      >
+                        <option value="beginner">
+                          Beginner (0-2 years experience)
+                        </option>
+                        <option value="intermediate">
+                          Intermediate (3-5 years experience)
+                        </option>
+                        <option value="expert">
+                          Expert (6+ years experience)
+                        </option>
+                      </select>
+                      <Briefcase className="absolute w-5 h-5 text-gray-400 left-3 top-2.5 dark:text-indigo-300" />
+                      <ChevronDown className="absolute w-4 h-4 text-gray-400 right-3 top-3.5 dark:text-indigo-300" />
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="grid grid-cols-3 gap-4 mt-4">
+                {documents.map((doc) => (
+                  <div key={doc.public_id} className="relative group">
+                    <img
+                      src={doc.url}
+                      alt={`Document preview`}
+                      className="object-cover w-full h-24 border-2 border-blue-100 rounded-lg dark:border-indigo-800"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeDocument(doc.public_id)}
+                      className="absolute top-0 right-0 p-1 text-white transition-opacity bg-red-500 rounded-full opacity-0 group-hover:opacity-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
 
               {/* Document Upload */}
               <div className="space-y-2">
                 <FormLabel className="text-gray-700 dark:text-gray-300">
                   Verification Documents
                 </FormLabel>
+
                 <div className="flex flex-col gap-2">
                   <Label className="flex items-center gap-2 p-4 transition-colors border-2 rounded-lg cursor-pointer border-blue-200/70 hover:border-blue-300 dark:border-indigo-700/80 dark:hover:border-indigo-400">
-                    {isPending ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                    {isUploading ? (
+                      <LoadingSpinner size="sm" />
                     ) : (
                       <Upload className="w-5 h-5 text-gray-400 dark:text-indigo-300" />
                     )}
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Upload certification (PDF, images)
+                      Upload certification (Images)
                     </span>
                     <Input
                       type="file"
                       className="hidden"
-                      accept="image/*, .pdf"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        files.forEach(handleFileUpload);
+                      }}
+                      multiple
                     />
                   </Label>
                 </div>

@@ -1,7 +1,7 @@
 import createHttpError from "http-errors";
 import { imageUploadUtil } from "../utils/cloudinary.js";
 
-export const handleImageUpload = async (req, res) => {
+export const handleImageUpload = async (req, res, next) => {
   try {
     // Validate file exist in request
     if (!req.file)
@@ -18,12 +18,6 @@ export const handleImageUpload = async (req, res) => {
       message: "Image uploaded successfully",
     });
   } catch (error) {
-    // Pass error to Express error handler
-    next(
-      createHttpError(error.status || 500, error.message, {
-        details: error.details,
-        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-      })
-    );
+    next(error);
   }
 };
