@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import { Card } from "../ui/card";
 import ThemeToggle from "../common/ThemeToggle";
 import { TextLogo } from "../common/Logo";
+import { LoadingSpinner } from "../common/LoadingSpinner";
 
 export default function AuthLayout() {
   return (
@@ -38,7 +39,6 @@ export default function AuthLayout() {
           transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
         />
       </div>
-
       <TextLogo className="mb-3" />
 
       {/* Auth Card */}
@@ -51,7 +51,6 @@ export default function AuthLayout() {
           <Outlet />
         </Card>
       </motion.div>
-
       {/* Theme toggle */}
       <ThemeToggle className="p-2 hover:bg-white/20 dark:hover:bg-indigo-900/30 rounded-xl" />
     </div>
