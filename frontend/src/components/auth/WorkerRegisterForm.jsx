@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   Eye,
@@ -11,15 +11,16 @@ import {
   User,
   Mail,
   Lock,
-  Briefcase,
   X,
-  ChevronDown,
 } from "lucide-react";
-import { useRegister, useUpload } from "@/hooks/useAuth";
 
+import { useToast } from "@/hooks/useToast";
+import { useRegister, useUpload } from "@/hooks/useAuth";
+import { LoadingSpinner } from "../common/LoadingSpinner";
+
+import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
 import {
   Form,
   FormControl,
@@ -28,11 +29,22 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { Label } from "../ui/label";
-import { LoadingSpinner } from "../common/LoadingSpinner";
-import { useToast } from "@/hooks/useToast";
-import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
+import { Progress } from "../ui/progress";
 
+// Zod schema for form validation
 const workerSchema = z
   .object({
     username: z.string().min(3, "Username must be at least 3 characters"),
@@ -40,26 +52,27 @@ const workerSchema = z
     password: z
       .string()
       .min(6, "Password must be at least 6 characters")
-      .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-      .regex(/[0-9]/, "Must contain at least one number"),
+      .regex(/[A-Z]/, "Must contain at least one uppercase letter (A-Z)")
+      .regex(/[a-z]/, "Must contain at least one lowercase letter (a-z)")
+      .regex(/[0-9]/, "Must contain at least one number (0-9)"),
     confirm: z.string().min(6, "Please confirm your password"),
-    skills: z.string().min(3, "List at least one skill"),
-    experience: z.string().min(10, "Describe your experience"),
+    skills: z.string(),
+    experience: z.enum(["beginner", "intermediate", "expert"]),
+    availability: z.enum(["full-time", "part-time", "unavailable"]),
   })
   .refine((data) => data.password === data.confirm, {
     message: "Passwords do not match",
     path: ["confirm"],
   });
 
-const calculatePasswordStrength = (password) => {
-  let strength = 0;
-  if (password.length >= 6) strength++;
-  if (password.length >= 12) strength++;
-  if (/[A-Z]/.test(password)) strength++;
-  if (/[0-9]/.test(password)) strength++;
-  if (/[^A-Za-z0-9]/.test(password)) strength++;
-  return Math.min(strength, 4);
-};
+// Password requirements for validation
+const PASSWORD_REQUIREMENTS = [
+  { label: "6+ characters", regex: /.{6,}/ },
+  { label: "Uppercase (A-Z)", regex: /[A-Z]/ },
+  { label: "Lowercase (a-z)", regex: /[a-z]/ },
+  { label: "Number (0-9)", regex: /[0-9]/ },
+  { label: "Special char", regex: /[^A-Za-z0-9]/ },
+];
 
 const WorkerRegisterForm = ({ onBack }) => {
   const { toast } = useToast();
@@ -70,7 +83,6 @@ const WorkerRegisterForm = ({ onBack }) => {
   const { mutate: uploadDocument, isPending: isUploading } = useUpload();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const form = useForm({
@@ -86,11 +98,14 @@ const WorkerRegisterForm = ({ onBack }) => {
   });
 
   const password = form.watch("password");
-
-  useEffect(() => {
-    setPasswordStrength(calculatePasswordStrength(password || ""));
-  }, [password]);
-
+  const passwordRequirements = useMemo(
+    () =>
+      PASSWORD_REQUIREMENTS.map((req) => ({
+        ...req,
+        met: req.regex.test(password || ""),
+      })),
+    [password]
+  );
   const handleFileUpload = async (file) => {
     const formData = new FormData();
     formData.append("image", file); // Field name must match multer's .single('image')
@@ -134,224 +149,269 @@ const WorkerRegisterForm = ({ onBack }) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-96">
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={onBack}
-          className="text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/20"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Selection
-        </Button>
+        <div className="flex items-center justify-between">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onBack}
+            className="text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/20"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Button>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <span>Step {step} of 2</span>
+            <Progress value={step === 1 ? 50 : 100} className="w-24 h-2" />
+          </div>
+        </div>
 
-        {step === 1 && (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Username Field */}
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Username
-                    </FormLabel>
-                    <FormControl>
+        {step === 1 ? (
+          <div className="space-y-6">
+            {/* Username Field */}
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      startIcon={
+                        <User className="text-gray-400 dark:text-indigo-300" />
+                      }
+                      placeholder="Enter your username"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Email Field */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="sm:col-span-2">
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      startIcon={
+                        <Mail className="text-gray-400 dark:text-indigo-300" />
+                      }
+                      placeholder="email@example.com"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Password Fields */}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
                       <Input
                         {...field}
+                        type={showPassword ? "text" : "password"}
                         startIcon={
-                          <User className="text-gray-400 dark:text-indigo-300" />
+                          <Lock className="text-gray-400 dark:text-indigo-300" />
                         }
-                        placeholder="Enter your username"
+                        placeholder="Create password"
                         disabled={isPending}
-                        className="border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                        className="pr-12"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <button
+                        type="button"
+                        className="absolute p-1.5 text-gray-400 transition-colors rounded-md right-3 top-1/2 -translate-y-1/2 hover:text-blue-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-700/30"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Email Field */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="sm:col-span-2">
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Email
-                    </FormLabel>
-                    <FormControl>
+            <FormField
+              control={form.control}
+              name="confirm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Confirm Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
                       <Input
                         {...field}
-                        type="email"
+                        type={showConfirmPassword ? "text" : "password"}
                         startIcon={
-                          <Mail className="text-gray-400 dark:text-indigo-300" />
+                          <Lock className="text-gray-400 dark:text-indigo-300" />
                         }
-                        placeholder="email@example.com"
+                        placeholder="Confirm password"
                         disabled={isPending}
-                        className="border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                        className="pr-12"
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <button
+                        type="button"
+                        className="absolute p-1.5 text-gray-400 transition-colors rounded-md right-3 top-1/2 -translate-y-1/2 hover:text-blue-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-700/30"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              {/* Password Fields */}
-              {[
-                ["password", showPassword, setShowPassword],
-                ["confirm", showConfirmPassword, setShowConfirmPassword],
-              ].map(([name, show, setShow]) => (
-                <FormField
-                  key={name}
-                  control={form.control}
-                  name={name}
-                  render={({ field }) => (
-                    <FormItem className="space-y-2">
-                      <FormLabel className="text-gray-700 dark:text-gray-300">
-                        {name === "password" ? "Password" : "Confirm Password"}
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                            type={show ? "text" : "password"}
-                            startIcon={
-                              <Lock className="text-gray-400 dark:text-indigo-300" />
-                            }
-                            placeholder={
-                              name === "password"
-                                ? "Enter your password"
-                                : "Confirm your password"
-                            }
-                            disabled={isPending}
-                            className="pr-12 border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
-                          />
-                          <button
-                            type="button"
-                            className="absolute p-1.5 text-gray-400 transition-colors rounded-md right-3 top-1/2 -translate-y-1/2 hover:text-blue-600 dark:hover:text-indigo-400 hover:bg-gray-100/50 dark:hover:bg-gray-700/30"
-                            onClick={() => setShow(!show)}
-                          >
-                            {show ? (
-                              <EyeOff className="w-5 h-5" />
-                            ) : (
-                              <Eye className="w-5 h-5" />
-                            )}
-                          </button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-
-              {/* Password Strength */}
+            {/* Password Strength */}
+            <TooltipProvider>
               {password && (
-                <div className="sm:col-span-2">
-                  <div className="grid grid-cols-4 gap-2 mt-1">
-                    {[...Array(4)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          passwordStrength > i
-                            ? "bg-blue-500 dark:bg-indigo-400"
-                            : "bg-gray-200 dark:bg-gray-600"
-                        }`}
-                      />
+                <div className="p-4 space-y-2 rounded-lg bg-blue-50 dark:bg-indigo-900/20">
+                  <div className="grid grid-cols-5 gap-2">
+                    {passwordRequirements.map((req) => (
+                      <Tooltip key={req.label}>
+                        <TooltipTrigger className="w-full">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              req.met
+                                ? "bg-blue-500 dark:bg-indigo-400"
+                                : "bg-gray-200 dark:bg-gray-600"
+                            }`}
+                          />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {req.met ? "✓ Met: " : "✕ Missing: "}
+                          {req.label}
+                        </TooltipContent>
+                      </Tooltip>
                     ))}
                   </div>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    Password strength:{" "}
-                    <span className="font-medium text-blue-600 dark:text-indigo-300">
-                      {["Weak", "Fair", "Good", "Strong"][passwordStrength - 1]}
-                    </span>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Meeting{" "}
+                    {passwordRequirements.filter((req) => req.met).length} of{" "}
+                    {PASSWORD_REQUIREMENTS.length} requirements
                   </p>
                 </div>
               )}
-            </div>
+            </TooltipProvider>
 
             <Button
               type="button"
               onClick={() => setStep(2)}
-              className="w-full py-5 font-semibold text-white transition-colors bg-blue-600 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+              className="w-full py-5 font-semibold transition-colors bg-blue-600 dark:text-white hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
             >
-              Next Step
+              Continue to Details →
             </Button>
-          </>
-        )}
-
-        {step === 2 && (
+          </div>
+        ) : (
           <>
-            <div className="min-w-full space-y-4">
+            <div className="space-y-6">
               {/* Skills Field */}
               <FormField
                 control={form.control}
                 name="skills"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Skills (comma separated)
-                    </FormLabel>
+                    <FormLabel>Skills (comma-separated)</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        startIcon={
-                          <Briefcase className="text-gray-400 dark:text-indigo-300" />
-                        }
-                        placeholder="e.g., plumbing, electrical"
-                        className="border-2 border-blue-200/70 focus:border-blue-500 focus:ring-2 focus:ring-blue-200/50 dark:border-indigo-700/80 dark:focus:border-indigo-400 dark:focus:ring-indigo-400/20"
+                        placeholder="e.g., plumbing, electrical, carpentry"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               {/* Experience Field */}
               <FormField
                 control={form.control}
                 name="experience"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Experience Level
-                    </FormLabel>
-                    <div className="relative">
-                      <select
-                        {...field}
-                        className={cn(
-                          "h-10 w-full rounded-lg border border-blue-200/50 bg-white/80 px-3 py-2 text-base shadow-sm transition-colors",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400",
-                          "dark:border-indigo-800/30 dark:bg-indigo-900/20 dark:focus-visible:ring-indigo-500",
-                          "appearance-none pl-10 pr-8"
-                        )}
-                      >
-                        <option value="beginner">
+                    <FormLabel>Experience Level</FormLabel>
+
+                    <Select
+                      {...field}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select experience level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">
                           Beginner (0-2 years experience)
-                        </option>
-                        <option value="intermediate">
+                        </SelectItem>
+                        <SelectItem value="intermediate">
                           Intermediate (3-5 years experience)
-                        </option>
-                        <option value="expert">
+                        </SelectItem>
+                        <SelectItem value="expert">
                           Expert (6+ years experience)
-                        </option>
-                      </select>
-                      <Briefcase className="absolute w-5 h-5 text-gray-400 left-3 top-2.5 dark:text-indigo-300" />
-                      <ChevronDown className="absolute w-4 h-4 text-gray-400 right-3 top-3.5 dark:text-indigo-300" />
-                    </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <div className="grid grid-cols-3 gap-4 mt-4">
+              {/* Availability Field */}
+              <FormField
+                control={form.control}
+                name="availability"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-700 dark:text-gray-300">
+                      Availability
+                    </FormLabel>
+                    <Select
+                      {...field}
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select availability" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full-time">Full-time</SelectItem>
+                        <SelectItem value="part-time">Part-time</SelectItem>
+                        <SelectItem value="unavailable">Unavailable</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-3 gap-4">
                 {documents.map((doc) => (
                   <div key={doc.public_id} className="relative group">
                     <img
                       src={doc.url}
-                      alt={`Document preview`}
+                      alt="Document preview"
                       className="object-cover w-full h-24 border-2 border-blue-100 rounded-lg dark:border-indigo-800"
                     />
                     <button
@@ -364,12 +424,9 @@ const WorkerRegisterForm = ({ onBack }) => {
                   </div>
                 ))}
               </div>
-
               {/* Document Upload */}
               <div className="space-y-2">
-                <FormLabel className="text-gray-700 dark:text-gray-300">
-                  Verification Documents
-                </FormLabel>
+                <FormLabel>Verification Documents</FormLabel>
 
                 <div className="flex flex-col gap-2">
                   <Label className="flex items-center gap-2 p-4 transition-colors border-2 rounded-lg cursor-pointer border-blue-200/70 hover:border-blue-300 dark:border-indigo-700/80 dark:hover:border-indigo-400">
@@ -394,28 +451,27 @@ const WorkerRegisterForm = ({ onBack }) => {
                   </Label>
                 </div>
               </div>
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setStep(1)}
-                className="text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg -indigo-900/20"
-              >
-                Back
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="w-full py-5 font-semibold text-white transition-colors bg-blue-600 hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
-              >
-                {isPending ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  "Register as Worker"
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setStep(1)}
+                  className="text-indigo-600 hover:bg-indigo-50 dark:text-indigo-300 dark:hover:bg-indigo-900/20"
+                >
+                  Back
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full py-5 font-semibold transition-colors bg-blue-600 dark:text-white hover:bg-blue-700 dark:bg-indigo-600 dark:hover:bg-indigo-500"
+                >
+                  {isPending ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    "Register as Worker"
+                  )}
+                </Button>
+              </div>
             </div>
           </>
         )}

@@ -15,7 +15,7 @@ export const LoadingSpinner = ({ size = "md", variant = "primary", label }) => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-transparent backdrop-blur-sm">
+    <div className="flex items-center justify-center bg-transparent rounded-full backdrop-blur-sm">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
