@@ -3,10 +3,11 @@ import { Outlet } from "react-router-dom";
 
 import { Card } from "../ui/card";
 import ThemeToggle from "../common/ThemeToggle";
+import { TextLogo } from "../common/Logo";
 
 export default function AuthLayout() {
   return (
-    <div className="flex items-center justify-center w-full h-full min-h-screen overflow-hidden font-JosefinSans dark:bg-gradient-to-tl dark:from-indigo-900/95 dark:via-gray-800 dark:to-gray-900 bg-gradient-to-tr from-blue-200 via-gray-100/95 to-gray-200">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen overflow-hidden font-JosefinSans dark:bg-gradient-to-tl dark:from-indigo-900/95 dark:via-gray-800 dark:to-gray-900 bg-gradient-to-tr from-blue-200 via-gray-100/95 to-gray-200">
       {/* Animated background container */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -38,13 +39,15 @@ export default function AuthLayout() {
         />
       </div>
 
+      <TextLogo className="mb-3" />
+
       {/* Auth Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="relative w-full max-w-md px-8 mx-auto overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly">
+        <Card className="relative w-full md:max-w-md px-8 mx-auto max-w-[95vw] overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly ">
           <Outlet />
         </Card>
       </motion.div>

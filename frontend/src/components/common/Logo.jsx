@@ -1,7 +1,5 @@
-// src/components/Logo.jsx
 import { motion } from "framer-motion";
 import { Wrench, Shield } from "lucide-react";
-import { useNavigate } from "react-router";
 
 export const Logo = ({ className }) => {
   return (
@@ -18,14 +16,14 @@ export const Logo = ({ className }) => {
         whileTap={{ scale: 0.95 }}
       >
         <Wrench
-          className="w-full h-full transition-colors text-emerald-500 dark:text-emerald-400 group-hover:text-emerald-400 dark:group-hover:text-emerald-300"
+          className="w-full h-full text-indigo-600 transition-colors duration-300 dark:text-indigo-400 group-hover:text-indigo-500 dark:group-hover:text-indigo-300"
           strokeWidth={2.5}
           aria-hidden="true"
         />
 
         {/* Shield badge */}
         <motion.div
-          className="absolute -top-2 -right-2 md:-top-3 md:-right-3 bg-white/80 dark:bg-slate-900/80 p-1 md:p-1.5 rounded-full shadow-lg backdrop-blur-sm"
+          className="absolute -top-2 -right-2 md:-top-3 md:-right-3 bg-white/80 dark:bg-indigo-900/30 p-1 md:p-1.5 rounded-full shadow-lg backdrop-blur-sm border border-indigo-100/50 dark:border-indigo-800/30"
           animate={{
             y: [0, -8, 0],
             rotate: [0, 15, -15, 0],
@@ -37,7 +35,7 @@ export const Logo = ({ className }) => {
           }}
         >
           <Shield
-            className="w-3 h-3 md:w-4 md:h-4 text-emerald-500 dark:text-emerald-400"
+            className="w-3 h-3 text-indigo-600 md:w-4 md:h-4 dark:text-indigo-400"
             fill="currentColor"
             strokeWidth={1.5}
           />
@@ -56,19 +54,15 @@ export const Logo = ({ className }) => {
   );
 };
 
-// Optional text logo variant
 export const TextLogo = ({ className }) => {
-  const navigate = useNavigate();
-
   return (
     <motion.div
-      className={`flex items-center ${className} gap-2 md:gap-3 justify-center cursor-pointer`}
+      className={`flex items-center ${className} gap-2 md:gap-3 justify-center`}
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      onClick={() => navigate("/")}
     >
       <Logo className="w-8 h-8 md:w-10 md:h-10" />
-      <span className="text-xl font-bold text-transparent md:text-3xl bg-gradient-to-r from-emerald-500 to-cyan-500 dark:from-emerald-300 dark:to-cyan-300 bg-clip-text">
+      <span className="text-xl font-bold text-transparent md:text-3xl bg-gradient-to-r from-indigo-600 to-blue-500 dark:from-indigo-400 dark:to-blue-300 bg-clip-text">
         FixItHub
       </span>
     </motion.div>
