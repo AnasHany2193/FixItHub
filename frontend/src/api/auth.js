@@ -64,3 +64,16 @@ export const forgotPassword = async (email) => {
     throw new Error(error.response?.data?.error || "Password reset failed");
   }
 };
+
+export const resetPassword = async ({ email, code, newPassword }) => {
+  try {
+    const { data } = await axiosClient.post("/auth/reset-password", {
+      email,
+      code,
+      newPassword,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Password reset failed");
+  }
+};

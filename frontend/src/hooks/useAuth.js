@@ -7,9 +7,11 @@ import {
   logout,
   register,
   resendOTP,
+  resetPassword,
   verifyOTP,
 } from "@/api/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 export const useUser = () => {
   const { toast } = useToast();
@@ -68,6 +70,7 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -83,7 +86,7 @@ export const useLogout = () => {
         title: "Logged Out",
         description: "You've been successfully logged out",
       });
-      window.location.href = "/";
+      navigate("/");
     },
     onError: (error) => {
       // Even if logout fails, force cache reset
@@ -102,6 +105,7 @@ export const useLogout = () => {
 
 export const useRegister = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: register,
@@ -113,7 +117,7 @@ export const useRegister = () => {
           data.message || "Please check your email to verify your account",
       });
 
-      window.location.href = "/verify-email";
+      navigate("/verify-email");
     },
     onError: (error) => {
       toast({
@@ -151,6 +155,7 @@ export const useUpload = () => {
 
 export const useVerifyOTP = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: verifyOTP,
@@ -162,7 +167,7 @@ export const useVerifyOTP = () => {
           data.message || "Your email has been successfully verified",
       });
 
-      window.location.href = "/login";
+      navigate("/login");
     },
     onError: (error) => {
       toast({
@@ -176,6 +181,7 @@ export const useVerifyOTP = () => {
 
 export const useResendOTP = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: resendOTP,
@@ -186,7 +192,7 @@ export const useResendOTP = () => {
         description: data.message || "New OTP sent to your email",
       });
 
-      window.location.href = "/verify-email";
+      navigate("/verify-email");
     },
     onError: (error) => {
       toast({
@@ -200,6 +206,7 @@ export const useResendOTP = () => {
 
 export const useForgotPassword = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: forgotPassword,
@@ -209,12 +216,36 @@ export const useForgotPassword = () => {
         title: "OTP Sent",
         description: data.message || "Check your email for the reset OTP",
       });
-      window.location.href = "/reset-password";
+      navigate("/reset-password");
     },
     onError: (error) => {
       toast({
         variant: "error",
         title: "Password Reset Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useResetPassword = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: resetPassword,
+    onSuccess: (data) => {
+      toast({
+        variant: "success",
+        title: "Password Updated",
+        description: data.message || "Login with your new password",
+      });
+      navigate("/login");
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Reset Failed",
         description: error.message,
       });
     },

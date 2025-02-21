@@ -22,6 +22,7 @@ import NotFoundPage from "./pages/public/NotFoundPage";
 import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
 import ResendOtpPage from "./pages/auth/ResendOtpPage";
 import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
           <Route path="/verify-email" element={<VerifyOTPPage />} />
           <Route path="/resend-otp" element={<ResendOtpPage />} />
           <Route path="/forgot-password" element={<ForgetPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
         </Route>
       </Route>
 
