@@ -1,10 +1,9 @@
 import { motion } from "framer-motion";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 
 import { Card } from "../ui/card";
-import ThemeToggle from "../common/ThemeToggle";
 import { TextLogo } from "../common/Logo";
-import { LoadingSpinner } from "../common/LoadingSpinner";
+import ThemeToggle from "../common/ThemeToggle";
 
 export default function AuthLayout() {
   return (
@@ -47,8 +46,18 @@ export default function AuthLayout() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="relative w-full md:max-w-md px-8 mx-auto max-w-[95vw] overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly ">
+        <Card className="relative w-full md:max-w-md px-8 mx-auto max-w-[95vw] overflow-auto border border-blue-200 max-h-[95vh] backdrop-blur-lg dark:bg-indigo-900/30 dark:border-indigo-800 bg-white/80 min-h-[450px] flex flex-col justify-evenly">
           <Outlet />
+
+          {/* Add home navigation at bottom */}
+          <div className="mt-4 text-center">
+            <Link
+              to="/"
+              className="text-sm text-indigo-600 transition-colors hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200 link-underline"
+            >
+              ← Back to Home Page
+            </Link>
+          </div>
         </Card>
       </motion.div>
       {/* Theme toggle */}
