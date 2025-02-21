@@ -7,18 +7,13 @@ export const AuthProvider = ({ children }) => {
   const userQuery = useUser();
   const logoutMutation = useLogout();
 
-  // Prevent infinite retries
-  // In AuthProvider component
+  // Prevent infinite retries on unauthorized errors
   useEffect(() => {
     if (userQuery.error?.response?.status === 401) {
-      userQuery.remove();
+      userQuery.remove(); // Remove cached user data
       window.location.href = "/";
     }
-  }, [userQuery]);
-
-  useEffect(() => {
-    userQuery.refetch();
-  }, [userQuery]);
+  }, [userQuery, userQuery.error]); // ✅ Only run when error changes
 
   const value = {
     user: userQuery.data?.data,

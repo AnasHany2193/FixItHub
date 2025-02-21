@@ -1,25 +1,28 @@
 // src/providers/QueryClientProvider.jsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { persistQueryClient } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: (failureCount, error) => {
-        // Don't retry on 404, 401 errors
-        if (
-          error?.response?.status === 404 ||
-          error?.response?.status === 401
-        ) {
-          return false;
-        }
-        return failureCount < 3;
-      },
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 10, // 10 minutes
+      staleTime: 1000 * 60 * 15, // 15 minutes
+      cacheTime: 1000 * 60 * 30, // 30 minutes
+      refetchOnMount: false,
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
+});
+
+// 🏆 Persist cache using localStorage
+const persister = createSyncStoragePersister({ storage: window.localStorage });
+
+persistQueryClient({
+  queryClient,
+  persister,
+  maxAge: 1000 * 60 * 30, // ⏳ Cache expires after 30 minutes
 });
 
 export const QueryProvider = ({ children }) => (
