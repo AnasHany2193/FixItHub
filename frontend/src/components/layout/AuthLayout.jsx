@@ -2,14 +2,13 @@ import { motion } from "framer-motion";
 import { Link, Outlet } from "react-router-dom";
 
 import { Card } from "../ui/card";
-import { TextLogo } from "../common/Logo";
 import ThemeToggle from "../common/ThemeToggle";
 
 export default function AuthLayout() {
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen overflow-auto font-JosefinSans dark:bg-gradient-to-tl dark:from-indigo-900/95 dark:via-gray-800 dark:to-gray-900 bg-gradient-to-tr from-blue-200 via-gray-100/95 to-gray-200">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-screen p-10 overflow-auto font-JosefinSans dark:bg-gradient-to-tl dark:from-indigo-900/95 dark:via-gray-800 dark:to-gray-900 bg-gradient-to-tr from-blue-200 via-gray-100/95 to-gray-200">
       {/* Animated background container */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 h-full overflow-hidden">
         <motion.div
           className="absolute w-40 h-40 bg-indigo-400 rounded-full top-40 left-30 filter blur-2xl dark:bg-indigo-600"
           animate={{
@@ -38,7 +37,6 @@ export default function AuthLayout() {
           transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
         />
       </div>
-      <TextLogo className="mb-3" />
 
       {/* Auth Card */}
       <motion.div

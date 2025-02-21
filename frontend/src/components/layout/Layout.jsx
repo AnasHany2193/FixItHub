@@ -52,7 +52,7 @@ export default function Layout() {
               </Button>
 
               {isLoading ? (
-                <LoadingSpinner />
+                <LoadingSpinner size="sm" />
               ) : user ? (
                 <div className="relative group">
                   <Button variant="ghost" size="icon">

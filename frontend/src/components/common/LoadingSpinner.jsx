@@ -1,6 +1,5 @@
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import PropTypes from "prop-types";
 
 export const LoadingSpinner = ({ size = "md", variant = "primary", label }) => {
   const sizes = {
@@ -65,18 +64,4 @@ export const LoadingSpinner = ({ size = "md", variant = "primary", label }) => {
       </motion.div>
     </div>
   );
-};
-
-LoadingSpinner.propTypes = {
-  size: PropTypes.oneOf(["sm", "md", "lg"]),
-  variant: PropTypes.oneOf(["primary", "neutral", "destructive"]),
-  backdrop: PropTypes.bool,
-  label: PropTypes.string,
-};
-
-LoadingSpinner.defaultProps = {
-  size: "md",
-  variant: "primary",
-  backdrop: true,
-  label: null,
 };
