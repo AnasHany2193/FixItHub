@@ -50,7 +50,7 @@ const mobileItemVariants = {
   closed: { opacity: 0, x: -20 },
 };
 
-export const Header = () => {
+const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -343,3 +343,5 @@ export const Header = () => {
     </motion.header>
   );
 };
+
+export default Header;
