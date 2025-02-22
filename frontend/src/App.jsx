@@ -23,6 +23,7 @@ import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
 import ResendOtpPage from "./pages/auth/ResendOtpPage";
 import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import CustomerRequests from "./pages/customer/CustomerRequests";
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["customer"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
+            <Route path="/requests" element={<CustomerRequests />} />
           </Route>
         </Route>
 
