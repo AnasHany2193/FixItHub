@@ -5,14 +5,14 @@ import { useAuth } from "@/context/AuthContext";
 export const AuthGuard = () => {
   const { isLoading, user } = useAuth();
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner size="lg" />;
   return user ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export const PublicGuard = () => {
   const { isLoading, user } = useAuth();
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner size="lg" />;
   return !user ? <Outlet /> : <Navigate to="/" replace />;
 };
 

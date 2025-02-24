@@ -65,7 +65,12 @@ const Sidebar = ({
         <div key={item.name} className="space-y-1">
           <button
             onClick={() => toggleGroup(item.name)}
-            className={`flex items-center w-full p-3 rounded-lg transition-colors ${
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") toggleGroup(item.name);
+            }}
+            aria-expanded={expandedGroups.has(item.name)}
+            aria-controls={`group-${item.name}`}
+            className={`flex items-center w-full p-3 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 ${
               level > 0 ? "pl-8" : ""
             } ${
               expandedGroups.has(item.name)
@@ -73,19 +78,22 @@ const Sidebar = ({
                 : "hover:bg-gray-100 dark:hover:bg-gray-700"
             }`}
           >
-            <span className="flex items-center flex-1 gap-3">
+            <div className="flex items-center flex-1 gap-3">
               {item.icon}
               {!isCollapsed && (
-                <div className="flex justify-between w-full">
+                <div className="flex items-center justify-between w-full">
                   <span className="text-sm">{item.name}</span>
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${
-                      expandedGroups.has(item.name) ? "rotate-180" : ""
-                    }`}
-                  />
+                  <motion.div
+                    animate={{
+                      rotate: expandedGroups.has(item.name) ? 180 : 0,
+                      transition: { type: "spring", stiffness: 300 },
+                    }}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </motion.div>
                 </div>
               )}
-            </span>
+            </div>
           </button>
 
           <AnimatePresence>
@@ -210,7 +218,7 @@ const Sidebar = ({
         <Separator />
 
         {/* Navigation Items */}
-        <nav className="flex-1 space-y-1 overflow-auto">
+        <nav className="flex-1 px-1 space-y-1 overflow-auto">
           {renderQuickActions()}
           {navItems.map((item) => renderNavItem(item))}
         </nav>
