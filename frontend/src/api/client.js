@@ -37,6 +37,7 @@ axiosClient.interceptors.response.use(
         try {
           // Refresh tokens using dedicated API call
           await axiosClient.post("/auth/refresh-token");
+          window.location.reload();
           isRefreshing = false;
           onRefreshed();
         } catch (refreshError) {
