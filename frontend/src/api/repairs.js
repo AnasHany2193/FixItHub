@@ -1,9 +1,14 @@
-import apiClient from "./client";
+import axiosClient from "./client";
 
 export const createRepair = async (repairData) => {
-  return apiClient.post("/repairs", repairData);
+  try {
+    const { data } = await axiosClient.post("/repairs", repairData);
+    return data;
+  } catch (error) {
+    console.log("createRepair error", error);
+  }
 };
 
 export const getRepairs = async () => {
-  return apiClient.get("/repairs");
+  return axiosClient.get("/repairs");
 };

@@ -15,7 +15,7 @@ const Input = React.forwardRef(
         <input
           type={type}
           className={cn(
-            "flex h-10 w-full rounded-lg border border-blue-200/50 bg-white/80 px-3 py-2 text-base shadow-sm transition-colors",
+            "flex h-10 w-full rounded-lg border border-blue-300  bg-white/80 px-3 py-2 text-base shadow-sm transition-colors",
             "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
             "placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400",
             "dark:border-indigo-800/30 dark:bg-indigo-900/20 dark:file:text-indigo-100 dark:placeholder:text-indigo-200/80 dark:focus-visible:ring-indigo-500",

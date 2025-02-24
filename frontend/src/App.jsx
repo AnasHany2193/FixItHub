@@ -10,7 +10,10 @@ import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
+
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
+import NewRepairPage from "./pages/customer/NewRepairPage";
+
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -23,7 +26,6 @@ import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
 import ResendOtpPage from "./pages/auth/ResendOtpPage";
 import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
-import CustomerRequests from "./pages/customer/CustomerRequests";
 
 function App() {
   return (
@@ -45,7 +47,7 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["customer"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
-            <Route path="/requests" element={<CustomerRequests />} />
+            <Route path="/requests/new" element={<NewRepairPage />} />
           </Route>
         </Route>
 

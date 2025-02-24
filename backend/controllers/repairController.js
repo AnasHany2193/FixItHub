@@ -30,6 +30,9 @@ export const createRepairRequest = async (req, res, next) => {
     if (!imageUrls?.length)
       throw createHttpError(400, "At least one image is required");
 
+    if (new Date(expiresAt) <= new Date())
+      throw createHttpError(400, "Auction must have future expiration date");
+
     // 1. First create repair request without auction reference
     const repairRequest = await RepairRequest.create({
       customer: req.user._id,
@@ -37,9 +40,9 @@ export const createRepairRequest = async (req, res, next) => {
       category,
       issueDescription,
       itemType,
-      photos: imageUrls.map((url) => ({
-        url,
-        public_id: url.split("/").pop().split(".")[0],
+      photos: imageUrls.map((img) => ({
+        url: img.url,
+        public_id: img.public_id, // Require client to send Cloudinary public_id
       })),
       status: "auction_open",
       shippingRequired: shippingRequired || false,
