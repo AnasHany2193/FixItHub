@@ -8,11 +8,16 @@ import {
 import AuthLayout from "./components/layout/AuthLayout";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
+import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
+import ResendOtpPage from "./pages/auth/ResendOtpPage";
+import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
+import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 
 import DashboardLayout from "./components/layout/DashboardLayout";
 
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import NewRepairPage from "./pages/customer/NewRepairPage";
+import RepairRequestsPage from "./pages/customer/RepairRequestsPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -22,10 +27,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import VerifyOTPPage from "./pages/auth/VerifyOTPPage";
-import ResendOtpPage from "./pages/auth/ResendOtpPage";
-import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
-import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 
 function App() {
   return (
@@ -47,7 +48,9 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["customer"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
-            <Route path="/requests/new" element={<NewRepairPage />} />
+            <Route path="/repairs/new" element={<NewRepairPage />} />
+            <Route path="/repairs" element={<RepairRequestsPage />} />
+            {/* <Route path="/repairs/:id" element={<RepairDetailsPage />} /> */}
           </Route>
         </Route>
 

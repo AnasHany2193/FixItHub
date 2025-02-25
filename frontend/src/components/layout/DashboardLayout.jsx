@@ -48,7 +48,7 @@ const DashboardLayout = () => {
         quickActions: [
           {
             name: "New Repair Request",
-            path: "/requests/new",
+            path: "/repairs/new",
             icon: <PlusCircle className="w-4 h-4" />,
           },
           {
@@ -64,19 +64,19 @@ const DashboardLayout = () => {
         icon: <Cog className="w-5 h-5" />,
         items: [
           {
-            path: "/requests/active",
-            name: "Active Requests",
+            path: "/repairs",
+            name: "Repair Requests",
             icon: <Clock className="w-4 h-4" />,
             badge: 3, // Ongoing repairs
           },
           {
-            path: "/requests/history",
+            path: "/repairs/history",
             name: "Repair History",
             icon: <History className="w-4 h-4" />,
             progress: 2, // Completed repairs
           },
           {
-            path: "/requests/new",
+            path: "/repairs/new",
             name: "New Request",
             icon: <Plus className="w-4 h-4" />,
             variant: "success",
