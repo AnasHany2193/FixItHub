@@ -64,7 +64,7 @@ const DashboardLayout = () => {
         icon: <Cog className="w-5 h-5" />,
         items: [
           {
-            path: "/repairs",
+            path: "/repairs/all",
             name: "Repair Requests",
             icon: <Clock className="w-4 h-4" />,
             badge: 3, // Ongoing repairs

@@ -24,7 +24,7 @@ export const useCreateRepair = () => {
         title: "Repair Created",
         description: data.message || "Repair request submitted successfully",
       });
-      navigate("/repairs");
+      navigate("/repairs/all");
     },
     onError: (error) => {
       toast({
@@ -96,7 +96,7 @@ export const useCancelRepair = () => {
         title: "Repair Cancelled",
         description: data.message || "Repair request cancelled successfully",
       });
-      navigate("/repairs");
+      navigate("/repairs/all");
     },
     onError: (error) => {
       toast({

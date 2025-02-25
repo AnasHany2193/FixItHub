@@ -49,7 +49,7 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/repairs/new" element={<NewRepairPage />} />
-            <Route path="/repairs" element={<RepairRequestsPage />} />
+            <Route path="/repairs/all" element={<RepairRequestsPage />} />
             {/* <Route path="/repairs/:id" element={<RepairDetailsPage />} /> */}
           </Route>
         </Route>

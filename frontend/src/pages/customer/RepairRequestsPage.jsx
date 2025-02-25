@@ -252,6 +252,7 @@ export default function RepairRequestsPage() {
                           variant="destructive"
                           size="icon"
                           className="shrink-0 shadow-red-500/20 hover:shadow-red-500/30"
+                          onClick={handleCancel}
                         >
                           {isCancelling ? (
                             <LoadingSpinner size="sm" />
