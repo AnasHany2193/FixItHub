@@ -169,11 +169,7 @@ export default function RepairRequestsPage() {
         onOpenChange={() => setSelectedRepair(null)}
       >
         {selectedRepair && (
-          <RepairDetailsDialog
-            StatItem={StatItem}
-            repair={selectedRepair}
-            statusConfig={statusConfig}
-          />
+          <RepairDetailsDialog StatItem={StatItem} repair={selectedRepair} />
         )}
       </Dialog>
 

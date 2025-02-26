@@ -13,7 +13,7 @@ const Progress = React.forwardRef(({ className, value, ...props }, ref) => (
   >
     <ProgressPrimitive.Indicator
       className={cn(
-        "h-full transition-all duration-1000 bg-blue-500 dark:bg-indigo-400",
+        "h-full transition-all duration-1000 bg-blue-500 dark:bg-indigo-400 rounded-full",
         // Handle incomplete state with subtle animation
         value < 100 && "animate-pulse"
       )}
