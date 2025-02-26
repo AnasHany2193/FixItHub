@@ -19,15 +19,7 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 
-const statusStages = {
-  pending: { step: 1, label: "Awaiting Approval", color: "bg-amber-500" },
-  auction_open: { step: 2, label: "Bidding Active", color: "bg-indigo-500" },
-  in_progress: { step: 3, label: "Repair Ongoing", color: "bg-blue-500" },
-  completed: { step: 4, label: "Service Completed", color: "bg-emerald-500" },
-  cancelled: { step: 0, label: "Cancelled", color: "bg-rose-500" },
-};
-
-const RepairDetailsDialog = ({ repair, StatItem }) => {
+const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
   const currentStatus = statusStages[repair.status] || statusStages.pending;
 
   return (
