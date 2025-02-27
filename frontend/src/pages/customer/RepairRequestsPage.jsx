@@ -178,7 +178,7 @@ export default function RepairRequestsPage() {
                         <Progress
                           value={(currentStatus.step / 4) * 100}
                           className="mt-3 h-1.5 bg-white/20 dark:bg-gray-700"
-                          indicatorClassName={currentStatus.color}
+                          // indicatorClassName={currentStatus.color}
                         />
                       </div>
 

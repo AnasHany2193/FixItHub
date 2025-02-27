@@ -7,20 +7,26 @@ import {
   Box,
   Clock,
   MapPin,
+  PlusCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { Progress } from "../ui/progress";
 import { Badge } from "../ui/badge";
 import {
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import { useState } from "react";
+import { Button } from "../ui/button";
+import StartAuctionDialog from "./StartAuctionDialog";
 
 const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
   const currentStatus = statusStages[repair.status] || statusStages.pending;
+  const [showAuctionDialog, setShowAuctionDialog] = useState(false);
 
   return (
     <DialogContent className="max-w-[90vw]  md:max-w-4xl rounded-2xl max-h-[90dvh] overflow-auto p-0 font-JosefinSans">
@@ -59,7 +65,7 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
           <Progress
             value={(currentStatus.step / 4) * 100}
             className="h-2 bg-white/20 dark:bg-gray-700"
-            indicatorClassName={currentStatus.color}
+            // indicatorClassName={currentStatus.color}
           />
         </div>
       </div>
@@ -281,6 +287,44 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
           </motion.div>
         </div>
       </div>
+
+      {/* Add Auction Start Section */}
+      {repair.status === "awaiting_assignment" && !repair.auction && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="p-6 m-6 border border-indigo-200 border-dashed rounded-xl dark:border-gray-700"
+        >
+          <div className="text-center">
+            <div className="mb-4 text-gray-600 dark:text-gray-300">
+              <Gavel className="w-12 h-12 mx-auto text-indigo-600 dark:text-indigo-400" />
+              <h4 className="mt-2 text-xl font-semibold">No Active Auction</h4>
+              <p className="mt-1 text-sm">Start bidding to get repair offers</p>
+            </div>
+            <Button
+              onClick={() => setShowAuctionDialog(true)}
+              className="gap-2 bg-indigo-600 dark:text-gray-300 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600"
+            >
+              <PlusCircle className="w-4 h-4" />
+              Start Auction
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Auction Dialog */}
+
+      <Dialog
+        open={!!showAuctionDialog}
+        onOpenChange={() => setShowAuctionDialog(false)}
+      >
+        {showAuctionDialog && (
+          <StartAuctionDialog
+            repair={repair}
+            onOpenChange={setShowAuctionDialog}
+          />
+        )}
+      </Dialog>
     </DialogContent>
   );
 };
