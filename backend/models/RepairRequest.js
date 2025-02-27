@@ -7,7 +7,7 @@ import { repairStatusEmailTemplate } from "../utils/emailTemplates.js";
 
 /**
  * @typedef {Object} RepairStatus
- * @property {string} PENDING - Initial request state
+ * @property {string} AWAITING_ASSIGNMENT - Initial request state without auction
  * @property {string} AUCTION_OPEN - Bidding open for workers
  * @property {string} IN_PROGRESS - Repair work started
  * @property {string} COMPLETED - Repair successfully finished
@@ -15,7 +15,7 @@ import { repairStatusEmailTemplate } from "../utils/emailTemplates.js";
  * @property {string} RETURNING_TO_CUSTOMER - Item in transit back
  */
 export const RepairStatus = Object.freeze({
-  PENDING: "pending",
+  AWAITING_ASSIGNMENT: "awaiting_assignment",
   AUCTION_OPEN: "auction_open",
   IN_PROGRESS: "in_progress",
   COMPLETED: "completed",
@@ -109,7 +109,7 @@ const RepairRequestSchema = new mongoose.Schema(
         values: Object.values(RepairStatus),
         message: "Invalid repair status: {VALUE}",
       },
-      default: RepairStatus.PENDING,
+      default: RepairStatus.AWAITING_ASSIGNMENT,
     },
     paymentIntentId: {
       type: String,
@@ -155,7 +155,6 @@ const RepairRequestSchema = new mongoose.Schema(
     auction: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Auction",
-      unique: true,
     },
   },
   {

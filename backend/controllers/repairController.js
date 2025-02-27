@@ -1,17 +1,16 @@
 import createHttpError from "http-errors";
 
 import Auction from "../models/Auction.js";
-import RepairRequest from "../models/RepairRequest.js";
+import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
 
 // ===================================================
 //                REPAIR REQUEST FLOW
 // ===================================================
 
 /**
- * @desc    Create new repair request with auction
+ * @desc    Create new repair request with optional auction
  * @route   POST /api/v1/repairs
  * @access  Private (Customer)
- * @note    Creates associated auction automatically
  */
 export const createRepairRequest = async (req, res, next) => {
   try {
@@ -20,21 +19,19 @@ export const createRepairRequest = async (req, res, next) => {
       category,
       issueDescription,
       itemType,
-      startingMaxPrice,
-      expiresAt,
+      startingMaxPrice, // Optional if no auction
+      expiresAt, // Optional if no auction
       imageUrls,
       shippingRequired,
+      createAuction = false, // New flag
     } = req.body;
 
     // Validate images
     if (!imageUrls?.length)
       throw createHttpError(400, "At least one image is required");
 
-    if (new Date(expiresAt) <= new Date())
-      throw createHttpError(400, "Auction must have future expiration date");
-
-    // 1. First create repair request without auction reference
-    const repairRequest = await RepairRequest.create({
+    // 1. Create base repair request
+    const repairData = {
       customer: req.user._id,
       title,
       category,
@@ -42,34 +39,87 @@ export const createRepairRequest = async (req, res, next) => {
       itemType,
       photos: imageUrls.map((img) => ({
         url: img.url,
-        public_id: img.public_id, // Require client to send Cloudinary public_id
+        public_id: img.public_id,
       })),
-      status: "auction_open",
       shippingRequired: shippingRequired || false,
+      status: createAuction
+        ? RepairStatus.AUCTION_OPEN
+        : RepairStatus.AWAITING_ASSIGNMENT,
+    };
+
+    const repairRequest = await RepairRequest.create(repairData);
+
+    // 2. Conditionally create auction
+    if (createAuction) {
+      if (!startingMaxPrice || !expiresAt)
+        throw createHttpError(
+          400,
+          "Auction requires starting price and expiration"
+        );
+
+      if (new Date(expiresAt) <= new Date())
+        throw createHttpError(400, "Auction must have future expiration date");
+
+      const auction = await Auction.create({
+        repairRequest: repairRequest._id,
+        startingMaxPrice,
+        expiresAt: new Date(expiresAt),
+      });
+
+      repairRequest.auction = auction._id;
+      await repairRequest.save();
+    }
+
+    // 📧 Should send confirmation email to customer
+    res.status(201).json({
+      success: true,
+      data: repairRequest,
+      message: `Repair request created ${createAuction ? "with auction" : ""} successfully`,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Start auction for existing repair request
+ * @route   POST /api/v1/repairs/:id/auction
+ * @access  Private (Customer)
+ */
+export const startRepairAuction = async (req, res, next) => {
+  try {
+    const { startingMaxPrice, expiresAt } = req.body;
+
+    const repairRequest = await RepairRequest.findOne({
+      _id: req.params.id,
+      customer: req.user._id,
+      status: RepairStatus.AWAITING_ASSIGNMENT,
+      auction: { $exists: false },
     });
 
-    // 2. Create associated auction
+    if (!repairRequest)
+      throw createHttpError(404, "Repair not found or cannot start auction");
+
+    if (new Date(expiresAt) <= new Date())
+      throw createHttpError(400, "Auction must have future expiration date");
+
     const auction = await Auction.create({
       repairRequest: repairRequest._id,
       startingMaxPrice,
       expiresAt: new Date(expiresAt),
     });
 
-    // 3. Update repair request with auction reference
     repairRequest.auction = auction._id;
+    repairRequest.status = RepairStatus.AUCTION_OPEN;
     await repairRequest.save();
 
-    // 📧 Should send confirmation email to customer
     res.status(201).json({
       success: true,
       data: {
-        repairRequest: {
-          ...repairRequest.toObject(),
-          auction: auction._id,
-        },
+        repair: repairRequest,
         auction,
       },
-      message: "Repair request created successfully",
+      message: "Auction started successfully",
     });
   } catch (error) {
     next(error);
@@ -379,9 +429,11 @@ export const cancelRepairRequest = async (req, res, next) => {
       {
         _id: req.params.id,
         customer: req.user._id,
-        status: { $in: ["pending", "auction_open"] },
+        status: {
+          $in: [RepairStatus.AWAITING_ASSIGNMENT, RepairStatus.AUCTION_OPEN],
+        },
       },
-      { status: "cancelled" },
+      { status: RepairStatus.CANCELLED },
       { new: true, runValidators: true }
     );
 

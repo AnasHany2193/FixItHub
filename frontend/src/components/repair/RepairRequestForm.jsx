@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { DollarSign, UploadCloud, X } from "lucide-react";
+import { CalendarPlus, DollarSign, UploadCloud, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Import components and hooks
@@ -31,24 +31,33 @@ import { useCreateRepair } from "@/hooks/useRepair";
 import { useUpload } from "@/hooks/useAuth";
 import { LoadingSpinner } from "../common/LoadingSpinner";
 
-const repairSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  category: z.enum(["electronics", "furniture", "appliances", "other"]),
-  issueDescription: z
-    .string()
-    .min(20, "Description must be at least 20 characters"),
-  itemType: z.string().min(2, "Item type is required"),
-  startingMaxPrice: z.number().min(1, "Must be at least $1"),
-  expiresAt: z.date(),
-  shippingRequired: z.boolean().default(false),
-});
+const repairSchema = z
+  .object({
+    title: z.string().min(5, "Title must be at least 5 characters"),
+    category: z.enum(["electronics", "furniture", "appliances", "other"]),
+    issueDescription: z
+      .string()
+      .min(20, "Description must be at least 20 characters"),
+    itemType: z.string().min(2, "Item type is required"),
+    createAuction: z.boolean().default(false),
+    startingMaxPrice: z.number().min(1, "Must be at least $1").optional(),
+    expiresAt: z.date().optional(),
+    shippingRequired: z.boolean().default(false),
+  })
+  .refine(
+    (data) => !data.createAuction || (data.startingMaxPrice && data.expiresAt),
+    "Auction requires price and expiration date"
+  );
 
 const RepairRequestForm = () => {
   const { toast } = useToast();
+  const [images, setImages] = useState([]);
+  const [enableAuction, setEnableAuction] = useState(false);
+
   const { mutate: createRepair, isPending } = useCreateRepair();
   const { mutateAsync: uploadImage, isPending: isUploading } = useUpload();
-  const [images, setImages] = useState([]);
 
+  // Updated default values
   const form = useForm({
     resolver: zodResolver(repairSchema),
     defaultValues: {
@@ -56,8 +65,9 @@ const RepairRequestForm = () => {
       category: "electronics",
       issueDescription: "",
       itemType: "",
-      startingMaxPrice: 0,
-      expiresAt: new Date(),
+      createAuction: false,
+      startingMaxPrice: undefined,
+      expiresAt: undefined,
       shippingRequired: false,
     },
   });
@@ -191,7 +201,6 @@ const RepairRequestForm = () => {
             />
           </CardContent>
         </Card>
-
         {/* Item Information Card */}
         <Card className="border-indigo-300 dark:border-gray-700 dark:bg-gray-800">
           <CardHeader>
@@ -242,7 +251,6 @@ const RepairRequestForm = () => {
             </div>
           </CardContent>
         </Card>
-
         {/* Image Upload Card */}
         <Card className="border-indigo-300 dark:border-gray-700 dark:bg-gray-800">
           <CardHeader>
@@ -315,64 +323,84 @@ const RepairRequestForm = () => {
 
         {/* Auction Settings Card */}
         <Card className="border-indigo-300 dark:border-gray-700 dark:bg-gray-800">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-xl font-semibold text-indigo-600 dark:text-indigo-400">
               <span className="px-2 py-1 bg-indigo-100 rounded-md dark:bg-indigo-900/20">
                 04
               </span>
-              <span className="ml-3">Auction Settings</span>
+              <span className="ml-3">Auction Setup</span>
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 md:grid-cols-2">
-              <FormField
-                name="startingMaxPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Maximum Bid Price
-                    </FormLabel>
-
-                    <Input
-                      {...field}
-                      type="number"
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      className="dark:bg-gray-700 dark:border-gray-600"
-                      placeholder="0.00"
-                      min={0}
-                      startIcon={<DollarSign />}
+            <FormField
+              name="createAuction"
+              render={({ field }) => (
+                <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        setEnableAuction(checked);
+                      }}
                     />
+                  </FormControl>
+                  <FormLabel className="text-gray-700 dark:text-gray-300">
+                    Create Auction
+                  </FormLabel>
+                </FormItem>
+              )}
+            />
+          </CardHeader>
 
-                    <FormMessage className="text-red-500 dark:text-red-400" />
-                  </FormItem>
-                )}
-              />
+          {enableAuction && (
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  name="startingMaxPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Maximum Bid Price
+                      </FormLabel>
+                      <Input
+                        {...field}
+                        type="number"
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className="dark:bg-gray-700 dark:border-gray-600"
+                        placeholder="0.00"
+                        min={1}
+                        startIcon={<DollarSign />}
+                      />
 
-              <FormField
-                name="expiresAt"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Auction End Date
-                    </FormLabel>
-                    <FormControl>
+                      <FormMessage className="text-red-500 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="expiresAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300">
+                        Auction End Date
+                      </FormLabel>
                       <Input
                         type="datetime-local"
                         {...field}
-                        value={field.value.toISOString().slice(0, 16)}
+                        value={field.value?.toISOString().slice(0, 16) || ""}
                         onChange={(e) =>
                           field.onChange(new Date(e.target.value))
                         }
-                        disabled={(date) => date < new Date()}
+                        min={new Date().toISOString().slice(0, 16)}
                         className="dark:bg-gray-700 dark:border-gray-600"
+                        startIcon={<CalendarPlus />}
                       />
-                    </FormControl>
-                    <FormMessage className="text-red-500 dark:text-red-400" />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
+                      <FormMessage className="text-red-500 dark:text-red-400" />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          )}
         </Card>
 
         {/* Submit Button */}

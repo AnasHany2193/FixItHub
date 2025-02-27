@@ -14,6 +14,7 @@ import {
   getRepairRequests,
   getWorkerHistory,
   getWorkerRepairs,
+  startRepairAuction,
   updateRepairStatus,
   updateShippingStatus,
 } from "../controllers/repairController.js";
@@ -35,6 +36,14 @@ router.post(
   roleCheck("customer"),
   sensitiveActionLimiter,
   createRepairRequest
+);
+
+router.post(
+  "/:id/auction",
+  protect,
+  roleCheck("customer"),
+  sensitiveActionLimiter,
+  startRepairAuction
 );
 
 /**

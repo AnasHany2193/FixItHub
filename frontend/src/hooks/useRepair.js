@@ -7,6 +7,7 @@ import {
   cancelRepair,
   createRepair,
   getRepairRequests,
+  startRepairAuction,
   updateRepairStatus,
 } from "@/api/repairs";
 
@@ -17,8 +18,10 @@ export const useCreateRepair = () => {
 
   return useMutation({
     mutationFn: createRepair,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries(["repairs"]);
+      console.log("variables", variables);
+
       toast({
         variant: "success",
         title: "Repair Created",
@@ -30,6 +33,30 @@ export const useCreateRepair = () => {
       toast({
         variant: "error",
         title: "Creation Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useStartRepairAuction = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: startRepairAuction,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["repairs", data.repair._id]);
+      toast({
+        variant: "success",
+        title: "Auction Started",
+        description: data.message || "Bidding is now open for workers",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Auction Failed",
         description: error.message,
       });
     },

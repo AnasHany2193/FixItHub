@@ -2,10 +2,31 @@ import axiosClient from "./client";
 
 export const createRepair = async (repairData) => {
   try {
-    const { data } = await axiosClient.post("/repairs", repairData);
+    // Separate auction data from base repair
+    const { startingMaxPrice, expiresAt, ...baseRepair } = repairData;
+    const payload = {
+      ...baseRepair,
+      createAuction: !!startingMaxPrice && !!expiresAt,
+      ...(startingMaxPrice && { startingMaxPrice }),
+      ...(expiresAt && { expiresAt }),
+    };
+
+    const { data } = await axiosClient.post("/repairs", payload);
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Repair creation failed");
+  }
+};
+
+export const startRepairAuction = async ({ repairId, auctionData }) => {
+  try {
+    const { data } = await axiosClient.post(
+      `/repairs/${repairId}/auction`,
+      auctionData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to start auction");
   }
 };
 
