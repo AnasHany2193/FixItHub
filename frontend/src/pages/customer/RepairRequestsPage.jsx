@@ -15,7 +15,11 @@ import { useCancelRepair, useRepairRequests } from "@/hooks/useRepair";
 import RepairDetailsDialog from "@/components/repair/RepairDetailsDialog";
 
 const statusStages = {
-  pending: { step: 1, label: "Awaiting Approval", color: "bg-amber-500" },
+  awaiting_assignment: {
+    step: 1,
+    label: "Awaiting Assignment",
+    color: "bg-amber-500",
+  },
   auction_open: { step: 2, label: "Bidding Active", color: "bg-indigo-500" },
   in_progress: { step: 3, label: "Repair Ongoing", color: "bg-blue-500" },
   completed: { step: 4, label: "Completed", color: "bg-emerald-500" },
@@ -157,7 +161,7 @@ export default function RepairRequestsPage() {
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 300 }}
                   >
-                    <Card className="h-full overflow-hidden transition-all border shadow-lg hover:shadow-xl dark:border-gray-700 group backdrop-blur-sm bg-white/50 dark:bg-gray-800/50">
+                    <Card className="flex flex-col justify-between h-full overflow-hidden transition-all border shadow-lg hover:shadow-xl dark:border-gray-700 group backdrop-blur-sm bg-white/50 dark:bg-gray-800/50">
                       {/* Status Header */}
                       <div className="relative p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-gray-800 dark:to-gray-900">
                         <div className="flex items-center justify-between">
@@ -225,7 +229,7 @@ export default function RepairRequestsPage() {
                         >
                           Service Details
                         </Button>
-                        {(repair.status === "pending" ||
+                        {(repair.status === "awaiting_assignment" ||
                           repair.status === "auction_open") && (
                           <motion.div whileHover={{ scale: 1.05 }}>
                             <Button

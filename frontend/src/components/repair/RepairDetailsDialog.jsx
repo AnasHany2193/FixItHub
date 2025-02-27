@@ -199,9 +199,9 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
               <StatItem
                 label="Current Offer"
                 value={
-                  repair.bids.length > 0
+                  repair.bids?.length > 0
                     ? `$${Math.min(...repair.bids.map((b) => b.bidPrice))}`
-                    : "No active bids"
+                    : "No bids"
                 }
                 icon={
                   <span className="text-emerald-600 dark:text-emerald-400">
@@ -264,7 +264,7 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
               />
               <StatItem
                 label="Amount Reserved"
-                value={`$${repair.auction?.startingMaxPrice?.toFixed(2)}`}
+                value={`$${repair.auction?.startingMaxPrice?.toFixed(2) || "0.00"}`}
               />
               <StatItem
                 label="Payment Method"
