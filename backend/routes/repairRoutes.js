@@ -11,10 +11,12 @@ import {
   createRepairRequest,
   getCustomerAuctions,
   getCustomerHistory,
+  getRepairRequest,
   getRepairRequests,
   getWorkerHistory,
   getWorkerRepairs,
   startRepairAuction,
+  updateRepairRequest,
   updateRepairStatus,
   updateShippingStatus,
 } from "../controllers/repairController.js";
@@ -46,12 +48,28 @@ router.post(
   startRepairAuction
 );
 
+router.put(
+  "/:id",
+  protect,
+  roleCheck("customer"),
+  sensitiveActionLimiter,
+  updateRepairRequest
+);
+
 /**
  * @desc    Get customer's active repair requests
  * @route   GET /api/v1/repairs
  * @access  Private (Customer)
  */
 router.get("/", protect, roleCheck("customer"), apiLimiter, getRepairRequests);
+
+router.get(
+  "/:id",
+  protect,
+  roleCheck("customer"),
+  apiLimiter,
+  getRepairRequest
+);
 
 /**
  * @desc    Update repair request status

@@ -6,8 +6,10 @@ import { useToast } from "./useToast";
 import {
   cancelRepair,
   createRepair,
+  getRepairDetails,
   getRepairRequests,
   startRepairAuction,
+  updateRepairRequest,
   updateRepairStatus,
 } from "@/api/repairs";
 
@@ -18,9 +20,8 @@ export const useCreateRepair = () => {
 
   return useMutation({
     mutationFn: createRepair,
-    onSuccess: (data, variables) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["repairs"]);
-      console.log("variables", variables);
 
       toast({
         variant: "success",
@@ -42,22 +43,51 @@ export const useCreateRepair = () => {
 export const useStartRepairAuction = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: startRepairAuction,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(["repairs", data.repair._id]);
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["repairs", variables.id]);
       toast({
         variant: "success",
         title: "Auction Started",
         description: data.message || "Bidding is now open for workers",
       });
+      navigate("/repairs/all");
     },
     onError: (error) => {
       toast({
         variant: "error",
         title: "Auction Failed",
         description: error.message,
+      });
+    },
+  });
+};
+
+export const useUpdateRepair = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: ({ id, ...updateData }) => updateRepairRequest(id, updateData),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["repairs", variables.id]);
+      queryClient.invalidateQueries(["repairs"]);
+      toast({
+        variant: "success",
+        title: "Repair Updated",
+        description: data.message || "Repair request updated successfully",
+      });
+      navigate("/repairs/all");
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Update Failed",
+        description: error.message || "Failed to update repair request",
       });
     },
   });
@@ -103,6 +133,24 @@ export const useRepairRequests = (statusFilters = []) => {
       toast({
         variant: "error",
         title: "Failed to load repairs",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useRepairDetails = (repairId) => {
+  const { toast } = useToast();
+
+  return useQuery({
+    queryKey: ["repairs", repairId],
+    queryFn: () => getRepairDetails(repairId),
+    enabled: !!repairId, // Only fetch when ID exists
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Failed to load repair",
         description: error.message,
       });
     },

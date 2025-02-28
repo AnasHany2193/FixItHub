@@ -26,8 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/useToast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useState } from "react";
-import { useCreateRepair } from "@/hooks/useRepair";
+import { useEffect, useState } from "react";
+import { useCreateRepair, useUpdateRepair } from "@/hooks/useRepair";
 import { useUpload } from "@/hooks/useAuth";
 import { LoadingSpinner } from "../common/LoadingSpinner";
 
@@ -49,14 +49,17 @@ const repairSchema = z
     "Auction requires price and expiration date"
   );
 
-const RepairRequestForm = () => {
+const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
   const { toast } = useToast();
   const [images, setImages] = useState([]);
+  const [removedImages, setRemovedImages] = useState([]);
   const [enableAuction, setEnableAuction] = useState(false);
 
-  const { mutate: createRepair, isPending } = useCreateRepair();
   const { mutateAsync: uploadImage, isPending: isUploading } = useUpload();
+  const { mutate: createRepair, isPending: isCreating } = useCreateRepair();
+  const { mutate: updateRepair, isPending: isUpdating } = useUpdateRepair();
 
+  console.log("existingRepair", existingRepair);
   // Updated default values
   const form = useForm({
     resolver: zodResolver(repairSchema),
@@ -72,12 +75,33 @@ const RepairRequestForm = () => {
     },
   });
 
+  // Update the useEffect initialization
+  useEffect(() => {
+    if (isEdit && existingRepair) {
+      const { photos, auction, ...repairData } = existingRepair;
+
+      // Convert ISO strings to Date objects
+      const initialValues = {
+        ...repairData,
+        createAuction: !!auction,
+        startingMaxPrice: auction?.startingMaxPrice || undefined,
+        expiresAt: auction?.expiresAt ? new Date(auction.expiresAt) : undefined,
+      };
+
+      // Reset form with existing values
+      form.reset(initialValues);
+
+      // Update local state
+      setEnableAuction(!!auction);
+      setImages(photos || []);
+    }
+  }, [isEdit, existingRepair, form]);
+
   const handleImageUpload = async (file) => {
     const formData = new FormData();
     formData.append("image", file);
     uploadImage(formData, {
       onSuccess: ({ result }) => {
-        console.log("result", result);
         setImages((prev) => [
           ...prev,
           {
@@ -89,7 +113,15 @@ const RepairRequestForm = () => {
     });
   };
 
-  const onSubmit = (values) => {
+  const handleRemoveImage = (index) => {
+    const imageToRemove = images[index];
+    if (imageToRemove?.public_id) {
+      setRemovedImages((prev) => [...prev, imageToRemove]);
+    }
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const onSubmit = async (values) => {
     if (images.length === 0) {
       toast({
         variant: "error",
@@ -99,7 +131,17 @@ const RepairRequestForm = () => {
       return;
     }
 
-    createRepair({ ...values, imageUrls: images });
+    // Separate new images from existing ones
+    const newImages = images.filter((img) => !img.public_id);
+
+    const payload = {
+      ...values,
+      newImages, // Images that were newly uploaded
+      removedImageIds: removedImages.map((img) => img.public_id),
+    };
+
+    if (isEdit) updateRepair({ id: existingRepair.id, ...payload });
+    else createRepair({ ...payload, imageUrls: images });
   };
 
   return (
@@ -126,17 +168,16 @@ const RepairRequestForm = () => {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Title
-                    </FormLabel>
+                    <FormLabel>Title</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
+                        value={field.value}
                         placeholder="e.g., Smartphone Screen Replacement"
-                        className="dark:bg-gray-700 dark:border-gray-600"
+                        className="dark:bg-gray-700"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-500 dark:text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -145,36 +186,29 @@ const RepairRequestForm = () => {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Category
-                    </FormLabel>
+                    <FormLabel>Category</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
+                      disabled={isEdit}
                     >
-                      <SelectTrigger className="dark:bg-gray-700 dark:border-gray-600">
+                      <SelectTrigger className="dark:bg-gray-700">
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
-                      <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
+                      <SelectContent className="dark:bg-gray-700">
                         {[
                           "electronics",
                           "furniture",
                           "appliances",
                           "other",
                         ].map((cat) => (
-                          <SelectItem
-                            key={cat}
-                            value={cat}
-                            className="hover:bg-indigo-50 dark:hover:bg-gray-700"
-                          >
-                            <span className="font-medium text-gray-700 dark:text-gray-300">
-                              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                            </span>
+                          <SelectItem key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-red-500 dark:text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -184,23 +218,22 @@ const RepairRequestForm = () => {
               name="issueDescription"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-700 dark:text-gray-300">
-                    Issue Description
-                  </FormLabel>
+                  <FormLabel>Issue Description</FormLabel>
                   <FormControl>
                     <Textarea
                       {...field}
                       rows={4}
-                      className="dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500"
+                      className="dark:bg-gray-700"
                       placeholder="Describe the issue in detail..."
                     />
                   </FormControl>
-                  <FormMessage className="text-red-500 dark:text-red-400" />
+                  <FormMessage />
                 </FormItem>
               )}
             />
           </CardContent>
         </Card>
+
         {/* Item Information Card */}
         <Card className="border-indigo-300 dark:border-gray-700 dark:bg-gray-800">
           <CardHeader>
@@ -217,17 +250,15 @@ const RepairRequestForm = () => {
                 name="itemType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Item Type
-                    </FormLabel>
+                    <FormLabel>Item Type</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         placeholder="e.g., iPhone 12 Pro"
-                        className="dark:bg-gray-700 dark:border-gray-600"
+                        className="dark:bg-gray-700"
                       />
                     </FormControl>
-                    <FormMessage className="text-red-500 dark:text-red-400" />
+                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -242,15 +273,14 @@ const RepairRequestForm = () => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="text-gray-700 dark:text-gray-300">
-                      Require Shipping?
-                    </FormLabel>
+                    <FormLabel>Require Shipping?</FormLabel>
                   </FormItem>
                 )}
               />
             </div>
           </CardContent>
         </Card>
+
         {/* Image Upload Card */}
         <Card className="border-indigo-300 dark:border-gray-700 dark:bg-gray-800">
           <CardHeader>
@@ -266,7 +296,7 @@ const RepairRequestForm = () => {
               <AnimatePresence>
                 {images.map((img, index) => (
                   <motion.div
-                    key={img.public_id}
+                    key={img.public_id || img.url}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
@@ -275,16 +305,14 @@ const RepairRequestForm = () => {
                     <img
                       src={img.url}
                       alt={`Repair preview ${index + 1}`}
-                      className="object-cover w-full h-full border-2 border-indigo-100 rounded-lg dark:border-gray-700"
+                      className="object-cover w-full h-full border-2 rounded-lg"
                     />
                     <button
                       type="button"
-                      onClick={() =>
-                        setImages((prev) => prev.filter((_, i) => i !== index))
-                      }
-                      className="absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-2 right-2 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-red-100"
                     >
-                      <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      <X className="w-4 h-4 text-red-600" />
                     </button>
                   </motion.div>
                 ))}
@@ -306,15 +334,12 @@ const RepairRequestForm = () => {
                     </>
                   )}
                 </div>
-                <Input
+                <input
                   type="file"
-                  className="hidden"
                   accept="image/*"
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || []);
-                    files.forEach(handleImageUpload);
-                  }}
-                  multiple
+                  onChange={(e) => handleImageUpload(e.target.files[0])}
+                  className="hidden"
+                  id="image-upload"
                 />
               </label>
             </div>
@@ -370,7 +395,6 @@ const RepairRequestForm = () => {
                         min={1}
                         startIcon={<DollarSign />}
                       />
-
                       <FormMessage className="text-red-500 dark:text-red-400" />
                     </FormItem>
                   )}
@@ -386,7 +410,11 @@ const RepairRequestForm = () => {
                       <Input
                         type="datetime-local"
                         {...field}
-                        value={field.value?.toISOString().slice(0, 16) || ""}
+                        value={
+                          field.value
+                            ? field.value.toISOString().slice(0, 16)
+                            : ""
+                        }
                         onChange={(e) =>
                           field.onChange(new Date(e.target.value))
                         }
@@ -411,17 +439,12 @@ const RepairRequestForm = () => {
         >
           <Button
             type="submit"
-            disabled={isPending}
+            disabled={isCreating || isUpdating || isUploading}
             className="w-full py-6 text-lg font-semibold transition-all bg-indigo-600 dark:text-white hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 hover:shadow-lg"
           >
-            {isPending ? (
-              <LoadingSpinner size="sm" />
-            ) : (
-              <span className="relative">
-                <span className="block transition-transform hover:translate-x-1">
-                  Submit Repair Request
-                </span>
-              </span>
+            {isEdit ? "Update Repair Request" : "Create Repair Request"}
+            {(isCreating || isUpdating || isUploading) && (
+              <LoadingSpinner className="ml-2" />
             )}
           </Button>
         </motion.div>

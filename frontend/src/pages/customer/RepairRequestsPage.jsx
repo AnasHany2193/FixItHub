@@ -2,7 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlusCircle, Clock, Gavel, Package, X, Wrench } from "lucide-react";
+import {
+  PlusCircle,
+  Clock,
+  Gavel,
+  Package,
+  X,
+  Wrench,
+  Pencil,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Dialog } from "@/components/ui/dialog";
@@ -181,7 +189,6 @@ export default function RepairRequestsPage() {
                           // indicatorClassName={currentStatus.color}
                         />
                       </div>
-
                       <CardContent className="p-4 space-y-4">
                         <div className="space-y-2">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -222,13 +229,34 @@ export default function RepairRequestsPage() {
                       </CardContent>
 
                       <CardFooter className="flex gap-2 p-4 pt-0">
-                        <Button
-                          variant="outline"
-                          className="flex-1 hover:bg-indigo-50 dark:hover:bg-gray-700"
-                          onClick={() => setSelectedRepair(repair)}
-                        >
-                          Service Details
-                        </Button>
+                        <div className="flex flex-1 gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1 hover:bg-indigo-50 dark:hover:bg-gray-700"
+                            onClick={() => setSelectedRepair(repair)}
+                          >
+                            Service Details
+                          </Button>
+
+                          {/* Add Edit Button */}
+                          {(repair.status === "awaiting_assignment" ||
+                            repair.status === "auction_open" ||
+                            repair.status === "cancelled") && (
+                            <motion.div whileHover={{ scale: 1.05 }}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                                onClick={() =>
+                                  navigate(`/repairs/${repair.id}/edit`)
+                                }
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                            </motion.div>
+                          )}
+                        </div>
+
                         {(repair.status === "awaiting_assignment" ||
                           repair.status === "auction_open") && (
                           <motion.div whileHover={{ scale: 1.05 }}>

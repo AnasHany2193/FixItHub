@@ -27,6 +27,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import EditRepairPage from "./pages/customer/EditRepairPage";
 
 function App() {
   return (
@@ -49,7 +50,9 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
             <Route path="/repairs/new" element={<NewRepairPage />} />
+            <Route path="/repairs/:id/edit" element={<EditRepairPage />} />
             <Route path="/repairs/all" element={<RepairRequestsPage />} />
+
             {/* <Route path="/repairs/:id" element={<RepairDetailsPage />} /> */}
           </Route>
         </Route>

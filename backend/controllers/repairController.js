@@ -2,6 +2,7 @@ import createHttpError from "http-errors";
 
 import Auction from "../models/Auction.js";
 import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
+import mongoose from "mongoose";
 
 // ===================================================
 //                REPAIR REQUEST FLOW
@@ -93,8 +94,9 @@ export const startRepairAuction = async (req, res, next) => {
     const repairRequest = await RepairRequest.findOne({
       _id: req.params.id,
       customer: req.user._id,
-      status: RepairStatus.AWAITING_ASSIGNMENT,
-      auction: { $exists: false },
+      status: {
+        $in: [RepairStatus.AWAITING_ASSIGNMENT, RepairStatus.CANCELLED],
+      },
     });
 
     if (!repairRequest)
@@ -120,6 +122,176 @@ export const startRepairAuction = async (req, res, next) => {
         auction,
       },
       message: "Auction started successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Update repair request details
+ * @route   PUT /api/v1/repairs/:id
+ * @access  Private (Customer)
+ */
+export const updateRepairRequest = async (req, res, next) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    const { id } = req.params;
+    const {
+      title,
+      category,
+      issueDescription,
+      itemType,
+      startingMaxPrice,
+      expiresAt,
+      imageUrls = [],
+      removedImageIds = [],
+      shippingRequired,
+      createAuction = false,
+    } = req.body;
+
+    // 1. Validate repair ownership and status
+    const existingRepair = await RepairRequest.findOne({
+      _id: id,
+      customer: req.user._id,
+      status: {
+        $in: [
+          RepairStatus.AWAITING_ASSIGNMENT,
+          RepairStatus.AUCTION_OPEN,
+          RepairStatus.CANCELLED,
+        ],
+      },
+    }).session(session);
+
+    if (!existingRepair)
+      throw createHttpError(404, "Repair not found or cannot be modified");
+
+    // 2. Determine new status
+    let newStatus;
+    if (existingRepair.status === RepairStatus.CANCELLED) {
+      newStatus = createAuction
+        ? RepairStatus.AUCTION_OPEN
+        : RepairStatus.AWAITING_ASSIGNMENT;
+    } else {
+      newStatus = createAuction
+        ? RepairStatus.AUCTION_OPEN
+        : existingRepair.status;
+    }
+
+    // 3. Handle image updates
+    // Filter out removed images and add new ones
+    const updatedPhotos = [
+      ...existingRepair.photos.filter(
+        (img) => !removedImageIds.includes(img.public_id)
+      ),
+      ...imageUrls,
+    ];
+
+    // 4. Prepare update payload
+    const updatePayload = {
+      title,
+      category,
+      issueDescription,
+      itemType,
+      shippingRequired,
+      status: newStatus,
+      photos: updatedPhotos,
+    };
+
+    // 5. Handle auction-related fields
+    if (createAuction) {
+      updatePayload.startingMaxPrice = startingMaxPrice;
+      updatePayload.expiresAt = expiresAt;
+    }
+
+    // 6. Update repair document
+    const updatedRepair = await RepairRequest.findByIdAndUpdate(
+      id,
+      updatePayload,
+      { new: true, session, runValidators: true }
+    ).populate("auction");
+
+    // 7. Handle auction creation/update
+    if (createAuction) {
+      if (existingRepair.auction) {
+        await Auction.findByIdAndUpdate(
+          existingRepair.auction,
+          {
+            startingMaxPrice,
+            expiresAt,
+            status: "open",
+          },
+          { session }
+        );
+      } else {
+        const auction = await Auction.create(
+          [
+            {
+              repairRequest: updatedRepair._id,
+              startingMaxPrice,
+              expiresAt,
+              status: "open",
+            },
+          ],
+          { session }
+        );
+        updatedRepair.auction = auction[0]._id;
+        await updatedRepair.save({ session });
+      }
+    }
+
+    await session.commitTransaction();
+
+    res.status(200).json({
+      success: true,
+      data: updatedRepair,
+      message: "Repair request updated successfully",
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
+  }
+};
+
+/**
+ * @desc    Get single repair request details
+ * @route   GET /api/v1/repairs/:id
+ * @access  Private (Customer)
+ */
+export const getRepairRequest = async (req, res, next) => {
+  try {
+    const repair = await RepairRequest.findOne({
+      _id: req.params.id,
+      customer: req.user._id,
+    })
+      .populate({
+        path: "bids",
+        select: "bidPrice estimatedTimeDays status submittedAt",
+        populate: {
+          path: "worker",
+          select: "username profile.avatar rating.average",
+        },
+      })
+      .populate({
+        path: "auction",
+        select: "status expiresAt startingMaxPrice currentLowestBid",
+      })
+      .populate({
+        path: "worker",
+        select: "username profile.avatar rating.average",
+      });
+
+    if (!repair) throw createHttpError(404, "Repair request not found");
+
+    res.status(200).json({
+      success: true,
+      data: repair,
+      message: "Repair request details retrieved",
     });
   } catch (error) {
     next(error);

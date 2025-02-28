@@ -49,9 +49,9 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
             </Badge>
             <Badge variant="premium" className="gap-1.5 backdrop-blur-sm">
               <Clock className="w-4 h-4" />
-              {formatDistanceToNow(new Date(repair.createdAt), {
-                addSuffix: true,
-              })}
+              {repair.auction?.status === "open"
+                ? formatDistanceToNow(new Date(repair.auction.expiresAt))
+                : "Auction closed"}
             </Badge>
           </div>
         </div>
@@ -204,11 +204,7 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
             <div className="space-y-4">
               <StatItem
                 label="Current Offer"
-                value={
-                  repair.bids?.length > 0
-                    ? `$${Math.min(...repair.bids.map((b) => b.bidPrice))}`
-                    : "No bids"
-                }
+                value={repair.auction?.currentLowestBid?.bidPrice || "No bids"}
                 icon={
                   <span className="text-emerald-600 dark:text-emerald-400">
                     ↓
@@ -218,11 +214,9 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
               <StatItem
                 label="Time Remaining"
                 value={
-                  repair.auction?.expiresAt
-                    ? formatDistanceToNow(new Date(repair.auction.expiresAt), {
-                        addSuffix: true,
-                      })
-                    : "N/A"
+                  repair.auction?.status === "open"
+                    ? formatDistanceToNow(new Date(repair.auction.expiresAt))
+                    : "Auction closed"
                 }
                 icon={
                   <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />

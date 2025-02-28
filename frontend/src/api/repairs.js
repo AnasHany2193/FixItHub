@@ -30,6 +30,17 @@ export const startRepairAuction = async ({ repairId, auctionData }) => {
   }
 };
 
+export const updateRepairRequest = async (repairId, updateData) => {
+  try {
+    const { data } = await axiosClient.put(`/repairs/${repairId}`, updateData);
+    return data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to update repair request"
+    );
+  }
+};
+
 export const getRepairRequests = async (params = {}) => {
   try {
     const { data } = await axiosClient.get("/repairs", { params });
