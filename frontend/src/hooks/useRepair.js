@@ -79,7 +79,7 @@ export const useUpdateRepair = () => {
         title: "Repair Updated",
         description: data.message || "Repair request updated successfully",
       });
-      navigate("/repairs/all");
+      navigate(`/repairs/${variables.id}`);
     },
     onError: (error) => {
       toast({

@@ -1,5 +1,5 @@
-import { useParams } from "react-router-dom";
-import { useRepairDetails } from "@/hooks/useRepair";
+import { useNavigate, useParams } from "react-router-dom";
+import { useCancelRepair, useRepairDetails } from "@/hooks/useRepair";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,8 @@ import {
   Info,
   User,
   Clock,
+  Trash2,
+  PencilLine,
 } from "lucide-react";
 import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
 import { format, formatDistanceToNow } from "date-fns";
@@ -61,8 +63,11 @@ const formatDate = (dateString) => {
 
 export default function RepairDetailsPage() {
   const { id } = useParams();
-  const { data: repair, isLoading, isError } = useRepairDetails(id);
+  const navigate = useNavigate();
   const [showAuctionDialog, setShowAuctionDialog] = useState(false);
+
+  const { mutate: cancelRepair } = useCancelRepair();
+  const { data: repair, isLoading, isError } = useRepairDetails(id);
 
   if (isLoading) return <PageSkeleton />;
   if (!repair || isError) return <NotFoundState />;
@@ -378,6 +383,33 @@ export default function RepairDetailsPage() {
                 >
                   Start Auction
                 </Button>
+              </div>
+            )}
+
+            {(repair.status === "awaiting_assignment" ||
+              repair.status === "auction_open") && (
+              <div className="flex gap-3 mt-4">
+                <Button
+                  variant="destructive"
+                  onClick={() => cancelRepair(repair._id)}
+                  className="flex-1 gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Cancel Repair</span>
+                </Button>
+
+                {(repair.status === "awaiting_assignment" ||
+                  repair.status === "auction_open" ||
+                  repair.status === "cancelled") && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/repairs/${repair._id}/edit`)}
+                    className="flex-1 gap-2 border border-indigo-300 shadow-md dark:border-gray-700"
+                  >
+                    <PencilLine className="w-4 h-4" />
+                    <span>Edit Repair</span>
+                  </Button>
+                )}
               </div>
             )}
           </div>
