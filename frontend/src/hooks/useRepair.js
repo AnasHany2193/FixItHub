@@ -43,7 +43,6 @@ export const useCreateRepair = () => {
 export const useStartRepairAuction = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: startRepairAuction,
@@ -54,7 +53,6 @@ export const useStartRepairAuction = () => {
         title: "Auction Started",
         description: data.message || "Bidding is now open for workers",
       });
-      navigate("/repairs/all");
     },
     onError: (error) => {
       toast({

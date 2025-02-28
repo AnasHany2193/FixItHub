@@ -2,7 +2,6 @@ import { useParams } from "react-router-dom";
 import { useRepairDetails } from "@/hooks/useRepair";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -12,9 +11,17 @@ import {
   CarouselNext,
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Wrench, MapPin, ShieldAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  Wrench,
+  MapPin,
+  ShieldAlert,
+  Info,
+  User,
+  Clock,
+} from "lucide-react";
 import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useState } from "react";
 import { Dialog } from "@/components/ui/dialog";
 
@@ -44,22 +51,21 @@ const STATUS_CONFIG = {
   },
 };
 
+const formatDate = (dateString) => {
+  try {
+    return format(new Date(dateString), "MMM dd, yyyy HH:mm");
+  } catch {
+    return "N/A";
+  }
+};
+
 export default function RepairDetailsPage() {
   const { id } = useParams();
-  const { data: repair, isLoading, isError, error } = useRepairDetails(id);
+  const { data: repair, isLoading, isError } = useRepairDetails(id);
   const [showAuctionDialog, setShowAuctionDialog] = useState(false);
 
-  const safeFormatDate = (dateString) => {
-    try {
-      return dateString ? formatDistanceToNow(new Date(dateString)) : "N/A";
-    } catch {
-      return "N/A";
-    }
-  };
-
   if (isLoading) return <PageSkeleton />;
-  if (isError) return <ErrorState error={error} />;
-  if (!repair) return <NotFoundState />;
+  if (!repair || isError) return <NotFoundState />;
 
   const statusConfig =
     STATUS_CONFIG[repair.status] || STATUS_CONFIG.awaiting_assignment;
@@ -81,22 +87,38 @@ export default function RepairDetailsPage() {
           </motion.div>
 
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                {repair.title}
-                <Badge variant="outline" className="ml-3 font-mono">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  {repair.title}
+                </h1>
+                <Badge variant="outline" className="font-mono">
                   #{id.slice(-6)}
                 </Badge>
-              </h1>
-              <p className="mt-2 text-muted-foreground">
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className={statusConfig.color}>
+                  {statusConfig.label}
+                </Badge>
+                <Badge
+                  variant={repair.shippingRequired ? "default" : "secondary"}
+                >
+                  {repair.shippingRequired
+                    ? "Shipping Required"
+                    : "Local Service"}
+                </Badge>
+              </div>
+              <p className="capitalize text-muted-foreground">
                 {repair.itemType} • {repair.category}
               </p>
             </div>
 
-            <div className="flex flex-col items-end gap-2">
-              <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
+            <div className="flex flex-col items-end gap-1">
               <p className="text-sm text-muted-foreground">
-                Created {safeFormatDate(repair.createdAt)} ago
+                Created: {formatDate(repair.createdAt)}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Updated: {formatDate(repair.updatedAt)}
               </p>
             </div>
           </div>
@@ -159,52 +181,115 @@ export default function RepairDetailsPage() {
               </Carousel>
             </motion.div>
 
-            {/* Details Section */}
-            <div className="space-y-8">
-              <SectionCard
-                icon={
-                  <Wrench className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                }
-                title="Issue Breakdown"
-              >
-                <p className="leading-relaxed text-foreground/90">
-                  {repair.issueDescription}
-                </p>
-              </SectionCard>
-
-              <SectionCard
-                icon={
-                  <MapPin className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                }
-                title="Service Timeline"
-              >
-                <div className="pl-4 space-y-6 border-l-2 border-border">
-                  {repair.trackingUpdates?.map((update, index) => (
-                    <TimelineItem key={index} update={update} />
-                  ))}
-                  {!repair.trackingUpdates?.length && (
-                    <p className="text-muted-foreground">
-                      No tracking updates available yet
-                    </p>
-                  )}
+            {/* Issue Details */}
+            <SectionCard
+              icon={
+                <Wrench className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="Technical Details"
+            >
+              <div className="space-y-4">
+                <InfoItem label="Item Type" value={repair.itemType} />
+                <InfoItem label="Category" value={repair.category} />
+                <div className="pt-4">
+                  <h3 className="mb-2 font-medium text-foreground">
+                    Issue Description
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {repair.issueDescription}
+                  </p>
                 </div>
-              </SectionCard>
-            </div>
+              </div>
+            </SectionCard>
+
+            {/* Service Timeline */}
+            <SectionCard
+              icon={
+                <MapPin className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="Service History"
+            >
+              <div className="pl-4 space-y-6 border-l-2 border-border">
+                {repair.trackingUpdates?.map((update, index) => (
+                  <div key={index} className="relative pl-6">
+                    <div className="absolute left-0 top-4 w-2.5 h-2.5 bg-primary rounded-full -translate-x-[calc(0.75rem+1px)]" />
+                    <div className="space-y-1">
+                      <p className="font-medium capitalize text-foreground">
+                        {update.status.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatDate(update.timestamp)}
+                      </p>
+                      {update.location && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {update.location}
+                          </span>
+                        </div>
+                      )}
+                      {update.technician && (
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {update.technician}
+                          </span>
+                        </div>
+                      )}
+                      {update.notes && (
+                        <div className="flex gap-2 p-3 mt-2 rounded-lg bg-muted">
+                          <Info className="w-4 h-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            {update.notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {!repair.trackingUpdates?.length && (
+                  <p className="text-muted-foreground">
+                    No service history recorded
+                  </p>
+                )}
+              </div>
+            </SectionCard>
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            <SectionCard title="Auction Details">
+            <SectionCard
+              icon={
+                <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="Auction Status"
+            >
               <div className="space-y-4">
                 <InfoItem
                   label="Current Bid"
-                  value={repair.auction?.currentLowestBid?.bidPrice || "-"}
+                  value={
+                    repair.auction?.currentLowestBid?.bidPrice
+                      ? `$${repair.auction.currentLowestBid.bidPrice.toFixed(2)}`
+                      : "No bids"
+                  }
+                />
+                <InfoItem
+                  label="Starting Price"
+                  value={`$${repair.auction?.startingMaxPrice?.toFixed(2) || "-"}`}
+                />
+                <InfoItem
+                  label="Ends At"
+                  value={
+                    repair.auction?.expiresAt
+                      ? formatDate(repair.auction.expiresAt)
+                      : "N/A"
+                  }
                 />
                 <InfoItem
                   label="Time Remaining"
                   value={
                     repair.auction?.status === "open"
-                      ? safeFormatDate(repair.auction.expiresAt)
+                      ? formatDistanceToNow(new Date(repair.auction.expiresAt))
                       : "Auction closed"
                   }
                 />
@@ -212,28 +297,67 @@ export default function RepairDetailsPage() {
               </div>
             </SectionCard>
 
-            <SectionCard title="Payment Information">
+            {/* Payment Information */}
+            <SectionCard
+              icon={
+                <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="Payment & Billing"
+            >
               <div className="space-y-4">
                 <InfoItem
-                  label="Status"
+                  label=" Payment Status"
                   value={
                     <Badge
                       variant={
-                        repair.paymentStatus === "paid" ? "success" : "warning"
+                        repair.paymentDetails?.status === "paid"
+                          ? "success"
+                          : "warning"
                       }
                     >
-                      {repair.paymentStatus}
+                      {repair.paymentDetails?.status?.toUpperCase()}
                     </Badge>
                   }
                 />
                 <InfoItem
-                  label="Amount"
-                  value={`$${repair.paymentAmount?.toFixed(2)}`}
-                />
-                <InfoItem
-                  label="Method"
+                  label="Payment Method"
                   value={repair.paymentDetails?.method || "Not specified"}
                 />
+                <InfoItem
+                  label="Last Updated"
+                  value={formatDate(repair.updatedAt)}
+                />
+              </div>
+            </SectionCard>
+
+            {/* Bid History */}
+            <SectionCard title="Bid History">
+              <div className="space-y-4">
+                {repair.bids?.length > 0 ? (
+                  repair.bids.map((bid, index) => (
+                    <div
+                      key={bid._id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted"
+                    >
+                      <div>
+                        <p className="font-medium">Bid #{index + 1}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(bid.timestamp)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium">
+                          ${bid.bidPrice.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {bid.technician?.name || "Anonymous"}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">No bids placed yet</p>
+                )}
               </div>
             </SectionCard>
 
@@ -287,32 +411,6 @@ const SectionCard = ({ icon, title, children }) => (
   </motion.div>
 );
 
-const TimelineItem = ({ update }) => (
-  <div className="relative pl-6">
-    <div className="absolute left-0 top-4 w-2.5 h-2.5 bg-primary rounded-full -translate-x-[calc(0.75rem+1px)]" />
-    <div className="flex flex-col gap-1">
-      <p className="font-medium capitalize text-foreground">
-        {update.status.replace(/_/g, " ")}
-      </p>
-      <p className="text-sm text-muted-foreground">
-        {new Date(update.timestamp).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </p>
-      {update.location && (
-        <div className="flex items-center gap-2 mt-2">
-          <MapPin className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground ">
-            {update.location}
-          </span>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
 const InfoItem = ({ label, value }) => (
   <div className="flex items-center justify-between py-2.5 border-b border-border">
     <span className="text-muted-foreground">{label}</span>
@@ -339,16 +437,6 @@ const PageSkeleton = () => (
         <Skeleton className="h-48 rounded-xl" />
       </div>
     </div>
-  </div>
-);
-
-// Error State
-const ErrorState = ({ error }) => (
-  <div className="p-6 mx-auto mt-8 max-w-7xl bg-red-50 dark:bg-red-900/20 rounded-xl">
-    <Alert variant="destructive">
-      <Alert.Title>Error Loading Repair</Alert.Title>
-      <Alert.Description>{error.message}</Alert.Description>
-    </Alert>
   </div>
 );
 
