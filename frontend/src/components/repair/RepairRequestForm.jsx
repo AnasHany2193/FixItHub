@@ -416,7 +416,12 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
                             : ""
                         }
                         onChange={(e) =>
-                          field.onChange(new Date(e.target.value))
+                          field.onChange(
+                            new Date(
+                              new Date(e.target.value).getTime() -
+                                new Date().getTimezoneOffset() * 60000
+                            )
+                          )
                         }
                         min={new Date().toISOString().slice(0, 16)}
                         className="dark:bg-gray-700 dark:border-gray-600"

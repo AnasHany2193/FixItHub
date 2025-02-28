@@ -3,6 +3,7 @@ import createHttpError from "http-errors";
 import Auction from "../models/Auction.js";
 import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
 import mongoose from "mongoose";
+import Bid from "../models/Bid.js";
 
 // ===================================================
 //                REPAIR REQUEST FLOW
@@ -91,11 +92,16 @@ export const startRepairAuction = async (req, res, next) => {
   try {
     const { startingMaxPrice, expiresAt } = req.body;
 
+    // 1. Find repair request with auction restart capability
     const repairRequest = await RepairRequest.findOne({
       _id: req.params.id,
       customer: req.user._id,
       status: {
-        $in: [RepairStatus.AWAITING_ASSIGNMENT, RepairStatus.CANCELLED],
+        $in: [
+          RepairStatus.AWAITING_ASSIGNMENT,
+          RepairStatus.CANCELLED,
+          RepairStatus.AUCTION_OPEN,
+        ],
       },
     });
 
@@ -105,23 +111,45 @@ export const startRepairAuction = async (req, res, next) => {
     if (new Date(expiresAt) <= new Date())
       throw createHttpError(400, "Auction must have future expiration date");
 
-    const auction = await Auction.create({
-      repairRequest: repairRequest._id,
-      startingMaxPrice,
-      expiresAt: new Date(expiresAt),
-    });
+    // 2. Auction creation/update logic
+    let auction;
+    if (repairRequest.auction) {
+      // Update existing auction
+      auction = await Auction.findByIdAndUpdate(
+        repairRequest.auction,
+        {
+          startingMaxPrice,
+          expiresAt: new Date(expiresAt),
+          status: "open",
+          $unset: { currentLowestBid: 1 }, // Reset bidding
+        },
+        { new: true, runValidators: true }
+      );
 
-    repairRequest.auction = auction._id;
+      // Clear previous bids
+      await Bid.deleteMany({ auction: auction._id });
+    } else {
+      // Create new auction
+      auction = await Auction.create({
+        repairRequest: repairRequest._id,
+        startingMaxPrice,
+        expiresAt: new Date(expiresAt),
+        status: "open",
+      });
+      repairRequest.auction = auction._id;
+    }
+
+    // 3. Update repair status
     repairRequest.status = RepairStatus.AUCTION_OPEN;
     await repairRequest.save();
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      data: {
-        repair: repairRequest,
-        auction,
-      },
-      message: "Auction started successfully",
+      data: { repair: repairRequest, auction },
+      message:
+        "Auction " +
+        (repairRequest.auction ? "restarted" : "started") +
+        "successfully",
     });
   } catch (error) {
     next(error);

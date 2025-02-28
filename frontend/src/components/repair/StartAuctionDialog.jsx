@@ -2,7 +2,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, DollarSign, Gavel } from "lucide-react";
+import { CalendarPlus, DollarSign, Gavel } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -33,7 +33,9 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
     resolver: zodResolver(auctionSchema),
     defaultValues: {
       startingMaxPrice: repair.auction?.startingMaxPrice || 0,
-      expiresAt: repair.auction?.expiresAt || new Date(),
+      expiresAt: repair.auction?.expiresAt
+        ? new Date(repair.auction?.expiresAt)
+        : undefined,
     },
   });
 
@@ -70,16 +72,15 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
               <FormItem>
                 <FormLabel>Maximum Bid Price</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <DollarSign className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-                    <Input
-                      {...field}
-                      type="number"
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                      className="pl-8"
-                      placeholder="150.00"
-                    />
-                  </div>
+                  <Input
+                    {...field}
+                    type="number"
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    className="dark:bg-gray-700 dark:border-gray-600"
+                    placeholder="0.00"
+                    min={1}
+                    startIcon={<DollarSign />}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -93,17 +94,24 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
               <FormItem>
                 <FormLabel>Auction End Date</FormLabel>
                 <FormControl>
-                  <div className="relative">
-                    <Calendar className="absolute w-4 h-4 text-gray-400 -translate-y-1/2 left-3 top-1/2" />
-                    <Input
-                      type="datetime-local"
-                      {...field}
-                      value={field.value?.toISOString().slice(0, 16)}
-                      onChange={(e) => field.onChange(new Date(e.target.value))}
-                      min={new Date().toISOString().slice(0, 16)}
-                      className="pl-8"
-                    />
-                  </div>
+                  <Input
+                    type="datetime-local"
+                    {...field}
+                    value={
+                      field.value ? field.value.toISOString().slice(0, 16) : ""
+                    }
+                    onChange={(e) =>
+                      field.onChange(
+                        new Date(
+                          new Date(e.target.value).getTime() -
+                            new Date().getTimezoneOffset() * 60000
+                        )
+                      )
+                    }
+                    min={new Date().toISOString().slice(0, 16)}
+                    className="dark:bg-gray-700 dark:border-gray-600"
+                    startIcon={<CalendarPlus />}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -283,7 +283,8 @@ const RepairDetailsDialog = ({ repair, StatItem, statusStages }) => {
       </div>
 
       {/* Add Auction Start Section */}
-      {repair.status === "awaiting_assignment" && !repair.auction && (
+      {(repair.status === "awaiting_assignment" ||
+        repair.status === "cancelled") && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
