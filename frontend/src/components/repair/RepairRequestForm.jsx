@@ -59,7 +59,6 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
   const { mutate: createRepair, isPending: isCreating } = useCreateRepair();
   const { mutate: updateRepair, isPending: isUpdating } = useUpdateRepair();
 
-  console.log("existingRepair", existingRepair);
   // Updated default values
   const form = useForm({
     resolver: zodResolver(repairSchema),

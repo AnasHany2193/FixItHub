@@ -20,6 +20,7 @@ import NewRepairPage from "./pages/customer/NewRepairPage";
 import EditRepairPage from "./pages/customer/EditRepairPage";
 import RepairRequestsPage from "./pages/customer/RepairRequestsPage";
 import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
+import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -54,6 +55,7 @@ function App() {
             <Route path="/repairs/:id/edit" element={<EditRepairPage />} />
             <Route path="/repairs/all" element={<RepairRequestsPage />} />
             <Route path="/repairs/:id" element={<RepairDetailsPage />} />
+            <Route path="/repairs/history" element={<RepairHistoryPage />} />
           </Route>
         </Route>
 
