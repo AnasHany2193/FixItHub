@@ -17,7 +17,6 @@ import {
   getWorkerRepairs,
   startRepairAuction,
   updateRepairRequest,
-  updateRepairStatus,
   updateShippingStatus,
 } from "../controllers/repairController.js";
 
@@ -69,19 +68,6 @@ router.get(
   roleCheck("customer"),
   apiLimiter,
   getRepairRequest
-);
-
-/**
- * @desc    Update repair request status
- * @route   PATCH /api/v1/repairs/:id/status
- * @access  Private (Customer)
- */
-router.patch(
-  "/:id/status",
-  protect,
-  roleCheck("customer"),
-  sensitiveActionLimiter,
-  updateRepairStatus
 );
 
 /**

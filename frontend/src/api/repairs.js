@@ -61,19 +61,6 @@ export const getRepairDetails = async (repairId) => {
   }
 };
 
-export const updateRepairStatus = async ({ repairId, status }) => {
-  try {
-    const { data } = await axiosClient.patch(`/repairs/${repairId}/status`, {
-      status,
-    });
-    return data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.error || "Failed to update repair status"
-    );
-  }
-};
-
 export const cancelRepair = async (repairId) => {
   try {
     const { data } = await axiosClient.patch(`/repairs/${repairId}/cancel`);
@@ -81,6 +68,19 @@ export const cancelRepair = async (repairId) => {
   } catch (error) {
     throw new Error(
       error.response?.data?.error || "Failed to cancel repair request"
+    );
+  }
+};
+
+export const getCustomerHistory = async (params = {}) => {
+  try {
+    const { data } = await axiosClient.get("/repairs/customer/history", {
+      params,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to fetch repair history"
     );
   }
 };

@@ -6,11 +6,11 @@ import { useToast } from "./useToast";
 import {
   cancelRepair,
   createRepair,
+  getCustomerHistory,
   getRepairDetails,
   getRepairRequests,
   startRepairAuction,
   updateRepairRequest,
-  updateRepairStatus,
 } from "@/api/repairs";
 
 export const useCreateRepair = () => {
@@ -91,30 +91,6 @@ export const useUpdateRepair = () => {
   });
 };
 
-export const useUpdateRepairStatus = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: updateRepairStatus,
-    onSuccess: (data) => {
-      queryClient.invalidateQueries(["repairs"]);
-      toast({
-        variant: "success",
-        title: "Status Updated",
-        description: data.message || "Repair status updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "error",
-        title: "Update Failed",
-        description: error.message,
-      });
-    },
-  });
-};
-
 export const useRepairRequests = (statusFilters = []) => {
   const { toast } = useToast();
 
@@ -175,6 +151,23 @@ export const useCancelRepair = () => {
       toast({
         variant: "error",
         title: "Cancellation Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useCustomerHistory = (filters = {}) => {
+  const { toast } = useToast();
+
+  return useQuery({
+    queryKey: ["repairs", "history", filters],
+    queryFn: () => getCustomerHistory(filters),
+    staleTime: 1000 * 60 * 5,
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "History Load Failed",
         description: error.message,
       });
     },

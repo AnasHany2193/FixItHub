@@ -390,33 +390,6 @@ export const getRepairRequests = async (req, res, next) => {
 // ===================================================
 
 /**
- * @desc    Update repair request status
- * @route   PATCH /api/v1/repairs/:id/status
- * @access  Private (Customer)
- */
-export const updateRepairStatus = async (req, res, next) => {
-  try {
-    const { status } = req.body;
-    const repairRequest = await RepairRequest.findOneAndUpdate(
-      { _id: req.params.id, customer: req.user._id },
-      { status },
-      { new: true, runValidators: true }
-    );
-
-    if (!repairRequest) throw createHttpError(404, "Repair request not found");
-
-    // 📧 Should send status update email to worker/customer
-    res.status(200).json({
-      success: true,
-      data: repairRequest,
-      message: "Repair status updated successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
  * @desc    Mark repair as completed
  * @route   POST /api/v1/repairs/:id/complete
  * @access  Private (Worker)
