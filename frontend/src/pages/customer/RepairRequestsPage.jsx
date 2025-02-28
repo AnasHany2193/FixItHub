@@ -13,16 +13,14 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 import { useCancelRepair, useRepairRequests } from "@/hooks/useRepair";
-import RepairDetailsDialog from "@/components/repair/RepairDetailsDialog";
 
-const statusStages = {
+export const statusStages = {
   awaiting_assignment: {
     step: 1,
     label: "Awaiting Assignment",
@@ -51,7 +49,6 @@ const statusFilters = [
 
 export default function RepairRequestsPage() {
   const navigate = useNavigate();
-  const [selectedRepair, setSelectedRepair] = useState(null);
 
   const [selectedStatus, setSelectedStatus] = useState(["all"]);
   const { data, isLoading } = useRepairRequests(
@@ -158,7 +155,8 @@ export default function RepairRequestsPage() {
             <AnimatePresence>
               {data.data.map((repair) => {
                 const currentStatus =
-                  statusStages[repair.status] || statusStages.pending;
+                  statusStages[repair.status] ||
+                  statusStages["awaiting_assignment"];
 
                 return (
                   <motion.div
@@ -233,7 +231,7 @@ export default function RepairRequestsPage() {
                           <Button
                             variant="outline"
                             className="flex-1 hover:bg-indigo-50 dark:hover:bg-gray-700"
-                            onClick={() => setSelectedRepair(repair)}
+                            onClick={() => navigate(`/repairs/${repair.id}`)}
                           >
                             Service Details
                           </Button>
@@ -279,20 +277,6 @@ export default function RepairRequestsPage() {
           </motion.div>
         )}
       </div>
-
-      {/* Repair Details Dialog */}
-      <Dialog
-        open={!!selectedRepair}
-        onOpenChange={() => setSelectedRepair(null)}
-      >
-        {selectedRepair && (
-          <RepairDetailsDialog
-            StatItem={StatItem}
-            repair={selectedRepair}
-            statusStages={statusStages}
-          />
-        )}
-      </Dialog>
     </div>
   );
 }

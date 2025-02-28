@@ -17,7 +17,9 @@ import DashboardLayout from "./components/layout/DashboardLayout";
 
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
 import NewRepairPage from "./pages/customer/NewRepairPage";
+import EditRepairPage from "./pages/customer/EditRepairPage";
 import RepairRequestsPage from "./pages/customer/RepairRequestsPage";
+import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -27,7 +29,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import EditRepairPage from "./pages/customer/EditRepairPage";
 
 function App() {
   return (
@@ -52,8 +53,7 @@ function App() {
             <Route path="/repairs/new" element={<NewRepairPage />} />
             <Route path="/repairs/:id/edit" element={<EditRepairPage />} />
             <Route path="/repairs/all" element={<RepairRequestsPage />} />
-
-            {/* <Route path="/repairs/:id" element={<RepairDetailsPage />} /> */}
+            <Route path="/repairs/:id" element={<RepairDetailsPage />} />
           </Route>
         </Route>
 

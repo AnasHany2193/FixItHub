@@ -64,7 +64,7 @@ export default function EditRepairPage() {
             className="pb-12"
           >
             <RepairRequestForm
-              repair={repair.data}
+              repair={repair}
               isEdit
               key={repair.id} // Force re-render when repair changes
             />

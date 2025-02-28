@@ -53,7 +53,7 @@ export const getRepairRequests = async (params = {}) => {
 export const getRepairDetails = async (repairId) => {
   try {
     const { data } = await axiosClient.get(`/repairs/${repairId}`);
-    return data;
+    return data.data;
   } catch (error) {
     throw new Error(
       error.response?.data?.error || "Failed to fetch repair details"
