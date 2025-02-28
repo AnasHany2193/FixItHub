@@ -131,13 +131,27 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
       return;
     }
 
-    // Separate new images from existing ones
-    const newImages = images.filter((img) => !img.public_id);
+    console.log("images before filtering:", images);
+    console.log(
+      "Images with public_id:",
+      images.filter((img) => img.public_id)
+    );
+    console.log(
+      "Images without public_id:",
+      images.filter((img) => !img.public_id)
+    );
+    const newImageUrls = images
+      .filter((img) => !img.public_id)
+      .map((img) => img.url);
+    console.log("Filtered new image URLs:", newImageUrls);
 
     const payload = {
       ...values,
-      newImages, // Images that were newly uploaded
-      removedImageIds: removedImages.map((img) => img.public_id),
+      imageUrls: images.map((img) => ({
+        url: img.url,
+        public_id: img.public_id,
+      })), // Send both url & public_id
+      removedImageIds: removedImages.map((img) => img.public_id), // Send only removed public_ids
     };
 
     if (isEdit) updateRepair({ id: existingRepair.id, ...payload });

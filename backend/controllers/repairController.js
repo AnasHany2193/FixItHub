@@ -181,6 +181,19 @@ export const updateRepairRequest = async (req, res, next) => {
       createAuction = false,
     } = req.body;
 
+    console.log({
+      title,
+      category,
+      issueDescription,
+      itemType,
+      startingMaxPrice,
+      expiresAt,
+      imageUrls,
+      removedImageIds,
+      shippingRequired,
+      createAuction,
+    });
+
     // 1. Validate repair ownership and status
     const existingRepair = await RepairRequest.findOne({
       _id: id,
@@ -211,11 +224,19 @@ export const updateRepairRequest = async (req, res, next) => {
 
     // 3. Handle image updates
     // Filter out removed images and add new ones
+    const existingPhotoPublicIds = new Set(
+      existingRepair.photos.map((img) => img.public_id)
+    );
+
+    const newUniquePhotos = imageUrls.filter(
+      (img) => !existingPhotoPublicIds.has(img.public_id)
+    );
+
     const updatedPhotos = [
       ...existingRepair.photos.filter(
         (img) => !removedImageIds.includes(img.public_id)
       ),
-      ...imageUrls,
+      ...newUniquePhotos, // Only add images that don't exist
     ];
 
     // 4. Prepare update payload
