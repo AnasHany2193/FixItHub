@@ -539,7 +539,7 @@ export const getWorkerHistory = async (req, res, next) => {
 
 /**
  * @desc    Get customer's repair history with filters
- * @route   GET /api/v1/repairs/customer/history
+ * @route   GET /api/v1/repairs/history
  * @access  Private (Customer)
  */
 export const getCustomerHistory = async (req, res, next) => {
@@ -547,7 +547,9 @@ export const getCustomerHistory = async (req, res, next) => {
     const { status, bidStatus } = req.query;
     const filter = {
       customer: req.user._id,
-      ...(status && { status }),
+      status: status
+        ? { $in: [status] }
+        : { $in: ["completed", "cancelled", "returning_to_customer"] },
     };
 
     const repairs = await RepairRequest.find(filter)
@@ -557,11 +559,11 @@ export const getCustomerHistory = async (req, res, next) => {
       })
       .populate({
         path: "bids",
-        match: { status: bidStatus },
+        select: "bidPrice estimatedTimeDays status",
       })
       .populate({
         path: "auction",
-        select: "status expiresAt startingMaxPrice currentLowestBid",
+        select: "status expiresAt startingMaxPrice",
       })
       .sort("-createdAt");
 
@@ -624,7 +626,7 @@ export const cancelRepairRequest = async (req, res, next) => {
         _id: req.params.id,
         customer: req.user._id,
         status: {
-          $in: [RepairStatus.AWAITING_ASSIGNMENT, RepairStatus.AUCTION_OPEN],
+          $in: [RepairStatus.AUCTION_OPEN],
         },
       },
       { status: RepairStatus.CANCELLED },

@@ -255,8 +255,7 @@ export default function RepairRequestsPage() {
                           )}
                         </div>
 
-                        {(repair.status === "awaiting_assignment" ||
-                          repair.status === "auction_open") && (
+                        {repair.status === "auction_open" && (
                           <motion.div whileHover={{ scale: 1.05 }}>
                             <Button
                               variant="ghost"

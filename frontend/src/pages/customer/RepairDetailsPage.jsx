@@ -386,8 +386,7 @@ export default function RepairDetailsPage() {
               </div>
             )}
 
-            {(repair.status === "awaiting_assignment" ||
-              repair.status === "auction_open") && (
+            {repair.status === "auction_open" && (
               <div className="flex gap-3 mt-4">
                 <Button
                   variant="destructive"

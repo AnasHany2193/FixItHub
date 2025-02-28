@@ -74,7 +74,7 @@ export const cancelRepair = async (repairId) => {
 
 export const getCustomerHistory = async (params = {}) => {
   try {
-    const { data } = await axiosClient.get("/repairs/customer/history", {
+    const { data } = await axiosClient.get("/repairs/history", {
       params,
     });
     return data;

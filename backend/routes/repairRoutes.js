@@ -62,6 +62,19 @@ router.put(
  */
 router.get("/", protect, roleCheck("customer"), apiLimiter, getRepairRequests);
 
+/**
+ * @desc    Get customer's repair history
+ * @route   GET /api/v1/repairs/history
+ * @access  Private (Customer)
+ */
+router.get(
+  "/history",
+  protect,
+  roleCheck("customer"),
+  apiLimiter,
+  getCustomerHistory
+);
+
 router.get(
   "/:id",
   protect,
@@ -94,19 +107,6 @@ router.get(
   roleCheck("customer"),
   apiLimiter,
   getCustomerAuctions
-);
-
-/**
- * @desc    Get customer's repair history
- * @route   GET /api/v1/repairs/history
- * @access  Private (Customer)
- */
-router.get(
-  "/history",
-  protect,
-  roleCheck("customer"),
-  apiLimiter,
-  getCustomerHistory
 );
 
 // ===================================================
