@@ -235,7 +235,7 @@ const Header = () => {
                 >
                   <Button
                     onClick={() => navigate("/signup")}
-                    className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600"
+                    className="bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 dark:text-indigo-100"
                   >
                     Get Started
                   </Button>
