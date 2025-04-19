@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import validator from "validator";
 import createHttpError from "http-errors";
-import cloudinary from "../config/cloudinary.js";
 
 // Sub-schemas for better organization
 const addressSchema = new mongoose.Schema(
@@ -284,30 +283,6 @@ userSchema.pre("save", async function (next) {
     next();
   } catch (error) {
     next(createHttpError.InternalServerError("Password hashing failed"));
-  }
-});
-
-// Document cleanup hook
-userSchema.post("findOneAndUpdate", async function (doc) {
-  try {
-    if (
-      doc.workerApplication?.status === "rejected" &&
-      doc.workerApplication.documents?.length
-    ) {
-      const publicIds = doc.workerApplication.documents
-        .filter((d) => d.public_id)
-        .map((d) => d.public_id);
-
-      if (publicIds.length) {
-        await cloudinary.api.delete_resources(publicIds, {
-          resource_type: "image",
-          type: "upload",
-        });
-      }
-    }
-  } catch (error) {
-    console.error("Document cleanup error:", error);
-    throw createHttpError.BadGateway("Cloudinary cleanup operation failed");
   }
 });
 

@@ -21,7 +21,7 @@ export const localImageUpload = async (file) => {
 
     return {
       url,
-      public_id: filename, // mimic Cloudinary's public_id
+      public_id: filename,
     };
   } catch (error) {
     throw createHttpError(500, "Failed to upload image locally.");

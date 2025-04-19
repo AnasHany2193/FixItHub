@@ -1,6 +1,5 @@
 import createHttpError from "http-errors";
 
-import cloudinary from "../config/cloudinary.js";
 import { sendEmail } from "../services/emailService.js";
 
 import User from "../models/User.js";
@@ -45,12 +44,6 @@ export const handleContentRemoval = async (report) => {
 
     if (!content)
       throw createHttpError(404, `${report.contentType} content not found`);
-
-    // Additional cleanup for Cloudinary assets
-    if (report.contentType === "product" && content.photos?.length) {
-      const publicIds = content.photos.map((photo) => photo.public_id);
-      await cloudinary.api.delete_resources(publicIds);
-    }
 
     return content;
   } catch (error) {

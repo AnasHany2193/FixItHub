@@ -4,7 +4,6 @@ import createHttpError from "http-errors";
 
 import OTP from "../models/OTP.js";
 import User from "../models/User.js";
-import cloudinary from "../config/cloudinary.js";
 
 import {
   sendPasswordResetOtpEmail,
@@ -45,7 +44,7 @@ export const register = async (req, res, next) => {
                 ? skills
                 : skills?.split(",").map((s) => s.trim()),
               experience,
-              documents, // Expects array of Cloudinary URLs from /api/v1/upload
+              documents,
               status: "pending",
             }
           : undefined,
@@ -66,13 +65,6 @@ export const register = async (req, res, next) => {
       message: "Registration successful. Check email for OTP verification.",
     });
   } catch (err) {
-    // Cleanup uploaded files on error
-    if (user?.workerApplication?.documents) {
-      await cloudinary.api.delete_resources(
-        user.workerApplication.documents.map((doc) => doc.public_id)
-      );
-    }
-
     // Rollback user creation if email fails
     if (user) await User.deleteOne({ _id: user._id });
 

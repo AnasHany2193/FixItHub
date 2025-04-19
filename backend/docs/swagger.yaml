@@ -78,8 +78,6 @@ tags:
     description: Review management and rating system
   - name: Reports
     description: Content moderation and reporting
-  - name: Media
-    description: Image uploads and Cloudinary integration
   - name: Admin
     description: Administrative operations and moderation
   - name: Service Health
@@ -297,51 +295,6 @@ paths:
                 $ref: "#/components/schemas/PublicUser"
         "404":
           description: User not found
-
-  /api/v1/upload:
-    post:
-      tags: [Media]
-      summary: Upload image files
-      description: Handle multiple image uploads and return Cloudinary URLs
-      parameters:
-        - in: header
-          name: Content-Type
-          required: true
-          schema:
-            type: string
-            example: multipart/form-data
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                files:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
-                  description: Array of image files (max 5)
-      responses:
-        "200":
-          description: Image upload successful
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UploadResponse"
-        "400":
-          description: Invalid file upload
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          description: Image processing error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   /api/v1/auth/register:
     post:
@@ -2276,20 +2229,6 @@ components:
           type: string
           example: "Uploaded"
 
-    UploadResult:
-      type: object
-      properties:
-        url:
-          type: string
-          format: uri
-          example: "https://res.cloudinary.com/demo/image/upload/v123/example.jpg"
-        resourceType:
-          type: string
-          example: "image"
-        bytes:
-          type: integer
-          example: 102400
-
     RegistrationRequest:
       type: object
       properties:
@@ -2319,8 +2258,6 @@ components:
           enum: [beginner, intermediate, expert]
         documents:
           type: array
-          items:
-            $ref: "#/components/schemas/CloudinaryDocument"
       required: [username, email, password, role]
 
     LoginRequest:
@@ -2657,7 +2594,6 @@ components:
             format: uri
           minItems: 1
           maxItems: 5
-          example: ["https://res.cloudinary.com/demo/image/upload/lens.jpg"]
         location:
           type: object
           properties:

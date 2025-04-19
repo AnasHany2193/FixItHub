@@ -1,6 +1,5 @@
 import createHttpError from "http-errors";
 
-import cloudinary from "../config/cloudinary.js";
 import { sendApprovalEmail } from "../services/emailService.js";
 import {
   sendUserWarning,
@@ -224,15 +223,6 @@ export const processApplication = async (req, res, next) => {
 
     // Send email notification
     await sendApprovalEmail(user.email, user.username, status, reason);
-
-    // Clean up rejected documents
-    if (status === "rejected" && user.workerApplication.documents?.length) {
-      const publicIds = user.workerApplication.documents
-        .map((doc) => doc.public_id)
-        .filter(Boolean);
-
-      if (publicIds.length) await cloudinary.api.delete_resources(publicIds);
-    }
 
     // 📧 Uses sendApprovalEmail (emailService)
     res.json({
@@ -574,17 +564,7 @@ export const deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id).session(session);
 
-    if (!product) {
-      throw createHttpError(404, "Product not found");
-    }
-
-    // Delete product images
-    if (product.photos?.length) {
-      const publicIds = product.photos
-        .map((photo) => photo.public_id)
-        .filter(Boolean);
-      await cloudinary.api.delete_resources(publicIds);
-    }
+    if (!product) throw createHttpError(404, "Product not found");
 
     // Delete product and reservations
     await Promise.all([
