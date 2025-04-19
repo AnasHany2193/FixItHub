@@ -23,8 +23,10 @@ import {
 import { useStartRepairAuction } from "@/hooks/useRepair";
 
 const auctionSchema = z.object({
-  startingMaxPrice: z.number().min(1, "Must be at least $1"),
-  expiresAt: z.date().min(new Date(), "Must be future date"),
+  auctionDetails: z.object({
+    startingMaxPrice: z.number().min(1, "Must be at least $1"),
+    expiresAt: z.date().min(new Date(), "Must be future date"),
+  }),
 });
 
 export default function StartAuctionDialog({ repair, onOpenChange }) {
@@ -32,18 +34,21 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
   const form = useForm({
     resolver: zodResolver(auctionSchema),
     defaultValues: {
-      startingMaxPrice: repair.auction?.startingMaxPrice || 0,
-      expiresAt: repair.auction?.expiresAt
-        ? new Date(repair.auction?.expiresAt)
-        : undefined,
+      auctionDetails: {
+        startingMaxPrice: repair.auction?.startingMaxPrice || 0,
+        expiresAt: repair.auction?.expiresAt
+          ? new Date(repair.auction.expiresAt)
+          : undefined,
+      },
     },
   });
 
   const onSubmit = async (data) => {
+    console.log(data);
     try {
       await startAuction({
         repairId: repair._id,
-        auctionData: data,
+        auctionData: data.auctionDetails, // Send nested data
       });
       onOpenChange(false);
     } catch (error) {
@@ -67,7 +72,7 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
         <form onSubmit={form.handleSubmit(onSubmit)} className="my-2 space-y-6">
           <FormField
             control={form.control}
-            name="startingMaxPrice"
+            name="auctionDetails.startingMaxPrice"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Maximum Bid Price</FormLabel>
@@ -89,7 +94,7 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
 
           <FormField
             control={form.control}
-            name="expiresAt"
+            name="auctionDetails.expiresAt"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Auction End Date</FormLabel>

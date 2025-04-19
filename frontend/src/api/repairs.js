@@ -2,16 +2,10 @@ import axiosClient from "./client";
 
 export const createRepair = async (repairData) => {
   try {
-    // Separate auction data from base repair
-    const { startingMaxPrice, expiresAt, ...baseRepair } = repairData;
-    const payload = {
-      ...baseRepair,
-      createAuction: !!startingMaxPrice && !!expiresAt,
-      ...(startingMaxPrice && { startingMaxPrice }),
-      ...(expiresAt && { expiresAt }),
-    };
-
-    const { data } = await axiosClient.post("/repairs", payload);
+    const { data } = await axiosClient.post("/repairs", {
+      ...repairData,
+      auctionDetails: repairData.auctionDetails,
+    });
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Repair creation failed");
@@ -20,31 +14,28 @@ export const createRepair = async (repairData) => {
 
 export const startRepairAuction = async ({ repairId, auctionData }) => {
   try {
-    const { data } = await axiosClient.post(
-      `/repairs/${repairId}/auction`,
-      auctionData
-    );
+    const { data } = await axiosClient.post(`/repairs/${repairId}/auction`, {
+      ...auctionData,
+    });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Failed to start auction");
+    throw new Error(error.response?.data?.error || "Auction start failed");
   }
 };
 
-export const updateRepairRequest = async (repairId, updateData) => {
+export const updateRepairRequest = async ({ repairId, updateData }) => {
   try {
     const { data } = await axiosClient.put(`/repairs/${repairId}`, updateData);
     return data;
   } catch (error) {
-    throw new Error(
-      error.response?.data?.error || "Failed to update repair request"
-    );
+    throw new Error(error.response?.data?.error || "Update failed");
   }
 };
 
 export const getRepairRequests = async (params = {}) => {
   try {
     const { data } = await axiosClient.get("/repairs", { params });
-    return data;
+    return data.data;
   } catch (error) {
     throw new Error(error.response?.data?.error || "Failed to fetch repairs");
   }
@@ -77,7 +68,7 @@ export const getCustomerHistory = async (params = {}) => {
     const { data } = await axiosClient.get("/repairs/history", {
       params,
     });
-    return data;
+    return data.data;
   } catch (error) {
     throw new Error(
       error.response?.data?.error || "Failed to fetch repair history"

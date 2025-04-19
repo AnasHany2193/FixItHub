@@ -69,7 +69,7 @@ export default function RepairHistoryPage() {
   const { data, isLoading, isError, error } = useCustomerHistory();
 
   const filteredRepairs =
-    data?.data?.filter(
+    data?.filter(
       (repair) =>
         selectedStatus.includes("all") || selectedStatus.includes(repair.status)
     ) || [];
@@ -174,7 +174,7 @@ export default function RepairHistoryPage() {
         )}
 
         {/* Empty State */}
-        {!isLoading && !isError && data?.data?.length === 0 && (
+        {!isLoading && !isError && filteredRepairs.length === 0 && (
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -193,7 +193,7 @@ export default function RepairHistoryPage() {
         )}
 
         {/* History Timeline */}
-        {!isLoading && !isError && data?.data?.length > 0 && (
+        {!isLoading && !isError && filteredRepairs.length > 0 && (
           <motion.div
             layout
             className="space-y-6 md:space-y-8 lg:max-w-4xl lg:mx-auto"
@@ -206,7 +206,7 @@ export default function RepairHistoryPage() {
 
                 return (
                   <motion.div
-                    key={repair.id}
+                    key={repair._id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

@@ -1,16 +1,7 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { useCancelRepair, useRepairDetails } from "@/hooks/useRepair";
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from "@/components/ui/carousel";
-import { Badge } from "@/components/ui/badge";
+import { format, formatDistanceToNow } from "date-fns";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Wrench,
@@ -22,10 +13,22 @@ import {
   Trash2,
   PencilLine,
 } from "lucide-react";
-import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
-import { format, formatDistanceToNow } from "date-fns";
-import { useState } from "react";
+
+import { useCancelRepair, useRepairDetails } from "@/hooks/useRepair";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+} from "@/components/ui/carousel";
+
+import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
 
 const STATUS_CONFIG = {
   auction_open: {
@@ -273,7 +276,7 @@ export default function RepairDetailsPage() {
                 <InfoItem
                   label="Current Bid"
                   value={
-                    repair.auction?.currentLowestBid?.bidPrice
+                    repair.auction?.currentLowestBid
                       ? `$${repair.auction.currentLowestBid.bidPrice.toFixed(2)}`
                       : "No bids"
                   }
@@ -298,7 +301,10 @@ export default function RepairDetailsPage() {
                       : "Auction closed"
                   }
                 />
-                <InfoItem label="Total Bids" value={repair.bids?.length || 0} />
+                <InfoItem
+                  label="Total Bids"
+                  value={repair.auction?.bids?.length || 0}
+                />
               </div>
             </SectionCard>
 
@@ -311,16 +317,14 @@ export default function RepairDetailsPage() {
             >
               <div className="space-y-4">
                 <InfoItem
-                  label=" Payment Status"
+                  label="Payment Status"
                   value={
                     <Badge
                       variant={
-                        repair.paymentDetails?.status === "paid"
-                          ? "success"
-                          : "warning"
+                        repair.paymentStatus === "paid" ? "success" : "warning"
                       }
                     >
-                      {repair.paymentDetails?.status?.toUpperCase()}
+                      {repair.paymentStatus?.toUpperCase()}
                     </Badge>
                   }
                 />
@@ -338,8 +342,8 @@ export default function RepairDetailsPage() {
             {/* Bid History */}
             <SectionCard title="Bid History">
               <div className="space-y-4">
-                {repair.bids?.length > 0 ? (
-                  repair.bids.map((bid, index) => (
+                {repair.auction?.bids?.length > 0 ? (
+                  repair.auction.bids.map((bid, index) => (
                     <div
                       key={bid._id}
                       className="flex items-center justify-between p-3 rounded-lg bg-muted"
@@ -347,7 +351,7 @@ export default function RepairDetailsPage() {
                       <div>
                         <p className="font-medium">Bid #{index + 1}</p>
                         <p className="text-sm text-muted-foreground">
-                          {formatDate(bid.timestamp)}
+                          {formatDate(bid.submittedAt)}
                         </p>
                       </div>
                       <div className="text-right">
@@ -355,7 +359,7 @@ export default function RepairDetailsPage() {
                           ${bid.bidPrice.toFixed(2)}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {bid.technician?.name || "Anonymous"}
+                          {bid.worker?.username || "Anonymous"}
                         </p>
                       </div>
                     </div>
@@ -397,18 +401,14 @@ export default function RepairDetailsPage() {
                   <span>Cancel Repair</span>
                 </Button>
 
-                {(repair.status === "awaiting_assignment" ||
-                  repair.status === "auction_open" ||
-                  repair.status === "cancelled") && (
-                  <Button
-                    variant="secondary"
-                    onClick={() => navigate(`/repairs/${repair._id}/edit`)}
-                    className="flex-1 gap-2 border border-indigo-300 shadow-md dark:border-gray-700"
-                  >
-                    <PencilLine className="w-4 h-4" />
-                    <span>Edit Repair</span>
-                  </Button>
-                )}
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/repairs/${repair._id}/edit`)}
+                  className="flex-1 gap-2 border border-indigo-300 shadow-md dark:border-gray-700"
+                >
+                  <PencilLine className="w-4 h-4" />
+                  <span>Edit Repair</span>
+                </Button>
               </div>
             )}
           </div>

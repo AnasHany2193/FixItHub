@@ -2,7 +2,45 @@ import createHttpError from "http-errors";
 
 import Bid from "../models/Bid.js";
 import Auction from "../models/Auction.js";
-import RepairRequest from "../models/RepairRequest.js";
+import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
+
+export const createAuctionForRepair = async (
+  repairId,
+  { startingMaxPrice, expiresAt }
+) => {
+  if (!startingMaxPrice || !expiresAt)
+    throw createHttpError(400, "Auction requires price and expiration");
+
+  const auction = await Auction.create({
+    repairRequest: repairId,
+    startingMaxPrice,
+    expiresAt: new Date(expiresAt),
+  });
+
+  await RepairRequest.findByIdAndUpdate(repairId, {
+    auction: auction._id,
+    status: RepairStatus.AUCTION_OPEN,
+  });
+};
+
+export const handleAuctionUpdate = async (repair, auctionData) => {
+  if (repair.auction)
+    await Auction.findByIdAndUpdate(repair.auction, auctionData);
+  else await createAuctionForRepair(repair._id, auctionData);
+};
+
+export const updateExistingAuction = async (auctionId, data) => {
+  await Bid.deleteMany({ auction: auctionId });
+  return Auction.findByIdAndUpdate(
+    auctionId,
+    { ...data, status: "open", $unset: { currentLowestBid: 1 } },
+    { new: true }
+  );
+};
+
+export const createNewAuction = (repairId, data) => {
+  return Auction.create({ ...data, repairRequest: repairId });
+};
 
 // ===================================================
 //                 BID MANAGEMENT

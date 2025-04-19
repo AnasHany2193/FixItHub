@@ -54,6 +54,7 @@ export default function RepairRequestsPage() {
   const { data, isLoading } = useRepairRequests(
     selectedStatus.includes("all") ? [] : selectedStatus
   );
+
   const { mutate: cancelRepair } = useCancelRepair();
 
   return (
@@ -127,7 +128,7 @@ export default function RepairRequestsPage() {
         )}
 
         {/* Empty State */}
-        {!isLoading && data?.data?.length === 0 && (
+        {!isLoading && data?.length === 0 && (
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -147,20 +148,21 @@ export default function RepairRequestsPage() {
         )}
 
         {/* Repair Grid */}
-        {!isLoading && data?.data?.length > 0 && (
+        {!isLoading && data?.length > 0 && (
           <motion.div
             layout
             className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
           >
             <AnimatePresence>
-              {data.data.map((repair) => {
-                const currentStatus =
-                  statusStages[repair.status] ||
-                  statusStages["awaiting_assignment"];
+              {data.map((repair) => {
+                const currentStatus = statusStages[repair.status];
+                const hasAuction = !!repair.auction;
+                const lowestBid = repair.auction?.currentLowestBid?.bidPrice;
+                const bidCount = repair.auction?.bids?.length || 0;
 
                 return (
                   <motion.div
-                    key={repair.id}
+                    key={repair._id}
                     layout
                     initial={{ opacity: 0, scale: 0.96 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -187,6 +189,7 @@ export default function RepairRequestsPage() {
                           // indicatorClassName={currentStatus.color}
                         />
                       </div>
+
                       <CardContent className="p-4 space-y-4">
                         <div className="space-y-2">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -201,18 +204,21 @@ export default function RepairRequestsPage() {
                           <StatItem
                             label="Current Bid"
                             value={
-                              repair.bids.length > 0
-                                ? `$${Math.min(...repair.bids.map((b) => b.bidPrice))}`
-                                : "No bids"
+                              hasAuction
+                                ? lowestBid
+                                  ? `$${lowestBid}`
+                                  : `No bids (${bidCount} offers)`
+                                : "Direct assignment"
                             }
                             icon={
                               <Gavel className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                             }
                           />
+
                           <StatItem
                             label="Time Left"
                             value={
-                              repair.auction?.expiresAt
+                              hasAuction && repair.auction.expiresAt
                                 ? formatDistanceToNow(
                                     new Date(repair.auction.expiresAt),
                                     { addSuffix: true }
@@ -231,22 +237,24 @@ export default function RepairRequestsPage() {
                           <Button
                             variant="outline"
                             className="flex-1 hover:bg-indigo-50 dark:hover:bg-gray-700"
-                            onClick={() => navigate(`/repairs/${repair.id}`)}
+                            onClick={() => navigate(`/repairs/${repair._id}`)}
                           >
                             Service Details
                           </Button>
 
                           {/* Add Edit Button */}
-                          {(repair.status === "awaiting_assignment" ||
-                            repair.status === "auction_open" ||
-                            repair.status === "cancelled") && (
+                          {[
+                            "awaiting_assignment",
+                            "auction_open",
+                            "cancelled",
+                          ].includes(repair.status) && (
                             <motion.div whileHover={{ scale: 1.05 }}>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
                                 onClick={() =>
-                                  navigate(`/repairs/${repair.id}/edit`)
+                                  navigate(`/repairs/${repair._id}/edit`)
                                 }
                               >
                                 <Pencil className="w-4 h-4" />
@@ -261,7 +269,7 @@ export default function RepairRequestsPage() {
                               variant="ghost"
                               size="icon"
                               className="text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
-                              onClick={() => cancelRepair(repair.id)}
+                              onClick={() => cancelRepair(repair._id)}
                             >
                               <X className="w-5 h-5" />
                             </Button>

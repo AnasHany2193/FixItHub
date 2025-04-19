@@ -1,7 +1,5 @@
-import { useNavigate } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
 import { useToast } from "./useToast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   cancelRepair,
@@ -12,6 +10,7 @@ import {
   startRepairAuction,
   updateRepairRequest,
 } from "@/api/repairs";
+import { useNavigate } from "react-router";
 
 export const useCreateRepair = () => {
   const queryClient = useQueryClient();
@@ -22,11 +21,10 @@ export const useCreateRepair = () => {
     mutationFn: createRepair,
     onSuccess: (data) => {
       queryClient.invalidateQueries(["repairs"]);
-
       toast({
         variant: "success",
         title: "Repair Created",
-        description: data.message || "Repair request submitted successfully",
+        description: data.message,
       });
       navigate("/repairs/all");
     },
@@ -47,11 +45,11 @@ export const useStartRepairAuction = () => {
   return useMutation({
     mutationFn: startRepairAuction,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(["repairs", variables.id]);
+      queryClient.invalidateQueries(["repairs", variables.repairId]);
       toast({
         variant: "success",
         title: "Auction Started",
-        description: data.message || "Bidding is now open for workers",
+        description: data.message,
       });
     },
     onError: (error) => {
@@ -70,71 +68,49 @@ export const useUpdateRepair = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: ({ id, ...updateData }) => updateRepairRequest(id, updateData),
+    mutationFn: updateRepairRequest,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(["repairs", variables.id]);
+      // Update single repair cache
+      queryClient.setQueryData(["repairs", variables.repairId], data);
+
+      // Invalidate list cache to ensure freshness
       queryClient.invalidateQueries(["repairs"]);
+
       toast({
         variant: "success",
         title: "Repair Updated",
-        description: data.message || "Repair request updated successfully",
+        description: data.message,
       });
-      navigate(`/repairs/${variables.id}`);
+      navigate("/repairs/all");
     },
     onError: (error) => {
+      console.log("error", error);
       toast({
         variant: "error",
         title: "Update Failed",
-        description: error.message || "Failed to update repair request",
-      });
-    },
-  });
-};
-
-export const useRepairRequests = (statusFilters = []) => {
-  const { toast } = useToast();
-
-  return useQuery({
-    queryKey: ["repairs", statusFilters],
-    queryFn: () =>
-      getRepairRequests({
-        status: Array.isArray(statusFilters)
-          ? statusFilters.join(",")
-          : statusFilters,
-      }),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    onError: (error) => {
-      toast({
-        variant: "error",
-        title: "Failed to load repairs",
         description: error.message,
       });
     },
   });
 };
 
-export const useRepairDetails = (repairId) => {
-  const { toast } = useToast();
+export const useRepairRequests = (status) =>
+  useQuery({
+    queryKey: ["repairs", status],
+    queryFn: () => getRepairRequests({ status }),
+    staleTime: 5 * 60 * 1000,
+  });
 
-  return useQuery({
+export const useRepairDetails = (repairId) =>
+  useQuery({
     queryKey: ["repairs", repairId],
     queryFn: () => getRepairDetails(repairId),
-    enabled: !!repairId, // Only fetch when ID exists
-    staleTime: 1000 * 60 * 5, // 5 minutes cache
-    onError: (error) => {
-      toast({
-        variant: "error",
-        title: "Failed to load repair",
-        description: error.message,
-      });
-    },
+    enabled: !!repairId,
   });
-};
 
 export const useCancelRepair = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: cancelRepair,
@@ -143,9 +119,8 @@ export const useCancelRepair = () => {
       toast({
         variant: "success",
         title: "Repair Cancelled",
-        description: data.message || "Repair request cancelled successfully",
+        description: data.message,
       });
-      navigate("/repairs/all");
     },
     onError: (error) => {
       toast({
@@ -157,19 +132,8 @@ export const useCancelRepair = () => {
   });
 };
 
-export const useCustomerHistory = (filters = {}) => {
-  const { toast } = useToast();
-
-  return useQuery({
+export const useCustomerHistory = (filters) =>
+  useQuery({
     queryKey: ["repairs", "history", filters],
     queryFn: () => getCustomerHistory(filters),
-    staleTime: 1000 * 60 * 5,
-    onError: (error) => {
-      toast({
-        variant: "error",
-        title: "History Load Failed",
-        description: error.message,
-      });
-    },
   });
-};

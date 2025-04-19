@@ -33,19 +33,22 @@ import { LoadingSpinner } from "../common/LoadingSpinner";
 
 const repairSchema = z
   .object({
-    title: z.string().min(5, "Title must be at least 5 characters"),
+    title: z.string().min(5),
     category: z.enum(["electronics", "furniture", "appliances", "other"]),
-    issueDescription: z
-      .string()
-      .min(20, "Description must be at least 20 characters"),
-    itemType: z.string().min(2, "Item type is required"),
+    issueDescription: z.string().min(20),
+    itemType: z.string().min(2),
     createAuction: z.boolean().default(false),
-    startingMaxPrice: z.number().min(1, "Must be at least $1").optional(),
-    expiresAt: z.date().optional(),
     shippingRequired: z.boolean().default(false),
+    // Add auction details group
+    auctionDetails: z
+      .object({
+        startingMaxPrice: z.number().min(1),
+        expiresAt: z.date(),
+      })
+      .optional(),
   })
   .refine(
-    (data) => !data.createAuction || (data.startingMaxPrice && data.expiresAt),
+    (data) => !data.createAuction || data.auctionDetails,
     "Auction requires price and expiration date"
   );
 
@@ -79,26 +82,33 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
     if (isEdit && existingRepair) {
       const { photos, auction, ...repairData } = existingRepair;
 
-      // Convert ISO strings to Date objects
+      // Convert dates properly
       const initialValues = {
         ...repairData,
         createAuction: !!auction,
-        startingMaxPrice: auction?.startingMaxPrice || undefined,
-        expiresAt: auction?.expiresAt ? new Date(auction.expiresAt) : undefined,
+        auctionDetails: auction
+          ? {
+              startingMaxPrice: auction.startingMaxPrice,
+              expiresAt: new Date(auction.expiresAt),
+            }
+          : undefined,
       };
 
-      // Reset form with existing values
       form.reset(initialValues);
-
-      // Update local state
-      setEnableAuction(!!auction);
       setImages(photos || []);
+      setEnableAuction(!!auction);
+    } else {
+      // Reset to defaults when creating new
+      form.reset();
+      setImages([]);
+      setEnableAuction(false);
     }
   }, [isEdit, existingRepair, form]);
 
   const handleImageUpload = async (file) => {
     const formData = new FormData();
     formData.append("image", file);
+
     uploadImage(formData, {
       onSuccess: ({ result }) => {
         setImages((prev) => [
@@ -121,40 +131,34 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
   };
 
   const onSubmit = async (values) => {
-    if (images.length === 0) {
+    try {
+      const payload = {
+        ...values,
+        auctionDetails: values.createAuction
+          ? values.auctionDetails
+          : undefined,
+        imageUrls: images.map((img) => ({
+          url: img.url,
+          public_id: img.public_id,
+        })),
+        removedImageIds: removedImages.map((img) => img.public_id),
+      };
+
+      if (isEdit) {
+        await updateRepair({
+          repairId: existingRepair._id,
+          updateData: payload,
+        });
+      } else {
+        await createRepair(payload);
+      }
+    } catch (error) {
       toast({
         variant: "error",
-        title: "Images Required",
-        description: "Please upload at least one image",
+        title: "Submission Failed",
+        description: error.message,
       });
-      return;
     }
-
-    console.log("images before filtering:", images);
-    console.log(
-      "Images with public_id:",
-      images.filter((img) => img.public_id)
-    );
-    console.log(
-      "Images without public_id:",
-      images.filter((img) => !img.public_id)
-    );
-    const newImageUrls = images
-      .filter((img) => !img.public_id)
-      .map((img) => img.url);
-    console.log("Filtered new image URLs:", newImageUrls);
-
-    const payload = {
-      ...values,
-      imageUrls: images.map((img) => ({
-        url: img.url,
-        public_id: img.public_id,
-      })), // Send both url & public_id
-      removedImageIds: removedImages.map((img) => img.public_id), // Send only removed public_ids
-    };
-
-    if (isEdit) updateRepair({ id: existingRepair.id, ...payload });
-    else createRepair({ ...payload, imageUrls: images });
   };
 
   return (
@@ -393,7 +397,7 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
             <CardContent className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <FormField
-                  name="startingMaxPrice"
+                  name="auctionDetails.startingMaxPrice"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 dark:text-gray-300">
@@ -414,7 +418,7 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
                 />
 
                 <FormField
-                  name="expiresAt"
+                  name="auctionDetails.expiresAt"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-gray-700 dark:text-gray-300">
