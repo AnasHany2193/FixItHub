@@ -104,7 +104,7 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
         setImages((prev) => [
           ...prev,
           {
-            url: result.secure_url,
+            url: result.url,
             public_id: result.public_id,
           },
         ]);

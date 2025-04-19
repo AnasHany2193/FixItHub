@@ -7,6 +7,7 @@ import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
+import path from "path";
 
 import connectDB from "./config/db.js";
 import errorHandler from "./middlewares/errorHandler.js";
@@ -34,6 +35,7 @@ const swaggerDocument = YAML.load("./docs/swagger.yaml");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const v1Router = express.Router();
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // ======================
 // Security Middlewares

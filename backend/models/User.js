@@ -108,8 +108,7 @@ const userSchema = new mongoose.Schema(
       avatar: {
         url: {
           type: String,
-          default:
-            "https://res.cloudinary.com/demo/image/upload/d_avatar.png/non_existing_id.png",
+          default: "/uploads/defaults/avatar.png",
           validate: [validator.isURL, "Invalid avatar URL"],
         },
         public_id: String,
