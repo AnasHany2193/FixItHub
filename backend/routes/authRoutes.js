@@ -11,7 +11,6 @@ import {
   register,
   verifyOTP,
   resendOTP,
-  refreshToken,
   forgotPassword,
   resetPassword,
 } from "../controllers/authController.js";
@@ -33,7 +32,6 @@ router.post("/resend-otp", sensitiveActionLimiter, resendOTP); // 🛡️ Strict
 //                  AUTHENTICATION
 // ===================================================
 router.post("/login", authLimiter, login); // 🛡️ Rate limited
-router.post("/refresh-token", apiLimiter, refreshToken); // 🔄 Standard limit
 
 // ===================================================
 //                 PASSWORD MANAGEMENT

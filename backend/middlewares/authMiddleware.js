@@ -9,12 +9,13 @@ import User from "../models/User.js";
  * @throws  {403} Forbidden - Account restricted
  */
 export const protect = async (req, res, next) => {
-  // Check both Authorization header and cookies
-  const token = req.cookies?.accessToken;
+  // Check for the refreshToken cookie (previously accessToken)
+  const token = req.cookies?.refreshToken;
   if (!token) return next(createHttpError(401, "Authentication required"));
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    // Verify using refresh token secret
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
 
     // Get user with token version check
     const user = await User.findById(decoded.userId)

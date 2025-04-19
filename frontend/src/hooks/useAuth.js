@@ -70,34 +70,35 @@ export const useLogin = () => {
 
 export const useLogout = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      // 🏆 Fully reset React Query cache (including persisted data)
+      // Clear all application data
       queryClient.clear();
+      localStorage.clear();
 
-      // 🗑️ Clear React Query persisted storage (localStorage)
-      localStorage.removeItem("REACT_QUERY_OFFLINE_CACHE");
       toast({
         variant: "success",
         title: "Logged Out",
         description: "You've been successfully logged out",
       });
-      navigate("/");
+
+      // Force DOM cleanup for sensitive data
+      window.location.href = "/login";
     },
     onError: (error) => {
-      // Even if logout fails, force cache reset
+      // Nuclear cleanup on error
       queryClient.clear();
-      localStorage.removeItem("REACT_QUERY_OFFLINE_CACHE");
+      localStorage.clear();
 
       toast({
         variant: "error",
         title: "Logout Failed",
         description: error.message,
       });
+
       window.location.href = "/login";
     },
   });

@@ -177,21 +177,15 @@ export const login = async (req, res, next) => {
     user.tokenVersion += 1;
     await user.save();
 
-    // Generate tokens
-    const accessToken = jwt.sign(
+    // Generate token
+    const token = jwt.sign(
       {
         userId: user._id,
         role: user.role,
         tokenVersion: user.tokenVersion,
       },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN }
-    );
-
-    const refreshToken = jwt.sign(
-      { userId: user._id, tokenVersion: user.tokenVersion },
-      process.env.JWT_REFRESH_SECRET,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN }
+      process.env.JWT_REFRESH_SECRET, // Use refresh secret
+      { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN } // 7 days
     );
 
     // Generate a welcome message based on user role
@@ -204,19 +198,13 @@ export const login = async (req, res, next) => {
             ? "Welcome Admin! You now have full access to our powerful control panel."
             : "WHO ARE YOU!! 😢";
 
-    // Set refresh & access token in HTTP-only cookie
+    // Set refresh access token in HTTP-only cookie
     res
       .status(200)
-      .cookie("accessToken", accessToken, {
+      .cookie("refreshToken", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Modified
-        maxAge: 15 * 60 * 1000, // 15 minutes
-      })
-      .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Modified
+        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       })
       .json({
@@ -237,11 +225,7 @@ export const login = async (req, res, next) => {
 export const logout = async (req, res, next) => {
   try {
     // Atomic update to increment tokenVersion
-    await User.findByIdAndUpdate(
-      req.user._id,
-      { $inc: { tokenVersion: 1 } }, // Atomic increment
-      { new: true }
-    );
+    await User.findByIdAndUpdate(req.user._id, { $inc: { tokenVersion: 1 } });
 
     // Clear refresh token cookie
     res.clearCookie("refreshToken", {
@@ -255,60 +239,6 @@ export const logout = async (req, res, next) => {
       .json({ success: true, message: "Logged out successfully ツ" });
   } catch (err) {
     next(err); // Pass the error to the centralized error handler
-  }
-};
-
-// ===================================================
-//                  TOKEN MANAGEMENT
-// ===================================================
-
-/**
- * @desc    Refresh access token using refresh token
- * @route   POST /api/v1/auth/refresh-token
- * @access  Public
- */
-export const refreshToken = async (req, res, next) => {
-  try {
-    const { refreshToken } = req.cookies;
-    if (!refreshToken) throw createHttpError(401, "Unauthorized - No token");
-
-    // Verify token and check token version
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    const user = await User.findById(decoded.userId);
-    if (!user || !user.isVerified || decoded.tokenVersion !== user.tokenVersion)
-      throw createHttpError(401, "Unauthorized");
-
-    // Generate new access token with access secret
-    const newAccessToken = jwt.sign(
-      { userId: user._id, role: user.role, tokenVersion: user.tokenVersion },
-      process.env.JWT_ACCESS_SECRET,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRES_IN }
-    );
-    console.log("New Access Token Done!");
-
-    res
-      .status(200)
-      .cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-        maxAge: 15 * 60 * 1000,
-      })
-      .json({
-        success: true,
-        // accessToken: newAccessToken, // Delete Later
-      });
-  } catch (err) {
-    // Handle specific JWT errors
-    if (err.name === "TokenExpiredError")
-      return next(
-        createHttpError(401, "Session expired. Please log in again.")
-      );
-
-    if (err.name === "JsonWebTokenError")
-      return next(createHttpError(401, "Invalid token."));
-
-    next(err);
   }
 };
 

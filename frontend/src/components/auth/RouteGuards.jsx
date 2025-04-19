@@ -3,17 +3,17 @@ import { LoadingSpinner } from "../common/LoadingSpinner";
 import { useAuth } from "@/context/AuthContext";
 
 export const AuthGuard = () => {
-  const { isLoading, user } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) return <LoadingSpinner size="lg" />;
-  return user ? <Outlet /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
 export const PublicGuard = () => {
-  const { isLoading, user } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) return <LoadingSpinner size="lg" />;
-  return !user ? <Outlet /> : <Navigate to="/" replace />;
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 export const RoleGuard = ({ allowedRoles }) => {

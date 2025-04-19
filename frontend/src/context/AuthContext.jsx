@@ -5,22 +5,24 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const userQuery = useUser();
-  const logoutMutation = useLogout();
+  const { mutate: logout } = useLogout();
 
-  // Prevent infinite retries on unauthorized errors
+  // Centralized auth error handling
   useEffect(() => {
-    if (userQuery.error?.response?.status === 401) {
-      userQuery.remove(); // Remove cached user data
-      window.location.href = "/";
-    }
-  }, [userQuery, userQuery.error]); // ✅ Only run when error changes
+    const handleAuthError = (error) => {
+      if (error?.response?.status === 401 && !window.location.pathname("login"))
+        logout();
+    };
+
+    if (userQuery.error) handleAuthError(userQuery.error);
+  }, [userQuery.error, logout]);
 
   const value = {
     user: userQuery.data?.data,
     isLoading: userQuery.isLoading,
     error: userQuery.error,
     isAuthenticated: !!userQuery.data,
-    logout: () => logoutMutation.mutate(),
+    logout,
     refreshUser: userQuery.refetch,
   };
 

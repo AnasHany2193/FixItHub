@@ -19,9 +19,6 @@ export const login = async (credentials) => {
 };
 
 export const logout = async () => {
-  // Always clear client-side token
-  localStorage.removeItem("accessToken");
-  // Call your backend logout endpoint if exists
   await axiosClient.post("/auth/logout");
 };
 
