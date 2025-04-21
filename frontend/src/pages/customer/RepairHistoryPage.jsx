@@ -272,7 +272,7 @@ export default function RepairHistoryPage() {
                           variant="ghost"
                           size="sm"
                           className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-                          onClick={() => navigate(`/repairs/${repair.id}`)}
+                          onClick={() => navigate(`/repairs/${repair._id}`)}
                         >
                           View Details
                         </Button>

@@ -3,29 +3,21 @@ import express from "express";
 import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   createProductPaymentIntent,
-  createRepairPaymentIntent,
   paymentResponseFormatter,
+  createRepairPaymentSession,
 } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
+router.post(
+  "/payment/create-checkout-session",
+  protect,
+  createRepairPaymentSession
+);
+
 // ===================================================
 //                 PAYMENT INITIATION
 // ===================================================
-
-/**
- * @desc    Create repair service payment intent
- * @route   POST /api/v1/payments/repair
- * @access  Private (Customer)
- */
-// Customer payment initiation
-router.post(
-  "/repair",
-  protect,
-  roleCheck("customer"),
-  paymentResponseFormatter,
-  createRepairPaymentIntent
-);
 
 /**
  * @desc    Create product purchase payment intent

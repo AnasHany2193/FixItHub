@@ -1,7 +1,14 @@
 import createHttpError from "http-errors";
 
+import Bid from "../models/Bid.js";
+import Offer from "../models/Offer.js";
 import Auction from "../models/Auction.js";
-import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
+
+import RepairRequest, {
+  RepairStatus,
+  trackingStatusOrder,
+} from "../models/RepairRequest.js";
+
 import {
   createAuctionForRepair,
   handleAuctionUpdate,
@@ -174,14 +181,49 @@ export const getRepairRequest = async (req, res, next) => {
       _id: req.params.id,
       customer: req.user._id,
     })
-      .populate("auction", "status expiresAt startingMaxPrice")
-      .populate("worker", "username avatar")
+      .populate([
+        {
+          path: "bids",
+          select: "bidPrice estimatedTimeDays status createdAt",
+          populate: {
+            path: "worker",
+            select: "username rating.average",
+          },
+        },
+        {
+          path: "offers",
+          match: { status: "pending" },
+          select: "offerPrice estimatedTimeDays createdAt",
+          populate: {
+            path: "worker",
+            select: "username rating.average",
+          },
+        },
+        {
+          path: "auction",
+          select: "status expiresAt startingMaxPrice",
+        },
+        {
+          path: "worker",
+          select: "username avatar rating.average",
+        },
+      ])
       .lean();
 
     if (!repair) throw createHttpError(404, "Repair not found");
+
+    const response = {
+      ...repair,
+      // Show appropriate proposals based on repair type
+      proposals: repair.auction ? repair.bids : repair.offers,
+      // Remove internal arrays from response
+      bids: undefined,
+      offers: undefined,
+    };
+
     res.status(200).json({
       success: true,
-      data: repair,
+      data: response,
     });
   } catch (error) {
     next(error);
@@ -210,7 +252,10 @@ export const getRepairRequests = async (req, res, next) => {
 
 export const getCustomerHistory = async (req, res, next) => {
   try {
+    console.log("---------------------------------------------");
     const { status } = req.query;
+    console.log("status", status);
+    console.log("req.user._id", req.user._id);
     const filter = {
       customer: req.user._id,
       status: status || {
@@ -266,112 +311,338 @@ export const cancelRepairRequest = async (req, res, next) => {
   }
 };
 
-// ===================================================
-//                 REPAIR MANAGEMENT
-// ===================================================
-
-/**
- * @desc    Mark repair as completed
- * @route   POST /api/v1/repairs/:id/complete
- * @access  Private (Worker)
- */
-export const completeRepair = async (req, res, next) => {
+export const acceptBid = async (req, res, next) => {
   try {
-    const repairRequest = await RepairRequest.findOne({
-      _id: req.params.id,
-      worker: req.user._id,
-      status: "in_progress",
+    const { repairId } = req.params;
+    const { bidId } = req.body;
+    const customerId = req.user._id;
+
+    // 1. Validate repair ownership
+    const repair = await RepairRequest.findOne({
+      _id: repairId,
+      customer: customerId,
+      status: RepairStatus.AUCTION_OPEN,
     });
 
-    if (!repairRequest)
-      throw createHttpError(404, "Repair not found or not in progress");
+    if (!repair) {
+      return res.status(404).json({
+        success: false,
+        message: "Repair not found or not in auction state",
+      });
+    }
 
-    repairRequest.status = "completed";
-    repairRequest.trackingUpdates.push({
-      status: "quality_check",
-      location: "Quality Assurance Department",
+    // 2. Get and validate bid
+    const bid = await Bid.findOne({
+      _id: bidId,
+      auction: repair.auction,
     });
 
-    await repairRequest.save();
+    if (!bid) {
+      return res.status(404).json({
+        success: false,
+        message: "Bid not found in this auction",
+      });
+    }
 
-    // 📧 Should send completion email to customer
+    // 3. Close auction and update bids
+    await Auction.findByIdAndUpdate(repair.auction, { status: "closed" });
+    await Bid.updateMany(
+      { auction: repair.auction },
+      { status: bid._id.equals(bidId) ? "accepted" : "rejected" }
+    );
+
+    // 4. Assign worker and update repair
+    const updatedRepair = await RepairRequest.findByIdAndUpdate(
+      repairId,
+      {
+        worker: bid.worker,
+        status: RepairStatus.AWAITING_PAYMENT,
+        paymentAmount: bid.bidPrice,
+        paymentStatus: "pending",
+      },
+      { new: true }
+    ).populate("worker", "username");
+
     res.status(200).json({
       success: true,
-      message: "Repair marked as completed",
-      data: repairRequest,
+      message: "Bid accepted successfully",
+      data: updatedRepair,
     });
   } catch (error) {
     next(error);
   }
 };
 
-/**
- * @desc    Update shipping tracking
- * @route   POST /api/v1/repairs/:id/shipping
- * @access  Private (Worker)
- */
-export const updateShippingStatus = async (req, res, next) => {
+export const getNonAuctionRepairs = async (req, res, next) => {
   try {
-    const { status, location } = req.body;
+    const { category, itemType, sortBy } = req.query;
 
-    const repairRequest = await RepairRequest.findOne({
-      _id: req.params.id,
-      worker: req.user._id,
-      shippingRequired: true,
-    });
+    const filter = {
+      status: RepairStatus.AWAITING_ASSIGNMENT,
+      auction: null, // Ensure no auction exists
+    };
 
-    if (!repairRequest)
-      throw createHttpError(404, "Repair not found or shipping not required");
+    if (category) filter.category = category;
+    if (itemType) filter.itemType = { $regex: itemType, $options: "i" };
 
-    if (repairRequest.paymentDetails.status !== "paid")
-      throw createHttpError(402, "Payment required before shipping");
+    const sortOptions = {
+      newest: "-createdAt",
+      price: "-startingMaxPrice",
+    };
 
-    repairRequest.trackingUpdates.push({ status, location });
-    await repairRequest.save();
+    const repairs = await RepairRequest.find(filter)
+      .select("-customer -paymentIntentId -trackingUpdates")
+      .sort(sortOptions[sortBy] || "-createdAt")
+      .lean();
 
-    // 📧 Should send shipping update email to customer
     res.status(200).json({
       success: true,
-      message: "Shipping status updated",
-      data: repairRequest.trackingUpdates,
+      count: repairs.length,
+      data: repairs,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// ===================================================
-//                 WORKER DASHBOARD
-// ===================================================
+export const getNonAuctionRepairDetails = async (req, res, next) => {
+  try {
+    const repair = await RepairRequest.findOne({
+      _id: req.params.id,
+      status: RepairStatus.AWAITING_ASSIGNMENT,
+      auction: null,
+    })
+      .populate("worker", "username rating.average")
+      .select("-customer -paymentIntentId");
 
-/**
- * @desc    Get worker's assigned repairs
- * @route   GET /api/v1/repairs/worker
- * @access  Private (Worker)
- */
+    if (!repair) {
+      return res.status(404).json({
+        success: false,
+        message: "Non-auction repair not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: repair,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitOffer = async (req, res, next) => {
+  try {
+    const { repairId } = req.params;
+    const { offerPrice, estimatedTimeDays } = req.body;
+    const workerId = req.user._id;
+
+    // Validate repair
+    const repair = await RepairRequest.findOne({
+      _id: repairId,
+      status: RepairStatus.AWAITING_ASSIGNMENT,
+      auction: null,
+    });
+
+    if (!repair) {
+      return res.status(400).json({
+        success: false,
+        message: "Repair not available for offers",
+      });
+    }
+
+    // Check existing offer
+    const existingOffer = await Offer.findOne({
+      repairRequest: repairId,
+      worker: workerId,
+    });
+
+    if (existingOffer) {
+      return res.status(409).json({
+        success: false,
+        message: "You already submitted an offer for this repair",
+      });
+    }
+
+    // Create offer
+    const offer = await Offer.create({
+      worker: workerId,
+      repairRequest: repairId,
+      offerPrice,
+      estimatedTimeDays,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Offer submitted successfully",
+      data: offer,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateOffer = async (req, res, next) => {
+  try {
+    const { offerId } = req.params;
+    const { offerPrice, estimatedTimeDays } = req.body;
+    const workerId = req.user._id;
+
+    const offer = await Offer.findOneAndUpdate(
+      {
+        _id: offerId,
+        worker: workerId,
+        status: "pending",
+      },
+      { offerPrice, estimatedTimeDays },
+      { new: true, runValidators: true }
+    );
+
+    if (!offer) {
+      return res.status(404).json({
+        success: false,
+        message: "Offer not found or cannot be modified",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Offer updated successfully",
+      data: offer,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const acceptOffer = async (req, res, next) => {
+  try {
+    const { repairId } = req.params;
+    const { offerId } = req.body;
+    const customerId = req.user._id;
+
+    // Validate repair ownership
+    const repair = await RepairRequest.findOne({
+      _id: repairId,
+      customer: customerId,
+      status: RepairStatus.AWAITING_ASSIGNMENT,
+    });
+
+    if (!repair) {
+      return res.status(404).json({
+        success: false,
+        message: "Repair not found or not eligible",
+      });
+    }
+
+    // Validate offer
+    const offer = await Offer.findOne({
+      _id: offerId,
+      repairRequest: repairId,
+    });
+
+    if (!offer) {
+      return res.status(404).json({
+        success: false,
+        message: "Offer not found for this repair",
+      });
+    }
+
+    // Update offer statuses
+    await Offer.updateMany(
+      { repairRequest: repairId },
+      { status: offer._id.equals(offerId) ? "accepted" : "rejected" }
+    );
+
+    // Update repair
+    const updatedRepair = await RepairRequest.findByIdAndUpdate(
+      repairId,
+      {
+        worker: offer.worker,
+        status: RepairStatus.AWAITING_PAYMENT,
+        paymentAmount: offer.offerPrice,
+        paymentStatus: "pending",
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Offer accepted successfully",
+      data: {
+        repair: updatedRepair,
+        worker: offer.worker,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTrackingStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const validStatuses = trackingStatusOrder;
+
+    // Validate status
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Valid values: ${validStatuses.join(", ")}`,
+      });
+    }
+
+    // Find repair
+    const repair = await RepairRequest.findOneAndUpdate(
+      { _id: id, customer: req.user._id },
+      {
+        $push: {
+          trackingUpdates: {
+            status,
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
+    );
+
+    if (!repair) {
+      return res.status(404).json({
+        success: false,
+        message: "Repair not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Tracking status updated",
+      data: repair.trackingUpdates,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getWorkerRepairs = async (req, res, next) => {
   try {
     const { status } = req.query;
     const filter = {
       worker: req.user._id,
-      status: { $in: ["in_progress", "completed"] },
+      status: status || {
+        $in: [RepairStatus.IN_PROGRESS, RepairStatus.RETURNING_TO_CUSTOMER],
+      },
     };
 
-    if (status) filter.status = status;
-
     const repairs = await RepairRequest.find(filter)
-      .populate({
-        path: "customer",
-        select: "username profile.phone profile.address",
-      })
-      .sort("-updatedAt");
-
-    if (!repairs.length) throw createHttpError(404, "No repairs found");
+      .populate("customer", "name email")
+      .select("itemType status paymentStatus createdAt")
+      .sort("-createdAt")
+      .lean();
 
     res.status(200).json({
       success: true,
       count: repairs.length,
-      message: "Worker repairs retrieved",
       data: repairs,
     });
   } catch (error) {
@@ -379,113 +650,121 @@ export const getWorkerRepairs = async (req, res, next) => {
   }
 };
 
-// ===================================================
-//                 REPAIR HISTORY
-// ===================================================
+export const completeRepair = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const workerId = req.user._id;
 
-/**
- * @desc    Get worker's completed repair history
- * @route   GET /api/v1/repairs/worker/history
- * @access  Private (Worker)
- */
-export const getWorkerHistory = async (req, res, next) => {
+    const repair = await RepairRequest.findOneAndUpdate(
+      {
+        _id: id,
+        worker: workerId,
+        status: RepairStatus.IN_PROGRESS,
+      },
+      {
+        status: RepairStatus.COMPLETED,
+        $push: {
+          trackingUpdates: {
+            status: "completed",
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!repair) {
+      return res.status(404).json({
+        success: false,
+        message: "Repair not found or not eligible for completion",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Repair marked as completed",
+      data: repair,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const returnRepair = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const workerId = req.user._id;
+    const { reason } = req.body;
+
+    const repair = await RepairRequest.findOneAndUpdate(
+      {
+        _id: id,
+        worker: workerId,
+        status: RepairStatus.IN_PROGRESS,
+      },
+      {
+        status: RepairStatus.RETURNING_TO_CUSTOMER,
+        $push: {
+          trackingUpdates: {
+            status: "return_initiated",
+            details: reason || "Unable to complete repair",
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
+    ).populate("customer", "name email");
+
+    if (!repair) {
+      return res.status(404).json({
+        success: false,
+        message: "Repair not found or not eligible for return",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Repair return initiated",
+      data: repair,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWorkerRepairsHistory = async (req, res, next) => {
   try {
     const { status } = req.query;
     const filter = {
       worker: req.user._id,
-      status: status || "completed",
+      ...(status && { status }),
     };
 
     const repairs = await RepairRequest.find(filter)
+      .populate("customer", "name email")
       .populate({
-        path: "customer",
-        select: "username profile.avatar",
+        path: "auction",
+        select: "startingMaxPrice",
+        match: { status: "closed" },
       })
-      .populate({
-        path: "bids",
-        select: "bidPrice estimatedTimeDays submittedAt",
-      })
-      .sort("-updatedAt");
+      .sort("-createdAt")
+      .lean();
+
+    const history = repairs.map((repair) => ({
+      _id: repair._id,
+      itemType: repair.itemType,
+      status: repair.status,
+      paymentStatus: repair.paymentStatus,
+      completedAt: repair.trackingUpdates.find((t) => t.status === "completed")
+        ?.timestamp,
+      customer: repair.customer,
+      price: repair.auction?.startingMaxPrice || repair.paymentAmount,
+    }));
 
     res.status(200).json({
       success: true,
-      count: repairs.length,
-      message: "Worker repair history retrieved",
-      data: repairs,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ===================================================
-//                 AUCTION MANAGEMENT
-// ===================================================
-
-/**
- * @desc    Get customer's active auctions
- * @route   GET /api/v1/repairs/customer/auctions
- * @access  Private (Customer)
- */
-export const getCustomerAuctions = async (req, res, next) => {
-  try {
-    const repairs = await RepairRequest.find({
-      customer: req.user._id,
-      status: "auction_open",
-    }).populate({
-      path: "auction",
-      select: "status expiresAt startingMaxPrice bids",
-    });
-
-    res.status(200).json({
-      data: repairs.map((r) => r.auction),
-      count: repairs.length,
-      message: "Customer auctions retrieved successfully",
-      success: true,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ===================================================
-//                 REPAIR CANCELLATION
-// ===================================================
-
-/**
- * @desc    Initiate item return to customer
- * @route   POST /api/v1/repairs/:id/return
- * @access  Private (Worker)
- * @note    Sends return notification to customer
- */
-export const cancelAndReturnItem = async (req, res, next) => {
-  try {
-    const repairRequest = await RepairRequest.findOne({
-      _id: req.params.id,
-      worker: req.user._id,
-      status: "in_progress",
-    });
-
-    if (!repairRequest)
-      throw createHttpError(404, "Repair not found or not in progress");
-
-    repairRequest.status = "returning_to_customer";
-    repairRequest.trackingUpdates.push({
-      status: "return_initiated",
-      location: "Preparing for return shipment",
-      details: "Item could not be repaired, initiating return",
-    });
-
-    await repairRequest.save();
-
-    // 📧 Should send return notification email
-    res.status(200).json({
-      success: true,
-      message: "Return process initiated",
-      data: {
-        status: repairRequest.status,
-        tracking: repairRequest.trackingUpdates,
-      },
+      count: history.length,
+      data: history,
     });
   } catch (error) {
     next(error);

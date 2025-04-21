@@ -24,7 +24,6 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
-import auctionRoutes from "./routes/auctionRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 
 // Load environment variables and Swagger docs
@@ -127,7 +126,6 @@ const routeConfig = [
   { path: "/reports", route: reportRoutes },
   { path: "/repairs", route: repairRoutes },
   { path: "/payment", route: paymentRoutes },
-  { path: "/auctions", route: auctionRoutes },
   { path: "/products", route: productRoutes },
 ];
 

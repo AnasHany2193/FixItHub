@@ -42,279 +42,226 @@ export const createNewAuction = (repairId, data) => {
   return Auction.create({ ...data, repairRequest: repairId });
 };
 
-// ===================================================
-//                 BID MANAGEMENT
-// ===================================================
+/**
+ * @desc    Get all open auctions with filters
+ * @route   GET /api/v1/auctions
+ * @access  Private (Worker)
+ */
+export const getOpenAuctions = async (req, res, next) => {
+  try {
+    const { category, maxPrice, sortBy, search } = req.query;
+    const filter = {
+      status: "open",
+      expiresAt: { $gt: new Date() },
+    };
+
+    // Apply filters
+    if (category) filter["repairRequest.category"] = category;
+    if (maxPrice) filter.startingMaxPrice = { $lte: Number(maxPrice) };
+    if (search)
+      filter["repairRequest.title"] = { $regex: search, $options: "i" };
+
+    // Base query
+    const query = Auction.find(filter)
+      .populate({
+        path: "repairRequest",
+        select: "title category itemType photos shippingRequired",
+      })
+      .select("startingMaxPrice expiresAt currentLowestBid");
+
+    // Sorting
+    if (sortBy === "price") query.sort("startingMaxPrice");
+    if (sortBy === "expiry") query.sort("expiresAt");
+
+    const auctions = await query.lean();
+
+    res.status(200).json({ success: true, data: auctions });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
- * @desc    Submit new bid for an auction
+ * @desc    Get full auction details with repair info and bids
+ * @route   GET /api/v1/auctions/:id
+ * @access  Private (Worker)
+ */
+export const getAuctionDetails = async (req, res, next) => {
+  try {
+    const auction = await Auction.findOne({
+      _id: req.params.id,
+      status: "open",
+      expiresAt: { $gt: new Date() },
+    })
+      .populate({
+        path: "repairRequest",
+        select: "-customer -trackingUpdates -paymentDetails",
+      })
+      .populate({
+        path: "bids",
+        match: { worker: req.user._id },
+        select: "bidPrice estimatedTimeDays status",
+      })
+      .populate({
+        path: "currentLowestBid",
+        select: "bidPrice estimatedTimeDays",
+      })
+      .lean();
+
+    if (!auction) throw createHttpError(404, "Active auction not found");
+
+    // Add worker-specific context
+    const response = {
+      ...auction,
+      hasBid: auction.bids.length > 0,
+      myBid: auction.bids[0] || null,
+      currentLowest:
+        auction.currentLowestBid?.bidPrice || auction.startingMaxPrice,
+    };
+
+    res.status(200).json({ data: response });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Submit new bid on auction
  * @route   POST /api/v1/auctions/:auctionId/bids
  * @access  Private (Worker)
  */
 export const submitBid = async (req, res, next) => {
   try {
+    const { auctionId } = req.params;
+    const { bidPrice, estimatedTimeDays } = req.body;
+    const workerId = req.user._id;
+
+    // 1. Validate auction
     const auction = await Auction.findOne({
-      _id: req.params.auctionId,
+      _id: auctionId,
       status: "open",
+      expiresAt: { $gt: new Date() },
+    }).populate("currentLowestBid");
+
+    if (!auction) {
+      return res.status(400).json({
+        success: false,
+        message: "Auction not found or closed",
+      });
+    }
+
+    // 2. Validate bid price
+    const currentLowest =
+      auction.currentLowestBid?.bidPrice || auction.startingMaxPrice;
+
+    if (bidPrice >= currentLowest) {
+      return res.status(400).json({
+        success: false,
+        message: `Bid must be lower than current lowest (${currentLowest})`,
+      });
+    }
+
+    if (bidPrice > auction.startingMaxPrice) {
+      return res.status(400).json({
+        success: false,
+        message: `Bid exceeds maximum price (${auction.startingMaxPrice})`,
+      });
+    }
+
+    // 3. Create bid
+    const newBid = await Bid.create({
+      worker: workerId,
+      auction: auctionId,
+      bidPrice,
+      estimatedTimeDays,
     });
 
-    if (!auction) throw createHttpError(404, "Active auction not found");
+    // 4. Update auction
+    auction.bids.push(newBid._id);
+    auction.currentLowestBid = newBid._id;
+    await auction.save();
 
-    const newBidData = {
-      worker: req.user._id,
-      bidPrice: req.body.bidPrice,
-      estimatedTimeDays: req.body.estimatedTimeDays,
-    };
-
-    const updatedAuction = await auction.submitBid(newBidData);
-
-    // Populate the new bid for response
-    const currentLowestBid = await Bid.findById(
-      updatedAuction.currentLowestBid
-    );
-
-    // 📧 Should send bid confirmation email to worker
     res.status(201).json({
       success: true,
       message: "Bid submitted successfully",
-      data: {
-        yourBid: newBidData.bidPrice,
-        currentLowestBid: currentLowestBid.bidPrice,
-      },
+      data: newBid,
     });
   } catch (error) {
-    next(createHttpError(400, error.message));
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "You already submitted a bid for this auction",
+      });
+    }
+    next(error);
   }
 };
 
 /**
  * @desc    Update existing bid
- * @route   PATCH /api/v1/bids/:bidId
+ * @route   PUT /api/v1/bids/:bidId
  * @access  Private (Worker)
  */
 export const updateBid = async (req, res, next) => {
   try {
+    const { bidId } = req.params;
     const { bidPrice, estimatedTimeDays } = req.body;
+    const workerId = req.user._id;
 
-    const bid = await Bid.findById(req.params.bidId)
-      .populate("worker")
-      .populate({
-        path: "auction",
-        populate: { path: "currentLowestBid" },
+    // 1. Find existing bid
+    const existingBid = await Bid.findOne({
+      _id: bidId,
+      worker: workerId,
+      status: "pending",
+    }).populate("auction");
+
+    if (!existingBid) {
+      return res.status(404).json({
+        success: false,
+        message: "Bid not found or cannot be modified",
       });
-
-    // Validate ownership
-    if (bid.worker._id.toString() !== req.user._id.toString())
-      throw createHttpError(403, "Not authorized to update this bid");
-
-    // Validate auction status
-    if (bid.auction.status !== "open")
-      throw createHttpError(400, "Cannot update bid on closed auction");
-
-    // Get current lowest price
-    const currentLowest =
-      bid.auction.currentLowestBid?.bidPrice || bid.auction.startingMaxPrice;
-
-    if (bidPrice >= currentLowest)
-      throw createHttpError(
-        400,
-        `New bid must be lower than current lowest (${currentLowest})`
-      );
-
-    // Update bid
-    bid.bidPrice = bidPrice;
-    bid.estimatedTimeDays = estimatedTimeDays;
-    await bid.save();
-
-    // Update auction's current lowest if needed
-    if (bidPrice < currentLowest)
-      await Auction.findByIdAndUpdate(bid.auction._id, {
-        currentLowestBid: bid._id,
-      });
-
-    // 📧 Should send bid update notification to customer
-    res.status(200).json({
-      success: true,
-      data: bid,
-      message: "Bid updated successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// ===================================================
-//                 AUCTION QUERIES
-// ===================================================
-
-/**
- * @desc    Get all bids for specific auction
- * @route   GET /api/v1/auctions/:auctionId/bids
- * @access  Public
- */
-export const getAuctionBids = async (req, res, next) => {
-  try {
-    const auction = await Auction.findById(req.params.auctionId)
-      .populate({
-        path: "bids",
-        populate: {
-          path: "worker",
-          select: "username profile.avatar rating.average",
-        },
-      })
-      .populate("currentLowestBid")
-      .lean();
-
-    if (!auction) throw createHttpError(404, "Auction not found");
-
-    // Transform bids data
-    const bids = auction.bids.map((bid) => ({
-      ...bid,
-      isLowest: bid._id.equals(auction.currentLowestBid?._id),
-    }));
-
-    res.status(200).json({
-      success: true,
-      data: {
-        ...auction,
-        bids,
-        currentLowestBid: auction.currentLowestBid,
-      },
-      message: "Bids retrieved successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * @desc    Get list of available auctions
- * @route   GET /api/v1/auctions
- * @access  Public
- */
-export const getAvailableAuctions = async (req, res, next) => {
-  try {
-    const { includeCustomer } = req.query;
-
-    if (includeCustomer && req.user.role !== "admin") {
-      throw createHttpError(403, "Unauthorized customer data request");
     }
 
-    const auctions = await Auction.find({ status: "open" })
-      .populate({
-        path: "repairRequest",
-        match: { status: "auction_open" },
-        select: "title category itemType photos shippingRequired createdAt",
-        populate: includeCustomer
-          ? {
-              path: "customer",
-              select: "username profile.avatar rating.average",
-            }
-          : null,
-      })
-      .populate({
-        path: "currentLowestBid",
-        select: "bidPrice worker",
-      })
-      .sort("-createdAt")
-      .lean();
+    // 2. Validate auction status
+    const auction = await Auction.findById(existingBid.auction._id).populate(
+      "currentLowestBid"
+    );
 
-    const transformedAuctions = auctions
-      .filter((a) => a.repairRequest) // Filter out null repair requests
-      .map((auction) => ({
-        id: auction._id,
-        startingMaxPrice: auction.startingMaxPrice,
-        expiresAt: auction.expiresAt,
-        currentLowestBid: auction.currentLowestBid?.bidPrice,
-        repairRequest: transformRepairRequest(auction.repairRequest),
-      }));
+    if (auction.status !== "open" || auction.expiresAt <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update bid on closed auction",
+      });
+    }
 
-    if (!transformedAuctions.length)
-      throw createHttpError(404, "No available auctions found");
+    // 3. Validate new bid price
+    const currentLowest =
+      auction.currentLowestBid?.bidPrice || auction.startingMaxPrice;
+
+    if (bidPrice >= currentLowest) {
+      return res.status(400).json({
+        success: false,
+        message: `New bid must be lower than current lowest (${currentLowest})`,
+      });
+    }
+
+    // 4. Update bid
+    existingBid.bidPrice = bidPrice;
+    existingBid.estimatedTimeDays = estimatedTimeDays;
+    await existingBid.save();
+
+    // Update auction if this was the lowest bid
+    if (auction.currentLowestBid?.toString() === bidId) {
+      auction.currentLowestBid = existingBid._id;
+      await auction.save();
+    }
 
     res.status(200).json({
       success: true,
-      count: transformedAuctions.length,
-      data: transformedAuctions,
-      message: "Auctions retrieved successfully",
+      message: "Bid updated successfully",
+      data: existingBid,
     });
   } catch (error) {
     next(error);
   }
 };
-
-// ===================================================
-//                 AUCTION ACTIONS
-// ===================================================
-
-/**
- * @desc    Accept lowest bid and start repair
- * @route   POST /api/v1/auctions/:auctionId/accept
- * @access  Private (Customer)
- */
-export const acceptLowestBid = async (req, res, next) => {
-  try {
-    const auction = await Auction.findById(req.params.auctionId)
-      .populate({
-        path: "repairRequest",
-        populate: { path: "customer" },
-      })
-      .populate("currentLowestBid");
-
-    if (!auction) throw createHttpError(404, "Auction not found");
-
-    if (
-      auction.repairRequest.customer._id.toString() !== req.user._id.toString()
-    )
-      throw createHttpError(403, "Not authorized to accept bids");
-
-    const updatedAuction = await auction.acceptLowestBid();
-
-    // Update repair request with initial tracking
-    const updatedRepair = await RepairRequest.findByIdAndUpdate(
-      auction.repairRequest._id,
-      {
-        worker: updatedAuction.currentLowestBid.worker,
-        status: "in_progress",
-        paymentAmount: updatedAuction.currentLowestBid.bidPrice,
-        $push: {
-          trackingUpdates: {
-            status: "diagnosing",
-            location: "Workshop",
-            details: "Repair initiated by worker",
-          },
-        },
-      },
-      { new: true }
-    );
-
-    res.status(200).json({
-      success: true,
-      data: {
-        acceptedBid: updatedAuction.currentLowestBid,
-        repair: updatedRepair,
-      },
-      message: "Bid accepted and repair started successfully",
-    });
-  } catch (error) {
-    next(createHttpError(400, error.message));
-  }
-};
-
-// ===================================================
-//                  HELPER FUNCTIONS
-// ===================================================
-
-/**
- * Transform repair request data for client response
- */
-const transformRepairRequest = (repair) => ({
-  ...repair,
-  customer: repair.customer
-    ? {
-        username: repair.customer.username,
-        avatar: repair.customer.profile.avatar,
-        rating: repair.customer.rating?.average,
-      }
-    : undefined,
-});
