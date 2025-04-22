@@ -1,5 +1,6 @@
 import axiosClient from "./client";
 
+// Customer endpoints
 export const createRepair = async (repairData) => {
   try {
     const { data } = await axiosClient.post("/repairs", {
@@ -73,5 +74,182 @@ export const getCustomerHistory = async (params = {}) => {
     throw new Error(
       error.response?.data?.error || "Failed to fetch repair history"
     );
+  }
+};
+
+export const acceptBid = async (repairId, bidId) => {
+  try {
+    const { data } = await axiosClient.put(`/repairs/${repairId}/accept-bid`, {
+      bidId,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Bid acceptance failed");
+  }
+};
+
+export const acceptOffer = async (repairId, offerId) => {
+  try {
+    const { data } = await axiosClient.put(
+      `/repairs/${repairId}/accept-offer`,
+      { offerId }
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Offer acceptance failed");
+  }
+};
+
+// Worker endpoints
+export const getWorkerRepairs = async (status) => {
+  try {
+    const { data } = await axiosClient.get("/repairs/workers", {
+      params: { status },
+    });
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to fetch worker repairs"
+    );
+  }
+};
+
+export const completeRepair = async (repairId) => {
+  try {
+    const { data } = await axiosClient.patch(`/repairs/${repairId}/complete`);
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to complete repair");
+  }
+};
+
+export const updateTrackingStatus = async (repairId, statusData) => {
+  try {
+    const { data } = await axiosClient.put(
+      `/repairs/workshop/${repairId}`,
+      statusData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to update tracking status"
+    );
+  }
+};
+
+export const returnRepair = async (repairId, reason) => {
+  try {
+    const { data } = await axiosClient.patch(`/repairs/${repairId}/return`, {
+      reason,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to initiate return");
+  }
+};
+
+export const getWorkerHistory = async (params = {}) => {
+  try {
+    const { data } = await axiosClient.get("/repairs/workers/history", {
+      params,
+    });
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to fetch worker history"
+    );
+  }
+};
+
+// Auction endpoints
+export const getOpenAuctions = async (filters = {}) => {
+  try {
+    const { data } = await axiosClient.get("/repairs/auctions", {
+      params: filters,
+    });
+    return data.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Failed to fetch auctions");
+  }
+};
+
+export const getAuctionDetails = async (auctionId) => {
+  try {
+    const { data } = await axiosClient.get(`/repairs/auctions/${auctionId}`);
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to fetch auction details"
+    );
+  }
+};
+
+export const submitBid = async (auctionId, bidData) => {
+  try {
+    const { data } = await axiosClient.post(
+      `/repairs/auctions/${auctionId}/bids`,
+      bidData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Bid submission failed");
+  }
+};
+
+export const updateBid = async (bidId, bidData) => {
+  try {
+    const { data } = await axiosClient.put(`/repairs/bids/${bidId}`, bidData);
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Bid update failed");
+  }
+};
+
+// Non Auction Repairs endpoints
+export const getNonAuctionRepairs = async (filters = {}) => {
+  try {
+    const { data } = await axiosClient.get("/repairs/non-auctions", {
+      params: filters,
+    });
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to fetch direct offers"
+    );
+  }
+};
+
+export const getNonAuctionRepairDetails = async (repairId) => {
+  try {
+    const { data } = await axiosClient.get(`/repairs/non-auctions/${repairId}`);
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.error || "Failed to fetch repair details"
+    );
+  }
+};
+
+export const submitOffer = async (repairId, offerData) => {
+  try {
+    const { data } = await axiosClient.post(
+      `/repairs/non-auctions/${repairId}/offers`,
+      offerData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Offer submission failed");
+  }
+};
+
+export const updateOffer = async (offerId, offerData) => {
+  try {
+    const { data } = await axiosClient.put(
+      `/repairs/offers/${offerId}`,
+      offerData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.error || "Offer update failed");
   }
 };

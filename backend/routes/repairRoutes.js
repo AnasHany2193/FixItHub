@@ -103,14 +103,9 @@ router.get(
   apiLimiter,
   getAuctionDetails
 );
+router.get("/non-auctions", protect, roleCheck("worker"), getNonAuctionRepairs);
 router.get(
-  "/direct-offers",
-  protect,
-  roleCheck("worker"),
-  getNonAuctionRepairs
-);
-router.get(
-  "/direct-offers/:id",
+  "/non-auctions/:id",
   protect,
   roleCheck("worker"),
   getNonAuctionRepairDetails
@@ -120,7 +115,7 @@ router.get(
 router.post("/auctions/:id/bids", protect, roleCheck("worker"), submitBid);
 router.put("/bids/:id", protect, roleCheck("worker"), updateBid);
 router.post(
-  "/direct-offers/:id/offers",
+  "/non-auctions/:id/offers",
   protect,
   roleCheck("worker"),
   submitOffer
