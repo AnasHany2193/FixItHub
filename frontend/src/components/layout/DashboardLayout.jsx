@@ -1,37 +1,31 @@
-// frontend/src/components/layout/DashboardLayout.jsx
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import {
+  Activity,
+  Archive,
+  Briefcase,
+  Calendar,
+  CalendarDays,
+  Clock,
+  Cog,
+  DollarSign,
+  Gavel,
+  Handshake,
+  History,
+  LayoutDashboard,
+  Plus,
+  PlusCircle,
+  PocketKnife,
+  Search,
+  Settings,
+  Users,
+  Wrench,
+  Zap,
+} from "lucide-react";
+
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import Sidebar from "./Sidebar";
-import {
-  Activity,
-  Award,
-  Briefcase,
-  Calendar,
-  Clock,
-  Cog,
-  CreditCard,
-  FileText,
-  Flag,
-  Gavel,
-  Hand,
-  Heart,
-  History,
-  LayoutDashboard,
-  LifeBuoy,
-  ListOrdered,
-  Package,
-  Plus,
-  PlusCircle,
-  Search,
-  Settings,
-  ShoppingCart,
-  Star,
-  Users,
-  Wallet,
-  Zap,
-} from "lucide-react";
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
@@ -83,118 +77,78 @@ const DashboardLayout = () => {
           },
         ],
       },
-      {
-        type: "group",
-        name: "Auctions & Bids",
-        icon: <Gavel className="w-5 h-5" />,
-        items: [
-          {
-            path: "/auctions/active",
-            name: "Active Auctions",
-            icon: <Zap className="w-4 h-4" />,
-            badge: 5,
-          },
-          {
-            path: "/bids/active",
-            name: "My Bids",
-            icon: <Hand className="w-4 h-4" />,
-          },
-          {
-            path: "/auctions/won",
-            name: "Won Auctions",
-            icon: <Award className="w-4 h-4" />,
-          },
-        ],
-      },
-      {
-        type: "group",
-        name: "Marketplace",
-        icon: <ShoppingCart className="w-5 h-5" />,
-        items: [
-          {
-            path: "/products",
-            name: "Browse Products",
-            icon: <Search className="w-4 h-4" />,
-          },
-          {
-            path: "/wishlist",
-            name: "Wishlist",
-            icon: <Heart className="w-4 h-4" />,
-          },
-          {
-            path: "/orders",
-            name: "Purchase History",
-            icon: <Package className="w-4 h-4" />,
-          },
-        ],
-      },
-      {
-        type: "group",
-        name: "Financials",
-        icon: <Wallet className="w-5 h-5" />,
-        items: [
-          {
-            path: "/payments/methods",
-            name: "Payment Methods",
-            icon: <CreditCard className="w-4 h-4" />,
-          },
-          {
-            path: "/transactions",
-            name: "Transaction History",
-            icon: <ListOrdered className="w-4 h-4" />,
-          },
-          {
-            path: "/invoices",
-            name: "Tax Invoices",
-            icon: <FileText className="w-4 h-4" />,
-          },
-        ],
-      },
-      {
-        type: "group",
-        name: "Community",
-        icon: <Users className="w-5 h-5" />,
-        items: [
-          {
-            path: "/reviews",
-            name: "My Reviews",
-            icon: <Star className="w-4 h-4" />,
-          },
-          {
-            path: "/reports",
-            name: "Reports",
-            icon: <Flag className="w-4 h-4" />,
-          },
-          {
-            path: "/support",
-            name: "Live Support",
-            icon: <LifeBuoy className="w-4 h-4" />,
-          },
-        ],
-      },
-      {
-        type: "settings",
-        path: "/settings",
-        name: "Account Settings",
-        icon: <Settings className="w-5 h-5" />,
-        subsections: ["Profile", "Security", "Notifications", "Preferences"],
-      },
     ],
     worker: [
       {
+        type: "dashboard",
         path: "/worker-dashboard",
-        name: "Jobs",
+        name: "Work Dashboard",
         icon: <Briefcase className="w-5 h-5" />,
+        quickActions: [
+          {
+            name: "Available Jobs",
+            path: "/repairs/active",
+            icon: <Zap className="w-4 h-4" />,
+          },
+          {
+            name: "My Earnings",
+            path: "/earnings",
+            icon: <DollarSign className="w-4 h-4" />,
+          },
+        ],
       },
       {
-        path: "/schedule",
+        type: "group",
+        name: "Repair Opportunities",
+        icon: <Search className="w-5 h-5" />,
+        items: [
+          {
+            path: "/repairs/auctions",
+            name: "Auctions",
+            icon: <Gavel className="w-4 h-4" />,
+            badge: "live", // Indicates active auctions
+          },
+          {
+            path: "/repairs/direct-offers",
+            name: "Direct Offers",
+            icon: <Handshake className="w-4 h-4" />,
+          },
+        ],
+      },
+      {
+        type: "group",
+        name: "My Work",
+        icon: <PocketKnife className="w-5 h-5" />,
+        items: [
+          {
+            path: "/repairs/active",
+            name: "Active Jobs",
+            icon: <Wrench className="w-4 h-4" />,
+            badge: 2, // Number of active repairs
+          },
+          {
+            path: "/repairs/history",
+            name: "Job History",
+            icon: <Archive className="w-4 h-4" />,
+          },
+        ],
+      },
+      {
+        type: "group",
         name: "Schedule",
         icon: <Calendar className="w-5 h-5" />,
-      },
-      {
-        path: "/earnings",
-        name: "Earnings",
-        icon: <Wallet className="w-5 h-5" />,
+        items: [
+          {
+            path: "/schedule/upcoming",
+            name: "Upcoming",
+            icon: <Clock className="w-4 h-4" />,
+          },
+          {
+            path: "/schedule/calendar",
+            name: "Calendar View",
+            icon: <CalendarDays className="w-4 h-4" />,
+          },
+        ],
       },
     ],
     admin: [
