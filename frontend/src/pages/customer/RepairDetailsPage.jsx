@@ -9,9 +9,11 @@ import {
   ShieldAlert,
   Info,
   User,
-  Clock,
   Trash2,
   PencilLine,
+  DollarSign,
+  Trophy,
+  Gavel,
 } from "lucide-react";
 
 import { useCancelRepair, useRepairDetails } from "@/hooks/useRepair";
@@ -29,6 +31,7 @@ import {
 } from "@/components/ui/carousel";
 
 import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const STATUS_CONFIG = {
   auction_open: {
@@ -77,6 +80,76 @@ export default function RepairDetailsPage() {
 
   const statusConfig =
     STATUS_CONFIG[repair.status] || STATUS_CONFIG.awaiting_assignment;
+
+  // New section for auction status
+  const AuctionStatusSection = () => (
+    <SectionCard
+      icon={<Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
+      title="Auction Details"
+    >
+      <div className="space-y-4">
+        <InfoItem
+          label="Current Lowest Bid"
+          value={
+            repair.auction?.currentLowestBid ? (
+              <div className="flex items-center gap-2">
+                <Avatar className="w-6 h-6">
+                  <AvatarImage
+                    src={
+                      repair.auction.currentLowestBid.worker?.profile?.avatar
+                        ?.url
+                    }
+                  />
+                  <AvatarFallback>
+                    {repair.auction.currentLowestBid.worker?.username?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <span>
+                  ${repair.auction.currentLowestBid.bidPrice?.toFixed(2)}
+                </span>
+              </div>
+            ) : (
+              "No bids"
+            )
+          }
+        />
+        <InfoItem
+          label="Starting Price"
+          value={`$${repair.auction?.startingMaxPrice?.toFixed(2) || "-"}`}
+        />
+        <InfoItem
+          label="Time Remaining"
+          value={
+            repair.auction?.status === "open"
+              ? formatDistanceToNow(new Date(repair.auction.expiresAt))
+              : "Auction closed"
+          }
+        />
+      </div>
+    </SectionCard>
+  );
+
+  // Updated BidHistory section
+  const BidHistorySection = () => (
+    <SectionCard
+      title="Bid Proposals"
+      icon={
+        <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+      }
+    >
+      <div className="space-y-4">
+        {repair.proposals?.length > 0 ? (
+          repair.proposals.map((bid, index) => (
+            <BidCard key={bid._id} bid={bid} index={index} />
+          ))
+        ) : (
+          <div className="p-4 text-center rounded-lg bg-muted">
+            <p className="text-muted-foreground">No bids placed yet</p>
+          </div>
+        )}
+      </div>
+    </SectionCard>
+  );
 
   return (
     <div className="min-h-screen">
@@ -209,104 +282,12 @@ export default function RepairDetailsPage() {
                 </div>
               </div>
             </SectionCard>
-
-            {/* Service Timeline */}
-            <SectionCard
-              icon={
-                <MapPin className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Service History"
-            >
-              <div className="pl-4 space-y-6 border-l-2 border-border">
-                {repair.trackingUpdates?.map((update, index) => (
-                  <div key={index} className="relative pl-6">
-                    <div className="absolute left-0 top-4 w-2.5 h-2.5 bg-primary rounded-full -translate-x-[calc(0.75rem+1px)]" />
-                    <div className="space-y-1">
-                      <p className="font-medium capitalize text-foreground">
-                        {update.status.replace(/_/g, " ")}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(update.timestamp)}
-                      </p>
-                      {update.location && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            {update.location}
-                          </span>
-                        </div>
-                      )}
-                      {update.technician && (
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            {update.technician}
-                          </span>
-                        </div>
-                      )}
-                      {update.notes && (
-                        <div className="flex gap-2 p-3 mt-2 rounded-lg bg-muted">
-                          <Info className="w-4 h-4 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
-                            {update.notes}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {!repair.trackingUpdates?.length && (
-                  <p className="text-muted-foreground">
-                    No service history recorded
-                  </p>
-                )}
-              </div>
-            </SectionCard>
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            <SectionCard
-              icon={
-                <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Auction Status"
-            >
-              <div className="space-y-4">
-                <InfoItem
-                  label="Current Bid"
-                  value={
-                    repair.auction?.currentLowestBid
-                      ? `$${repair?.auction?.currentLowestBid?.bidPrice?.toFixed(2)}`
-                      : "No bids"
-                  }
-                />
-                <InfoItem
-                  label="Starting Price"
-                  value={`$${repair.auction?.startingMaxPrice?.toFixed(2) || "-"}`}
-                />
-                <InfoItem
-                  label="Ends At"
-                  value={
-                    repair.auction?.expiresAt
-                      ? formatDate(repair.auction.expiresAt)
-                      : "N/A"
-                  }
-                />
-                <InfoItem
-                  label="Time Remaining"
-                  value={
-                    repair.auction?.status === "open"
-                      ? formatDistanceToNow(new Date(repair.auction.expiresAt))
-                      : "Auction closed"
-                  }
-                />
-                <InfoItem
-                  label="Total Bids"
-                  value={repair.auction?.bids?.length || 0}
-                />
-              </div>
-            </SectionCard>
+            <AuctionStatusSection />
+            <BidHistorySection />
 
             {/* Payment Information */}
             <SectionCard
@@ -336,37 +317,6 @@ export default function RepairDetailsPage() {
                   label="Last Updated"
                   value={formatDate(repair.updatedAt)}
                 />
-              </div>
-            </SectionCard>
-
-            {/* Bid History */}
-            <SectionCard title="Bid History">
-              <div className="space-y-4">
-                {repair.auction?.bids?.length > 0 ? (
-                  repair.auction.bids.map((bid, index) => (
-                    <div
-                      key={bid._id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted"
-                    >
-                      <div>
-                        <p className="font-medium">Bid #{index + 1}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(bid.submittedAt)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          ${bid.bidPrice.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {bid.worker?.username || "Anonymous"}
-                        </p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-muted-foreground">No bids placed yet</p>
-                )}
               </div>
             </SectionCard>
 
@@ -427,6 +377,36 @@ export default function RepairDetailsPage() {
   );
 }
 
+export const BidCard = ({ bid, index }) => (
+  <div className="flex flex-row flex-wrap items-center gap-4 p-4 rounded-lg bg-muted">
+    <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
+      <AvatarImage src={bid.worker?.profile?.avatar?.url} />
+      <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+        {bid.worker?.username?.[0]?.toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+
+    <div className="flex-1">
+      <div className="flex items-center gap-2">
+        <span className="font-medium">
+          {bid.worker?.username || "Anonymous"}
+        </span>
+        <Badge variant={bid.status}>{bid.status}</Badge>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span>${bid.bidPrice?.toFixed(2)}</span>
+      </div>
+    </div>
+
+    {index === 0 && (
+      <Badge variant="indigo" className="ml-auto">
+        <Trophy className="w-4 h-4 mr-1" />
+        Current Lowest
+      </Badge>
+    )}
+  </div>
+);
+
 // Sub-components
 const SectionCard = ({ icon, title, children }) => (
   <motion.div
@@ -434,7 +414,7 @@ const SectionCard = ({ icon, title, children }) => (
     animate={{ opacity: 1, y: 0 }}
     className="p-6 bg-white border rounded-xl dark:bg-gray-800 dark:border-gray-700"
   >
-    <div className="flex items-center gap-3 mb-4">
+    <div className="flex gap-3 mb-4">
       {icon}
       <h2 className="text-lg font-semibold text-foreground">{title}</h2>
     </div>
@@ -445,7 +425,7 @@ const SectionCard = ({ icon, title, children }) => (
 const InfoItem = ({ label, value }) => (
   <div className="flex items-center justify-between py-2.5 border-b border-border">
     <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-foreground">{value}</span>
+    <div className="font-medium text-foreground">{value}</div>
   </div>
 );
 
