@@ -1,22 +1,23 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Wrench,
-  MapPin,
   ShieldAlert,
-  Info,
   User,
   Trash2,
   PencilLine,
-  DollarSign,
   Trophy,
   Gavel,
 } from "lucide-react";
 
-import { useCancelRepair, useRepairDetails } from "@/hooks/useRepair";
+import {
+  useAcceptBid,
+  useCancelRepair,
+  useRepairDetails,
+} from "@/hooks/useRepair";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,74 +83,42 @@ export default function RepairDetailsPage() {
     STATUS_CONFIG[repair.status] || STATUS_CONFIG.awaiting_assignment;
 
   // New section for auction status
-  const AuctionStatusSection = () => (
-    <SectionCard
-      icon={<Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />}
-      title="Auction Details"
-    >
-      <div className="space-y-4">
-        <InfoItem
-          label="Current Lowest Bid"
-          value={
-            repair.auction?.currentLowestBid ? (
-              <div className="flex items-center gap-2">
-                <Avatar className="w-6 h-6">
-                  <AvatarImage
-                    src={
-                      repair.auction.currentLowestBid.worker?.profile?.avatar
-                        ?.url
-                    }
-                  />
-                  <AvatarFallback>
-                    {repair.auction.currentLowestBid.worker?.username?.[0]}
-                  </AvatarFallback>
-                </Avatar>
-                <span>
-                  ${repair.auction.currentLowestBid.bidPrice?.toFixed(2)}
-                </span>
-              </div>
-            ) : (
-              "No bids"
-            )
-          }
-        />
-        <InfoItem
-          label="Starting Price"
-          value={`$${repair.auction?.startingMaxPrice?.toFixed(2) || "-"}`}
-        />
-        <InfoItem
-          label="Time Remaining"
-          value={
-            repair.auction?.status === "open"
-              ? formatDistanceToNow(new Date(repair.auction.expiresAt))
-              : "Auction closed"
-          }
-        />
-      </div>
-    </SectionCard>
-  );
+  const AuctionStatusSection = () => {
+    const { mutate: acceptBid } = useAcceptBid();
 
-  // Updated BidHistory section
-  const BidHistorySection = () => (
-    <SectionCard
-      title="Bid Proposals"
-      icon={
-        <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-      }
-    >
-      <div className="space-y-4">
-        {repair.proposals?.length > 0 ? (
-          repair.proposals.map((bid, index) => (
-            <BidCard key={bid._id} bid={bid} index={index} />
-          ))
-        ) : (
-          <div className="p-4 text-center rounded-lg bg-muted">
-            <p className="text-muted-foreground">No bids placed yet</p>
-          </div>
-        )}
-      </div>
-    </SectionCard>
-  );
+    return (
+      <SectionCard
+        icon={
+          <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+        }
+        title="Active Bids"
+      >
+        <div className="space-y-4">
+          {repair.proposals?.length > 0 ? (
+            repair.proposals.map((bid) => (
+              <div key={bid._id} className="relative group">
+                <BidCard bid={bid} />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute transition-opacity opacity-0 right-2 top-2 group-hover:opacity-100"
+                  onClick={() =>
+                    acceptBid({ repairId: repair._id, bidId: bid._id })
+                  }
+                >
+                  Accept Bid
+                </Button>
+              </div>
+            ))
+          ) : (
+            <div className="p-4 text-center rounded-lg bg-muted">
+              <p className="text-muted-foreground">No active bids yet</p>
+            </div>
+          )}
+        </div>
+      </SectionCard>
+    );
+  };
 
   return (
     <div className="min-h-screen">
@@ -282,13 +251,12 @@ export default function RepairDetailsPage() {
                 </div>
               </div>
             </SectionCard>
+
+            <AuctionStatusSection />
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            <AuctionStatusSection />
-            <BidHistorySection />
-
             {/* Payment Information */}
             <SectionCard
               icon={
