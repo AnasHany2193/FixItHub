@@ -111,12 +111,6 @@ const RepairRequestSchema = new mongoose.Schema(
         },
       },
     ],
-    bids: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Bid",
-      },
-    ],
     offers: [
       {
         type: mongoose.Schema.Types.ObjectId,

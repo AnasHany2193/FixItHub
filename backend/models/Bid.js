@@ -12,11 +12,6 @@ export const bidSchema = new mongoose.Schema({
     required: true,
     min: 0.01,
   },
-  estimatedTimeDays: {
-    type: Number,
-    required: true,
-    min: 1,
-  },
   auction: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Auction",

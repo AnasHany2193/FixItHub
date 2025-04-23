@@ -277,7 +277,7 @@ export default function RepairDetailsPage() {
                   label="Current Bid"
                   value={
                     repair.auction?.currentLowestBid
-                      ? `$${repair.auction.currentLowestBid.bidPrice.toFixed(2)}`
+                      ? `$${repair?.auction?.currentLowestBid?.bidPrice?.toFixed(2)}`
                       : "No bids"
                   }
                 />

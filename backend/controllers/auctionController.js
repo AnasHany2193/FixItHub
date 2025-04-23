@@ -132,11 +132,11 @@ export const getAuctionDetails = async (req, res, next) => {
       .populate({
         path: "bids",
         match: { worker: req.user._id },
-        select: "bidPrice estimatedTimeDays status",
+        select: "bidPrice status",
       })
       .populate({
         path: "currentLowestBid",
-        select: "bidPrice estimatedTimeDays",
+        select: "bidPrice",
       })
       .lean();
 
@@ -165,7 +165,9 @@ export const getAuctionDetails = async (req, res, next) => {
 export const submitBid = async (req, res, next) => {
   try {
     const { auctionId } = req.params;
-    const { bidPrice, estimatedTimeDays } = req.body;
+    const { bidPrice } = req.body;
+    console.log("bidPrice", bidPrice);
+    console.log("auctionId", auctionId);
     const workerId = req.user._id;
 
     // 1. Validate auction
@@ -205,7 +207,6 @@ export const submitBid = async (req, res, next) => {
       worker: workerId,
       auction: auctionId,
       bidPrice,
-      estimatedTimeDays,
     });
 
     // 4. Update auction
@@ -237,7 +238,7 @@ export const submitBid = async (req, res, next) => {
 export const updateBid = async (req, res, next) => {
   try {
     const { bidId } = req.params;
-    const { bidPrice, estimatedTimeDays } = req.body;
+    const { bidPrice } = req.body;
     const workerId = req.user._id;
 
     // 1. Find existing bid
@@ -279,7 +280,6 @@ export const updateBid = async (req, res, next) => {
 
     // 4. Update bid
     existingBid.bidPrice = bidPrice;
-    existingBid.estimatedTimeDays = estimatedTimeDays;
     await existingBid.save();
 
     // Update auction if this was the lowest bid

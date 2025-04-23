@@ -184,15 +184,15 @@ export const getAuctionDetails = async (auctionId) => {
   }
 };
 
-export const submitBid = async (auctionId, bidData) => {
+export const submitBid = async ({ auctionId, bidPrice }) => {
   try {
     const { data } = await axiosClient.post(
       `/repairs/auctions/${auctionId}/bids`,
-      bidData
+      { bidPrice }
     );
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Bid submission failed");
+    throw new Error(error.response?.data?.message || "Bid submission failed");
   }
 };
 

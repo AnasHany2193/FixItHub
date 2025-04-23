@@ -17,11 +17,6 @@ const OfferSchema = new mongoose.Schema(
       required: true,
       min: [1, "Minimum offer price is 1"],
     },
-    estimatedTimeDays: {
-      type: Number,
-      required: true,
-      min: [1, "Minimum estimate is 1 day"],
-    },
     status: {
       type: String,
       enum: ["pending", "accepted", "rejected", "withdrawn"],

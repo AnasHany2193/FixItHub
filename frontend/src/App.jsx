@@ -31,6 +31,7 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import AuctionsPage from "./pages/worker/AuctionsPage";
+import AuctionDetailPage from "./pages/worker/AuctionDetailPage";
 
 function App() {
   return (
@@ -64,6 +65,10 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
             <Route path="/repairs/auctions" element={<AuctionsPage />} />
+            <Route
+              path="/repairs/auctions/:id"
+              element={<AuctionDetailPage />}
+            />
           </Route>
         </Route>
 

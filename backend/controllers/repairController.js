@@ -183,42 +183,46 @@ export const getRepairRequest = async (req, res, next) => {
     })
       .populate([
         {
-          path: "bids",
-          select: "bidPrice estimatedTimeDays status createdAt",
-          populate: {
-            path: "worker",
-            select: "username rating.average",
-          },
-        },
-        {
-          path: "offers",
-          match: { status: "pending" },
-          select: "offerPrice estimatedTimeDays createdAt",
-          populate: {
-            path: "worker",
-            select: "username rating.average",
-          },
-        },
-        {
           path: "auction",
-          select: "status expiresAt startingMaxPrice",
+          select: "status expiresAt startingMaxPrice currentLowestBid bids",
+          populate: [
+            {
+              path: "currentLowestBid",
+              select: "bidPrice worker",
+              populate: {
+                path: "worker",
+                select: "username profile.avatar rating.average",
+              },
+            },
+            {
+              path: "bids",
+              select: "bidPrice status createdAt worker",
+              populate: {
+                path: "worker",
+                select: "username profile.avatar rating.average",
+              },
+            },
+          ],
         },
         {
           path: "worker",
-          select: "username avatar rating.average",
+          select: "username profile.avatar rating.average",
         },
       ])
       .lean();
 
     if (!repair) throw createHttpError(404, "Repair not found");
 
+    // Extract bids from auction if exists
     const response = {
       ...repair,
-      // Show appropriate proposals based on repair type
-      proposals: repair.auction ? repair.bids : repair.offers,
-      // Remove internal arrays from response
-      bids: undefined,
-      offers: undefined,
+      proposals: repair.auction?.bids || [],
+      auction: {
+        ...repair.auction,
+        currentLowest:
+          repair.auction?.currentLowestBid?.bidPrice ||
+          repair.auction?.startingMaxPrice,
+      },
     };
 
     res.status(200).json({
@@ -434,7 +438,7 @@ export const getNonAuctionRepairDetails = async (req, res, next) => {
 export const submitOffer = async (req, res, next) => {
   try {
     const { repairId } = req.params;
-    const { offerPrice, estimatedTimeDays } = req.body;
+    const { offerPrice } = req.body;
     const workerId = req.user._id;
 
     // Validate repair
@@ -469,7 +473,6 @@ export const submitOffer = async (req, res, next) => {
       worker: workerId,
       repairRequest: repairId,
       offerPrice,
-      estimatedTimeDays,
     });
 
     res.status(201).json({
@@ -485,7 +488,7 @@ export const submitOffer = async (req, res, next) => {
 export const updateOffer = async (req, res, next) => {
   try {
     const { offerId } = req.params;
-    const { offerPrice, estimatedTimeDays } = req.body;
+    const { offerPrice } = req.body;
     const workerId = req.user._id;
 
     const offer = await Offer.findOneAndUpdate(
@@ -494,7 +497,7 @@ export const updateOffer = async (req, res, next) => {
         worker: workerId,
         status: "pending",
       },
-      { offerPrice, estimatedTimeDays },
+      { offerPrice },
       { new: true, runValidators: true }
     );
 
