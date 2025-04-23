@@ -34,9 +34,85 @@ import {
 const router = express.Router();
 
 // ====================================================
-//                   Customer Routes
+//                   Worker Routes (Defined First)
 // ====================================================
-// Customer manages their repairs
+// Worker-specific routes with unique paths
+router.get(
+  "/workers",
+  protect,
+  roleCheck("worker"),
+  apiLimiter,
+  getWorkerRepairs
+);
+router.get(
+  "/workers/history",
+  protect,
+  roleCheck("worker"),
+  apiLimiter,
+  getWorkerRepairsHistory
+);
+router.get(
+  "/auctions",
+  protect,
+  roleCheck("worker"),
+  apiLimiter,
+  getOpenAuctions
+);
+router.get(
+  "/auctions/:id",
+  protect,
+  roleCheck("worker"),
+  apiLimiter,
+  getAuctionDetails
+);
+router.get("/non-auctions", protect, roleCheck("worker"), getNonAuctionRepairs);
+router.get(
+  "/non-auctions/:id",
+  protect,
+  roleCheck("worker"),
+  getNonAuctionRepairDetails
+);
+
+// Worker actions with unique paths
+router.post(
+  "/auctions/:auctionId/bids",
+  protect,
+  roleCheck("worker"),
+  submitBid
+);
+router.put("/bids/:bidId", protect, roleCheck("worker"), updateBid);
+router.post(
+  "/non-auctions/:repairId/offers",
+  protect,
+  roleCheck("worker"),
+  submitOffer
+);
+router.put("/offers/:offerId", protect, roleCheck("worker"), updateOffer);
+router.patch(
+  "/complete/:repairId",
+  protect,
+  roleCheck("worker"),
+  sensitiveActionLimiter,
+  completeRepair
+);
+router.patch(
+  "/return/:repairId",
+  protect,
+  roleCheck("worker"),
+  sensitiveActionLimiter,
+  returnRepair
+);
+router.put(
+  "/tracking/:repairId",
+  protect,
+  roleCheck("worker"),
+  updateTrackingStatus
+);
+
+// ====================================================
+//                   Customer Routes (Defined After)
+// ====================================================
+// Customer routes with ID parameters
 router.get("/", protect, roleCheck("customer"), apiLimiter, getRepairRequests);
 router.post(
   "/",
@@ -73,8 +149,6 @@ router.patch(
   sensitiveActionLimiter,
   cancelRepairRequest
 );
-
-// Customer auction management
 router.post(
   "/:id/auction",
   protect,
@@ -84,77 +158,5 @@ router.post(
 );
 router.put("/:id/accept-bid", protect, roleCheck("customer"), acceptBid);
 router.put("/:id/accept-offer", protect, roleCheck("customer"), acceptOffer);
-
-// ====================================================
-//                   Worker Routes
-// ====================================================
-// Worker browse opportunities
-router.get(
-  "/auctions",
-  protect,
-  roleCheck("worker"),
-  apiLimiter,
-  getOpenAuctions
-);
-router.get(
-  "/auctions/:id",
-  protect,
-  roleCheck("worker"),
-  apiLimiter,
-  getAuctionDetails
-);
-router.get("/non-auctions", protect, roleCheck("worker"), getNonAuctionRepairs);
-router.get(
-  "/non-auctions/:id",
-  protect,
-  roleCheck("worker"),
-  getNonAuctionRepairDetails
-);
-
-// Worker bid/offer management
-router.post("/auctions/:id/bids", protect, roleCheck("worker"), submitBid);
-router.put("/bids/:id", protect, roleCheck("worker"), updateBid);
-router.post(
-  "/non-auctions/:id/offers",
-  protect,
-  roleCheck("worker"),
-  submitOffer
-);
-router.put("/offers/:id", protect, roleCheck("worker"), updateOffer);
-
-// Worker repair management
-router.get(
-  "/workers",
-  protect,
-  roleCheck("worker"),
-  apiLimiter,
-  getWorkerRepairs
-);
-router.patch(
-  "/:id/complete",
-  protect,
-  roleCheck("worker"),
-  sensitiveActionLimiter,
-  completeRepair
-);
-router.patch(
-  "/:id/return",
-  protect,
-  roleCheck("worker"),
-  sensitiveActionLimiter,
-  returnRepair
-);
-router.get(
-  "/workers/history",
-  protect,
-  roleCheck("worker"),
-  apiLimiter,
-  getWorkerRepairsHistory
-);
-
-// ====================================================
-//                 Workshop Routes
-// ====================================================
-router.put("/workshop/:id", protect, roleCheck("worker"), updateTrackingStatus);
 
 export default router;

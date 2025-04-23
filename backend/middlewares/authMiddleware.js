@@ -59,14 +59,16 @@ export const protect = async (req, res, next) => {
  * @returns {Function} Middleware function
  * @throws  {403} Forbidden - Insufficient permissions
  */
-export const roleCheck = (allowedRoles) => (req, res, next) => {
-  if (!allowedRoles.includes(req.user.role))
-    return next(
-      createHttpError(403, `Requires ${allowedRoles.join(" or ")} privileges`)
-    );
+export const roleCheck =
+  (...allowedRoles) =>
+  (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role))
+      return next(
+        createHttpError(403, `Requires ${allowedRoles.join(" or ")} privileges`)
+      );
 
-  next();
-};
+    next();
+  };
 
 /**
  * @desc    Admin-only access middleware

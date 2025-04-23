@@ -50,30 +50,62 @@ export const createNewAuction = (repairId, data) => {
 export const getOpenAuctions = async (req, res, next) => {
   try {
     const { category, maxPrice, sortBy, search } = req.query;
-    const filter = {
+
+    const baseMatch = {
       status: "open",
       expiresAt: { $gt: new Date() },
     };
 
-    // Apply filters
-    if (category) filter["repairRequest.category"] = category;
-    if (maxPrice) filter.startingMaxPrice = { $lte: Number(maxPrice) };
+    if (maxPrice && !isNaN(maxPrice))
+      baseMatch.startingMaxPrice = { $lte: Number(maxPrice) };
+
+    const searchFilters = [];
+
     if (search)
-      filter["repairRequest.title"] = { $regex: search, $options: "i" };
+      searchFilters.push(
+        { "repairRequest.title": { $regex: search, $options: "i" } },
+        { "repairRequest.issueDescription": { $regex: search, $options: "i" } },
+        { "repairRequest.itemType": { $regex: search, $options: "i" } }
+      );
 
-    // Base query
-    const query = Auction.find(filter)
-      .populate({
-        path: "repairRequest",
-        select: "title category itemType photos shippingRequired",
-      })
-      .select("startingMaxPrice expiresAt currentLowestBid");
+    if (category && category !== "all")
+      searchFilters.push({ "repairRequest.category": category });
 
-    // Sorting
-    if (sortBy === "price") query.sort("startingMaxPrice");
-    if (sortBy === "expiry") query.sort("expiresAt");
+    const matchAfterLookup =
+      searchFilters.length > 0 ? { $and: searchFilters } : {};
 
-    const auctions = await query.lean();
+    const sortField =
+      sortBy === "price" ? { startingMaxPrice: 1 } : { expiresAt: 1 };
+
+    const auctions = await Auction.aggregate([
+      { $match: baseMatch },
+      {
+        $lookup: {
+          from: "repairrequests",
+          localField: "repairRequest",
+          foreignField: "_id",
+          as: "repairRequest",
+        },
+      },
+      { $unwind: "$repairRequest" },
+      { $match: matchAfterLookup },
+      {
+        $project: {
+          startingMaxPrice: 1,
+          expiresAt: 1,
+          currentLowestBid: 1,
+          repairRequest: {
+            title: 1,
+            category: 1,
+            itemType: 1,
+            photos: 1,
+            shippingRequired: 1,
+            issueDescription: 1,
+          },
+        },
+      },
+      { $sort: sortField },
+    ]);
 
     res.status(200).json({ success: true, data: auctions });
   } catch (error) {

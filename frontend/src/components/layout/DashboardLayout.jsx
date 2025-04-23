@@ -2,10 +2,9 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
   Activity,
-  Archive,
+  BarChart,
   Briefcase,
-  Calendar,
-  CalendarDays,
+  CheckCircle,
   Clock,
   Cog,
   DollarSign,
@@ -18,7 +17,9 @@ import {
   PocketKnife,
   Search,
   Settings,
+  Undo,
   Users,
+  WalletMinimal,
   Wrench,
   Zap,
 } from "lucide-react";
@@ -82,71 +83,82 @@ const DashboardLayout = () => {
       {
         type: "dashboard",
         path: "/worker-dashboard",
-        name: "Work Dashboard",
+        name: "Work Hub",
         icon: <Briefcase className="w-5 h-5" />,
         quickActions: [
           {
-            name: "Available Jobs",
+            name: "Active Jobs",
             path: "/repairs/active",
-            icon: <Zap className="w-4 h-4" />,
+            icon: <Wrench className="w-4 h-4" />,
           },
           {
-            name: "My Earnings",
-            path: "/earnings",
-            icon: <DollarSign className="w-4 h-4" />,
+            name: "New Opportunities",
+            path: "/repairs/opportunities",
+            icon: <Zap className="w-4 h-4" />,
           },
         ],
       },
       {
         type: "group",
-        name: "Repair Opportunities",
+        name: "Find Work",
         icon: <Search className="w-5 h-5" />,
         items: [
           {
             path: "/repairs/auctions",
-            name: "Auctions",
+            name: "Live Auctions",
             icon: <Gavel className="w-4 h-4" />,
-            badge: "live", // Indicates active auctions
+            badge: "live",
+            description: "Bid on repair projects",
           },
           {
             path: "/repairs/direct-offers",
-            name: "Direct Offers",
+            name: "Direct Repairs",
             icon: <Handshake className="w-4 h-4" />,
+            badge: "new",
+            description: "Immediate repair offers",
           },
         ],
       },
       {
         type: "group",
-        name: "My Work",
+        name: "My Repairs",
         icon: <PocketKnife className="w-5 h-5" />,
         items: [
           {
             path: "/repairs/active",
             name: "Active Jobs",
-            icon: <Wrench className="w-4 h-4" />,
-            badge: 2, // Number of active repairs
+            icon: <Activity className="w-4 h-4" />,
+            badge: 2, // Dynamic count from API
+            description: "Currently assigned repairs",
           },
           {
-            path: "/repairs/history",
-            name: "Job History",
-            icon: <Archive className="w-4 h-4" />,
+            path: "/repairs/completed",
+            name: "Completed Work",
+            icon: <CheckCircle className="w-4 h-4" />,
+            description: "Finished repair history",
+          },
+          {
+            path: "/repairs/returns",
+            name: "Returned Jobs",
+            icon: <Undo className="w-4 h-4" />,
+            description: "Repairs sent back to customers",
           },
         ],
       },
       {
         type: "group",
-        name: "Schedule",
-        icon: <Calendar className="w-5 h-5" />,
+        name: "Earnings & History",
+        icon: <DollarSign className="w-5 h-5" />,
         items: [
           {
-            path: "/schedule/upcoming",
-            name: "Upcoming",
-            icon: <Clock className="w-4 h-4" />,
+            path: "/earnings",
+            name: "Payment History",
+            icon: <WalletMinimal className="w-4 h-4" />,
           },
           {
-            path: "/schedule/calendar",
-            name: "Calendar View",
-            icon: <CalendarDays className="w-4 h-4" />,
+            path: "/performance",
+            name: "Work Stats",
+            icon: <BarChart className="w-4 h-4" />,
           },
         ],
       },

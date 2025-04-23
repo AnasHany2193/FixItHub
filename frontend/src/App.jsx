@@ -30,6 +30,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import AuctionsPage from "./pages/worker/AuctionsPage";
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["worker"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+            <Route path="/repairs/auctions" element={<AuctionsPage />} />
           </Route>
         </Route>
 
