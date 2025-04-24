@@ -211,6 +211,14 @@ export const useWorkerRepairs = (status) =>
     queryFn: () => getWorkerRepairs({ status }),
   });
 
+export const useWorkerRepair = (repairId) => {
+  return useQuery({
+    queryKey: ["worker-repair", repairId],
+    queryFn: () => getRepairDetails(repairId),
+    enabled: !!repairId, // Only run the query if repairId is provided
+  });
+};
+
 export const useCompleteRepair = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();

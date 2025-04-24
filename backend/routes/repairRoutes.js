@@ -23,6 +23,7 @@ import {
   updateTrackingStatus,
   getWorkerRepairsHistory,
   returnRepair,
+  getWorkerRepair,
 } from "../controllers/repairController.js";
 import {
   getAuctionDetails,
@@ -43,6 +44,13 @@ router.get(
   roleCheck("worker"),
   apiLimiter,
   getWorkerRepairs
+);
+router.get(
+  "/workers/active/:id",
+  protect,
+  roleCheck("worker"),
+  apiLimiter,
+  getWorkerRepair
 );
 router.get(
   "/workers/history",

@@ -682,6 +682,42 @@ export const getWorkerRepairs = async (req, res, next) => {
   }
 };
 
+export const getWorkerRepair = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const repair = await RepairRequest.findById(id)
+      .populate("customer", "username profile.avatar")
+      .populate({
+        path: "auction",
+        select: "status expiresAt startingMaxPrice currentLowestBid",
+        populate: {
+          path: "currentLowestBid",
+          select: "bidPrice",
+        },
+      })
+      .populate({
+        path: "offers",
+        match: { status: "accepted" },
+        select: "price status",
+      })
+      .lean();
+
+    if (!repair) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Repair not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: repair,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const completeRepair = async (req, res, next) => {
   try {
     const { id } = req.params;

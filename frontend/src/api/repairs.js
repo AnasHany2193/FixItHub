@@ -116,6 +116,19 @@ export const getWorkerRepairs = async ({ status }) => {
   }
 };
 
+export const getWorkerRepair = async (repairId) => {
+  try {
+    const { data } = await axiosClient.get(
+      `/repairs/workers/active/${repairId}`
+    );
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch repair details"
+    );
+  }
+};
+
 export const completeRepair = async (repairId) => {
   try {
     const { data } = await axiosClient.patch(`/repairs/${repairId}/complete`);
