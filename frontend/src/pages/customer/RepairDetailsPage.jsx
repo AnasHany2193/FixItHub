@@ -46,19 +46,28 @@ import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const STATUS_CONFIG = {
-  auction_open: {
-    label: "Auction Active",
-    color:
-      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400",
-  },
   awaiting_assignment: {
     label: "Awaiting Assignment",
     color:
       "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400",
   },
+  auction_open: {
+    label: "Auction Active",
+    color:
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400",
+  },
   in_progress: {
     label: "In Progress",
     color: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+  },
+  awaiting_payment: {
+    label: "Awaiting Payment",
+    color:
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
+  },
+  returning_to_customer: {
+    label: "Returning Item",
+    color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400",
   },
   completed: {
     label: "Completed",

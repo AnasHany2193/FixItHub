@@ -28,7 +28,17 @@ export const statusStages = {
   },
   auction_open: { step: 2, label: "Bidding Active", color: "bg-indigo-500" },
   in_progress: { step: 3, label: "Repair Ongoing", color: "bg-blue-500" },
-  completed: { step: 4, label: "Completed", color: "bg-emerald-500" },
+  awaiting_payment: {
+    step: 3.5,
+    label: "Awaiting Payment",
+    color: "bg-purple-500",
+  },
+  returning_to_customer: {
+    step: 4,
+    label: "Returning Item",
+    color: "bg-cyan-500",
+  },
+  completed: { step: 5, label: "Completed", color: "bg-emerald-500" },
   cancelled: { step: 0, label: "Cancelled", color: "bg-rose-500" },
 };
 
@@ -155,7 +165,11 @@ export default function RepairRequestsPage() {
           >
             <AnimatePresence>
               {data.map((repair) => {
-                const currentStatus = statusStages[repair.status];
+                const currentStatus = statusStages[repair.status] || {
+                  step: 0,
+                  label: "Unknown Status",
+                  color: "bg-gray-500",
+                };
                 const hasAuction = !!repair.auction;
                 const lowestBid = repair.auction?.currentLowestBid?.bidPrice;
                 const bidCount = repair.auction?.bids?.length || 0;
