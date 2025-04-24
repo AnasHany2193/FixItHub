@@ -5,7 +5,7 @@ export const register = async (credentials) => {
     const { data } = await axiosClient.post("/auth/register", credentials);
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Registration failed");
+    throw new Error(error.response?.data?.message || "Registration failed");
   }
 };
 
@@ -14,7 +14,7 @@ export const login = async (credentials) => {
     const { data } = await axiosClient.post("/auth/login", credentials);
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Login failed");
+    throw new Error(error.response?.data?.message || "Login failed");
   }
 };
 
@@ -39,7 +39,7 @@ export const verifyOTP = async ({ email, code }) => {
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "OTP verification failed");
+    throw new Error(error.response?.data?.message || "OTP verification failed");
   }
 };
 
@@ -49,7 +49,7 @@ export const resendOTP = async (email) => {
     const { data } = await axiosClient.post("/auth/resend-otp", email);
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Failed to resend OTP");
+    throw new Error(error.response?.data?.message || "Failed to resend OTP");
   }
 };
 
@@ -58,7 +58,7 @@ export const forgotPassword = async (email) => {
     const { data } = await axiosClient.post("/auth/forgot-password", email);
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Password reset failed");
+    throw new Error(error.response?.data?.message || "Password reset failed");
   }
 };
 
@@ -71,6 +71,6 @@ export const resetPassword = async ({ email, code, newPassword }) => {
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Password reset failed");
+    throw new Error(error.response?.data?.message || "Password reset failed");
   }
 };

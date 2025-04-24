@@ -124,7 +124,7 @@ export const useRegister = () => {
       toast({
         variant: "error",
         title: "Registration Failed",
-        description: error.response?.data?.error || error.message,
+        description: error.response?.data?.message || error.message,
       });
     },
   });

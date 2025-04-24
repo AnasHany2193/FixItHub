@@ -9,6 +9,6 @@ export const uploadImage = async (formData) => {
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Image upload failed");
+    throw new Error(error.response?.data?.message || "Image upload failed");
   }
 };

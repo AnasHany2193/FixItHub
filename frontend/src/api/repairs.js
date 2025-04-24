@@ -9,7 +9,7 @@ export const createRepair = async (repairData) => {
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Repair creation failed");
+    throw new Error(error.response?.data?.message || "Repair creation failed");
   }
 };
 
@@ -20,7 +20,7 @@ export const startRepairAuction = async ({ repairId, auctionData }) => {
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Auction start failed");
+    throw new Error(error.response?.data?.message || "Auction start failed");
   }
 };
 
@@ -29,7 +29,7 @@ export const updateRepairRequest = async ({ repairId, updateData }) => {
     const { data } = await axiosClient.put(`/repairs/${repairId}`, updateData);
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Update failed");
+    throw new Error(error.response?.data?.message || "Update failed");
   }
 };
 
@@ -38,7 +38,7 @@ export const getRepairRequests = async (params = {}) => {
     const { data } = await axiosClient.get("/repairs", { params });
     return data.data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Failed to fetch repairs");
+    throw new Error(error.response?.data?.message || "Failed to fetch repairs");
   }
 };
 
@@ -48,7 +48,7 @@ export const getRepairDetails = async (repairId) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch repair details"
+      error.response?.data?.message || "Failed to fetch repair details"
     );
   }
 };
@@ -59,7 +59,7 @@ export const cancelRepair = async (repairId) => {
     return data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to cancel repair request"
+      error.response?.data?.message || "Failed to cancel repair request"
     );
   }
 };
@@ -72,7 +72,7 @@ export const getCustomerHistory = async (params = {}) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch repair history"
+      error.response?.data?.message || "Failed to fetch repair history"
     );
   }
 };
@@ -98,7 +98,7 @@ export const acceptOffer = async (repairId, offerId) => {
     );
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Offer acceptance failed");
+    throw new Error(error.response?.data?.message || "Offer acceptance failed");
   }
 };
 
@@ -111,7 +111,7 @@ export const getWorkerRepairs = async (status) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch worker repairs"
+      error.response?.data?.message || "Failed to fetch worker repairs"
     );
   }
 };
@@ -121,7 +121,9 @@ export const completeRepair = async (repairId) => {
     const { data } = await axiosClient.patch(`/repairs/${repairId}/complete`);
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Failed to complete repair");
+    throw new Error(
+      error.response?.data?.message || "Failed to complete repair"
+    );
   }
 };
 
@@ -134,7 +136,7 @@ export const updateTrackingStatus = async (repairId, statusData) => {
     return data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to update tracking status"
+      error.response?.data?.message || "Failed to update tracking status"
     );
   }
 };
@@ -146,7 +148,9 @@ export const returnRepair = async (repairId, reason) => {
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Failed to initiate return");
+    throw new Error(
+      error.response?.data?.message || "Failed to initiate return"
+    );
   }
 };
 
@@ -158,7 +162,7 @@ export const getWorkerHistory = async (params = {}) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch worker history"
+      error.response?.data?.message || "Failed to fetch worker history"
     );
   }
 };
@@ -171,7 +175,9 @@ export const getOpenAuctions = async (filters = {}) => {
     });
     return data.data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Failed to fetch auctions");
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch auctions"
+    );
   }
 };
 
@@ -181,7 +187,7 @@ export const getAuctionDetails = async (auctionId) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch auction details"
+      error.response?.data?.message || "Failed to fetch auction details"
     );
   }
 };
@@ -206,7 +212,7 @@ export const updateBid = async ({ bidId, bidPrice }) => {
     return data;
   } catch (error) {
     console.log(error);
-    throw new Error(error.response?.data?.error || "Bid update failed");
+    throw new Error(error.response?.data?.message || "Bid update failed");
   }
 };
 
@@ -219,7 +225,7 @@ export const getNonAuctionRepairs = async (filters = {}) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch direct offers"
+      error.response?.data?.message || "Failed to fetch direct offers"
     );
   }
 };
@@ -230,7 +236,7 @@ export const getNonAuctionRepairDetails = async (repairId) => {
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.error || "Failed to fetch repair details"
+      error.response?.data?.message || "Failed to fetch repair details"
     );
   }
 };
@@ -243,7 +249,7 @@ export const submitOffer = async (repairId, offerData) => {
     );
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Offer submission failed");
+    throw new Error(error.response?.data?.message || "Offer submission failed");
   }
 };
 
@@ -255,6 +261,6 @@ export const updateOffer = async (offerId, offerData) => {
     );
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Offer update failed");
+    throw new Error(error.response?.data?.message || "Offer update failed");
   }
 };
