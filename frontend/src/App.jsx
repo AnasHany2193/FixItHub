@@ -34,6 +34,7 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import AuctionsPage from "./pages/worker/AuctionsPage";
+import WorkerRepairDetailsPage from "./pages/worker/WorkerRepairDetailsPage";
 
 function App() {
   return (
@@ -67,6 +68,10 @@ function App() {
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
             <Route path="/repairs/active" element={<WorkerRepairsPage />} />
+            <Route
+              path="/repairs/active/:id"
+              element={<WorkerRepairDetailsPage />}
+            />
             <Route path="/repairs/auctions" element={<AuctionsPage />} />
             <Route
               path="/repairs/auctions/:id"

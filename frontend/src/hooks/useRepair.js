@@ -15,6 +15,7 @@ import {
   getRepairDetails,
   getRepairRequests,
   getWorkerHistory,
+  getWorkerRepair,
   getWorkerRepairs,
   returnRepair,
   startRepairAuction,
@@ -214,7 +215,7 @@ export const useWorkerRepairs = (status) =>
 export const useWorkerRepair = (repairId) => {
   return useQuery({
     queryKey: ["worker-repair", repairId],
-    queryFn: () => getRepairDetails(repairId),
+    queryFn: () => getWorkerRepair({ repairId }),
     enabled: !!repairId, // Only run the query if repairId is provided
   });
 };

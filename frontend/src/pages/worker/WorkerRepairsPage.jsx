@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { useNavigate } from "react-router";
 
 export default function WorkerRepairsPage() {
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -91,89 +92,8 @@ const StatusFilter = ({ selectedStatus, setSelectedStatus }) => {
   );
 };
 
-// const RepairCard = ({ repair }) => {
-//   const statusConfig = {
-//     in_progress: {
-//       label: "In Progress",
-//       color: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
-//     },
-//     awaiting_payment: {
-//       label: "Awaiting Payment",
-//       color:
-//         "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
-//     },
-//   }[repair.status];
-
-//   return (
-//     <motion.div
-//       layout
-//       initial={{ opacity: 0, y: 20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       exit={{ opacity: 0, scale: 0.95 }}
-//       transition={{ duration: 0.2 }}
-//     >
-//       <Card className="overflow-hidden border border-gray-200 dark:border-gray-700">
-//         <CardContent className="p-4 space-y-4">
-//           <div className="flex items-start justify-between">
-//             <div>
-//               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-//                 {repair.itemType}
-//               </h3>
-//               <p className="text-sm text-gray-500 capitalize dark:text-gray-400">
-//                 {repair.customer?.username || "Customer"}
-//               </p>
-//             </div>
-//             <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
-//           </div>
-
-//           <div className="grid grid-cols-2 gap-4">
-//             <div className="flex items-center gap-2">
-//               <Hammer className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-//               <div>
-//                 <p className="text-sm text-gray-500 dark:text-gray-400">Type</p>
-//                 <p className="font-medium dark:text-gray-200">
-//                   {repair.sourceType === "auction"
-//                     ? "Auction Bid"
-//                     : "Direct Assignment"}
-//                 </p>
-//               </div>
-//             </div>
-
-//             <div className="flex items-center gap-2">
-//               <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-//               <div>
-//                 <p className="text-sm text-gray-500 dark:text-gray-400">
-//                   Value
-//                 </p>
-//                 <p className="font-medium dark:text-gray-200">
-//                   ${repair.currentPrice}
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-
-//           <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-//             <Clock className="w-4 h-4" />
-//             <span>
-//               Started {new Date(repair.createdAt).toLocaleDateString()}
-//             </span>
-//           </div>
-//         </CardContent>
-
-//         <CardFooter className="p-4 pt-0">
-//           <Button
-//             variant="outline"
-//             className="w-full border-gray-300 dark:border-gray-600"
-//           >
-//             View Job Details
-//           </Button>
-//         </CardFooter>
-//       </Card>
-//     </motion.div>
-//   );
-// };
-
 const RepairCard = ({ repair }) => {
+  const navigate = useNavigate();
   const statusConfig = {
     in_progress: {
       label: "In Progress",
@@ -267,6 +187,7 @@ const RepairCard = ({ repair }) => {
         <CardFooter className="p-4 pt-0">
           <Button
             variant="outline"
+            onClick={() => navigate(`/repairs/active/${repair._id}`)}
             className="w-full border-gray-300 hover:border-indigo-300 hover:bg-indigo-50 dark:border-gray-600 dark:hover:border-indigo-800 dark:hover:bg-indigo-900/20"
           >
             View Job Details

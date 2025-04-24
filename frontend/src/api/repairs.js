@@ -116,7 +116,7 @@ export const getWorkerRepairs = async ({ status }) => {
   }
 };
 
-export const getWorkerRepair = async (repairId) => {
+export const getWorkerRepair = async ({ repairId }) => {
   try {
     const { data } = await axiosClient.get(
       `/repairs/workers/active/${repairId}`
