@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Trophy,
   DollarSign,
+  RefreshCw,
 } from "lucide-react";
 
 import { useAuctionDetails, useSubmitBid } from "@/hooks/useRepair";
@@ -41,13 +42,20 @@ export default function AuctionDetailPage() {
   const [bidPrice, setBidPrice] = useState("");
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-  const { data: auction, isLoading } = useAuctionDetails(id);
+  const {
+    data: auction,
+    isFetching,
+    refetch,
+    isLoading,
+  } = useAuctionDetails(id);
   const { mutate: submitBid } = useSubmitBid();
-
-  console.log("auction", auction);
 
   const handleBidSubmit = () => {
     submitBid({ auctionId: id, bidPrice });
+  };
+
+  const handleRefreshBids = async () => {
+    await refetch();
   };
 
   if (isLoading) return <PageSkeleton />;
@@ -187,7 +195,7 @@ export default function AuctionDetailPage() {
                     Item Details
                   </TabsTrigger>
                   <TabsTrigger value="bids" className="w-1/2">
-                    Bid History
+                    Bids
                   </TabsTrigger>
                 </TabsList>
 
@@ -207,6 +215,20 @@ export default function AuctionDetailPage() {
                 </TabsContent>
 
                 <TabsContent value="bids" className="pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Bid History</h3>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRefreshBids}
+                      disabled={isFetching}
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
+                      />
+                      {isFetching ? "Refreshing..." : "Refresh Bids"}
+                    </Button>
+                  </div>
                   <div className="space-y-4">
                     {auction.bids?.length > 0 ? (
                       auction.bids.map((bid) => (
