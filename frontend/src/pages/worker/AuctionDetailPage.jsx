@@ -18,15 +18,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpdateBidDialog from "@/components/repair/UpdateBidDialog";
 import { Dialog } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 
 const formatDate = (dateString) => {
   try {
@@ -140,47 +137,7 @@ export default function AuctionDetailPage() {
           {/* Left Column */}
           <div className="space-y-8 lg:col-span-2">
             {/* Image Carousel */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="overflow-hidden border rounded shadow-sm -xl border-border"
-            >
-              <Carousel>
-                <CarouselContent>
-                  {repair.photos?.map((photo) => (
-                    <CarouselItem key={photo.public_id}>
-                      <div className="relative aspect-video">
-                        <img
-                          src={photo.url}
-                          alt="Repair item"
-                          className="object-contain w-full h-full"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20" />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                {repair.photos?.length > 1 && (
-                  <div className="absolute -translate-x-1/2 bottom-4 left-1/2">
-                    <div className="flex gap-2 px-4 py-2 border rounded-full bg-background/90 backdrop-blur-sm">
-                      {repair.photos.map((photo, idx) => (
-                        <button
-                          key={photo.public_id}
-                          className="w-10 h-10 transition-opacity hover:opacity-100"
-                          style={{ opacity: idx === 0 ? 1 : 0.6 }}
-                        >
-                          <img
-                            src={photo.url}
-                            className="object-cover w-full h-full rounded-sm"
-                            alt={`Thumbnail ${idx + 1}`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Carousel>
-            </motion.div>
+            <ImageCarousel images={repair.photos} />
 
             {/* Auction Details */}
             <SectionCard

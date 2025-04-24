@@ -16,12 +16,8 @@ import { useWorkerRepair } from "@/hooks/useRepair";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-} from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ImageCarousel } from "@/components/common/ImageCarousel";
 
 const STATUS_CONFIG = {
   in_progress: {
@@ -116,28 +112,7 @@ export default function WorkerRepairDetailsPage() {
           {/* Left Column */}
           <div className="space-y-8 lg:col-span-2">
             {/* Image Carousel */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="overflow-hidden border shadow-sm rounded-xl border-border"
-            >
-              <Carousel>
-                <CarouselContent>
-                  {repair.photos?.map((photo) => (
-                    <CarouselItem key={photo.public_id}>
-                      <div className="relative aspect-video">
-                        <img
-                          src={photo.url}
-                          alt="Repair item"
-                          className="object-contain w-full h-full"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/20" />
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-              </Carousel>
-            </motion.div>
+            <ImageCarousel images={repair.photos} />
 
             {/* Technical Details */}
             <SectionCard
