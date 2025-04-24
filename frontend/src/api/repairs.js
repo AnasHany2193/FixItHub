@@ -140,12 +140,11 @@ export const completeRepair = async (repairId) => {
   }
 };
 
-export const updateTrackingStatus = async (repairId, statusData) => {
+export const updateTrackingStatus = async ({ repairId, status }) => {
   try {
-    const { data } = await axiosClient.put(
-      `/repairs/workshop/${repairId}`,
-      statusData
-    );
+    const { data } = await axiosClient.put(`/repairs/tracking/${repairId}`, {
+      status,
+    });
     return data;
   } catch (error) {
     throw new Error(

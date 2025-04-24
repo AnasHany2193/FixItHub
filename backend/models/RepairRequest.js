@@ -13,13 +13,14 @@ export const RepairStatus = Object.freeze({
 });
 
 export const trackingStatusOrder = [
-  "received", // Item received at facility
-  "diagnosing", // Under diagnosis
-  "repairing", // Active repair work
-  "quality_check", // Post-repair inspection
-  "payment_received", // Payment confirmed
-  "shipped", // Item dispatched
-  "payment_failed", // Payment processing failed
+  "received", // 1. Item received
+  "diagnosing", // 2. Diagnosis complete
+  "repairing", // 3. Repair completed
+  "quality_check", // 4. Quality verification passed
+  "awaiting_payment", // 5. NEW: Payment required before shipping
+  "payment_received", // 6. Payment confirmed
+  "shipped", // 7. Item dispatched
+  "payment_failed", // 8. Payment issues
 ];
 
 const RepairRequestSchema = new mongoose.Schema(

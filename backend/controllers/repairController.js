@@ -557,9 +557,10 @@ export const acceptOffer = async (req, res, next) => {
     }
 
     // Update offer statuses
+    await Offer.findByIdAndUpdate(offerId, { status: "accepted" });
     await Offer.updateMany(
-      { repairRequest: repairId },
-      { status: offer._id.equals(offerId) ? "accepted" : "rejected" }
+      { repairRequest: repairId, _id: { $ne: offerId } },
+      { status: "rejected" }
     );
 
     // Update repair
@@ -567,7 +568,7 @@ export const acceptOffer = async (req, res, next) => {
       repairId,
       {
         worker: offer.worker,
-        status: RepairStatus.AWAITING_PAYMENT,
+        status: RepairStatus.IN_PROGRESS,
         paymentAmount: offer.offerPrice,
         paymentStatus: "pending",
       },
@@ -577,10 +578,7 @@ export const acceptOffer = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Offer accepted successfully",
-      data: {
-        repair: updatedRepair,
-        worker: offer.worker,
-      },
+      data: updatedRepair,
     });
   } catch (error) {
     next(error);
@@ -589,43 +587,55 @@ export const acceptOffer = async (req, res, next) => {
 
 export const updateTrackingStatus = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { repairId } = req.params;
     const { status } = req.body;
-    const validStatuses = trackingStatusOrder;
 
     // Validate status
-    if (!validStatuses.includes(status)) {
+    if (!trackingStatusOrder.includes(status)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid status. Valid values: ${validStatuses.join(", ")}`,
+        message: `Invalid status.`,
       });
     }
 
-    // Find repair
-    const repair = await RepairRequest.findOneAndUpdate(
-      { _id: id, customer: req.user._id },
-      {
-        $push: {
-          trackingUpdates: {
-            status,
-            timestamp: new Date(),
-          },
+    const update = {
+      $push: {
+        trackingUpdates: {
+          status,
+          timestamp: new Date(),
         },
       },
-      { new: true }
+    };
+
+    // Update main status when reaching awaiting_payment
+    if (status === "awaiting_payment")
+      update.$set = { status: "awaiting_payment" };
+
+    // Find and Update repair
+    const repair = await RepairRequest.findOneAndUpdate(
+      {
+        _id: repairId,
+        worker: req.user._id,
+        status: { $ne: "completed" }, // Prevent updates on completed repairs
+      },
+      update,
+      { new: true, runValidators: true }
     );
 
     if (!repair) {
       return res.status(404).json({
         success: false,
-        message: "Repair not found",
+        message: "Repair not found or not authorized",
       });
     }
 
     res.status(200).json({
       success: true,
       message: "Tracking status updated",
-      data: repair.trackingUpdates,
+      data: {
+        tracking: repair.trackingUpdates,
+        status: repair.status,
+      },
     });
   } catch (error) {
     next(error);

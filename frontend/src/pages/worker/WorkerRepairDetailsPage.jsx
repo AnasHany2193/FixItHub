@@ -5,19 +5,39 @@ import {
   ArrowLeft,
   Wrench,
   User,
-  Truck,
   Clock,
   DollarSign,
   CheckCircle,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 
-import { useWorkerRepair } from "@/hooks/useRepair";
+import { useUpdateTracking, useWorkerRepair } from "@/hooks/useRepair";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+export const trackingStatusOrder = [
+  "received", // 1. Item received
+  "diagnosing", // 2. Diagnosis complete
+  "repairing", // 3. Repair completed
+  "quality_check", // 4. Quality verification passed
+  "awaiting_payment", // 5. NEW: Payment required before shipping
+  "payment_received", // 6. Payment confirmed
+  "shipped", // 7. Item dispatched
+  "payment_failed", // 8. Payment issues
+];
 
 const STATUS_CONFIG = {
   in_progress: {
@@ -47,6 +67,11 @@ const formatDate = (dateString) => {
 export default function WorkerRepairDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+
+  const { mutate: updateStatus } = useUpdateTracking();
   const { data: repair, isLoading } = useWorkerRepair(id);
 
   if (isLoading) return <PageSkeleton />;
@@ -136,6 +161,25 @@ export default function WorkerRepairDetailsPage() {
                 />
               </div>
             </SectionCard>
+
+            {/* Status Tracking Section */}
+            <SectionCard
+              icon={
+                <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="Repair Progress"
+            >
+              <div className="space-y-6">
+                <StatusTimeline trackingUpdates={repair.trackingUpdates} />
+
+                <Button
+                  className="w-full"
+                  onClick={() => setShowStatusDialog(true)}
+                >
+                  Update Status
+                </Button>
+              </div>
+            </SectionCard>
           </div>
 
           {/* Right Column */}
@@ -203,33 +247,132 @@ export default function WorkerRepairDetailsPage() {
                 )}
               </div>
             </SectionCard>
-
-            {/* Shipping Info */}
-            {repair.shippingRequired && (
-              <SectionCard
-                icon={
-                  <Truck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                }
-                title="Shipping Information"
-              >
-                <div className="space-y-4">
-                  <InfoItem
-                    label="Shipping Address"
-                    value={repair.shippingAddress}
-                  />
-                  <InfoItem
-                    label="Tracking Number"
-                    value={repair.trackingNumber || "Not available"}
-                  />
-                </div>
-              </SectionCard>
-            )}
           </div>
         </div>
       </div>
+
+      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <DialogContent className="max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Update Repair Status</DialogTitle>
+            <DialogDescription>
+              Select the current progress stage of this repair
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6 space-y-4">
+            {trackingStatusOrder.map((status) => {
+              const currentIndex = trackingStatusOrder.indexOf(
+                repair.trackingUpdates?.slice(-1)[0]?.status || "received"
+              );
+              const statusIndex = trackingStatusOrder.indexOf(status);
+              const isAllowed =
+                statusIndex === 0 || statusIndex <= currentIndex + 1;
+
+              return (
+                <Button
+                  key={status}
+                  variant={statusIndex <= currentIndex ? "default" : "outline"}
+                  className="justify-start w-full gap-2"
+                  disabled={!isAllowed}
+                  onClick={() => setSelectedStatus(status)}
+                >
+                  {statusIndex <= currentIndex ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : (
+                    <span className="w-4 h-4" />
+                  )}
+                  {status.replace(/_/g, " ").toUpperCase()}
+                </Button>
+              );
+            })}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setShowStatusDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                console.log({ repairId: repair._id, status: selectedStatus });
+                updateStatus(
+                  { repairId: repair._id, status: selectedStatus },
+                  {
+                    onSuccess: () => setShowStatusDialog(false),
+                  }
+                );
+              }}
+              disabled={!selectedStatus}
+            >
+              Confirm Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+const StatusTimeline = ({ trackingUpdates }) => {
+  const lastStatus = trackingUpdates?.[trackingUpdates.length - 1]?.status;
+
+  return (
+    <div className="relative pl-6 space-y-8">
+      {trackingStatusOrder.map((status, index) => {
+        const isCompleted =
+          trackingStatusOrder.indexOf(status) <=
+          trackingStatusOrder.indexOf(lastStatus);
+        const isCurrent = status === lastStatus;
+
+        return (
+          <div key={status} className="relative flex items-center gap-4">
+            <div
+              className={`absolute w-0.5 h-full -left-[2px] ${
+                isCompleted ? "bg-indigo-500" : "bg-gray-200 dark:bg-gray-700"
+              }`}
+            />
+
+            <div
+              className={`flex items-center justify-center w-8 h-8 rounded-full ml-3 ${
+                isCompleted
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800"
+              }`}
+            >
+              {isCompleted ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <span className="text-sm">{index + 1}</span>
+              )}
+            </div>
+
+            <div>
+              <p
+                className={`font-medium ${
+                  isCurrent
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "text-gray-900 dark:text-gray-100"
+                }`}
+              >
+                {status.replace(/_/g, " ").toUpperCase()}
+              </p>
+              {trackingUpdates?.find((u) => u.status === status) && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {formatDate(
+                    trackingUpdates.find((u) => u.status === status).timestamp
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 // Reusable Components
 const SectionCard = ({ icon, title, children }) => (
