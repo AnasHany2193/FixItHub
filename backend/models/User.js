@@ -43,92 +43,60 @@ const workHistorySchema = new mongoose.Schema(
   { _id: false }
 );
 
-const documentSchema = new mongoose.Schema(
-  {
-    url: { type: String, required: true },
-    public_id: { type: String, required: true },
-  },
-  { _id: false }
-);
-
 const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
       required: true,
-      unique: true, // Ensures username is unique
+      unique: true,
       minlength: 3,
       maxlength: 30,
       lowercase: true,
-      validate: {
-        validator: (v) => /^[a-z0-9_]+$/.test(v),
-        message:
-          "Username can only contain lowercase letters, numbers, and underscores",
-      },
+      match: /^[a-z0-9_]+$/,
     },
     email: {
       type: String,
       unique: true,
-      lowercase: true,
-      required: [true, "Email is required"],
-      validate: {
-        validator: validator.isEmail,
-        message: "Invalid email format",
-      },
+      required: true,
+      validate: [validator.isEmail, "Invalid email"],
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters"],
+      required: true,
+      minlength: 6,
       select: false,
-      validate: {
-        validator: (v) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(v),
-        message:
-          "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-      },
     },
     role: {
       type: String,
-      required: true,
       enum: ["customer", "worker", "admin"],
       default: "customer",
-    },
-    lastLogin: Date,
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-    status: {
-      type: String,
-      enum: ["active", "banned", "pending", "deactivated"],
-      default: "active",
     },
     profile: {
       avatar: {
         url: {
           type: String,
-          default: "/uploads/defaults/avatar.png",
-          validate: [validator.isURL, "Invalid avatar URL"],
+          default: "http://localhost:5000/uploads/defaults/avatar.png",
         },
         public_id: String,
       },
       phone: {
         type: String,
-        validate: {
-          validator: (v) => validator.isMobilePhone(v, "any"),
-          message: "Invalid phone number",
-        },
+        validate: [validator.isMobilePhone, "Invalid phone number"],
       },
-      address: addressSchema,
       bio: {
         type: String,
         maxlength: 500,
-        validate: {
-          validator: (v) => !/<[^>]*>/g.test(v),
-          message: "Bio cannot contain HTML tags",
-        },
       },
-      socialMedia: socialMediaSchema,
+    },
+    status: {
+      type: String,
+      enum: ["active", "banned", "pending"],
+      default: "active",
+    },
+    lastLogin: Date,
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
     tokenVersion: {
       type: Number,
@@ -155,18 +123,12 @@ const userSchema = new mongoose.Schema(
         enum: ["beginner", "intermediate", "expert"],
         default: "beginner",
       },
-      status: {
-        type: String,
-        enum: ["pending", "approved", "rejected"],
-        default: "pending",
-      },
-      documents: {
-        type: [documentSchema],
-        validate: {
-          validator: (v) => v.length <= 5,
-          message: "Maximum 5 documents allowed",
+      documents: [
+        {
+          url: String,
+          public_id: String,
         },
-      },
+      ],
       workHistory: {
         type: [workHistorySchema],
         validate: {
