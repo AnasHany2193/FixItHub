@@ -770,25 +770,20 @@ export const completeRepair = async (req, res, next) => {
 
 export const returnRepair = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { repairId } = req.params;
     const workerId = req.user._id;
-    const { reason } = req.body;
 
+    // Find the repair request and ensure it is in progress and not paid
     const repair = await RepairRequest.findOneAndUpdate(
       {
-        _id: id,
+        _id: repairId,
         worker: workerId,
         status: RepairStatus.IN_PROGRESS,
+        paymentStatus: { $ne: "paid" }, // Ensure the payment status is not 'paid'
       },
       {
         status: RepairStatus.RETURNING_TO_CUSTOMER,
-        $push: {
-          trackingUpdates: {
-            status: "return_initiated",
-            details: reason || "Unable to complete repair",
-            timestamp: new Date(),
-          },
-        },
+        trackingUpdates: [], // Clear tracking updates when returning
       },
       { new: true }
     ).populate("customer", "name email");

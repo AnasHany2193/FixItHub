@@ -169,11 +169,9 @@ export const updateTrackingStatus = async ({ repairId, status }) => {
   }
 };
 
-export const returnRepair = async (repairId, reason) => {
+export const returnRepair = async ({ repairId }) => {
   try {
-    const { data } = await axiosClient.patch(`/repairs/${repairId}/return`, {
-      reason,
-    });
+    const { data } = await axiosClient.patch(`/repairs/return/${repairId}`);
     return data;
   } catch (error) {
     throw new Error(
