@@ -268,19 +268,36 @@ export const updateBid = async (req, res, next) => {
     }
 
     // 3. Validate new bid price
-    const currentLowest =
+    const currentLowestPrice =
       auction.currentLowestBid?.bidPrice || auction.startingMaxPrice;
 
-    if (bidPrice >= currentLowest) {
+    if (bidPrice >= currentLowestPrice) {
       return res.status(400).json({
         success: false,
-        message: `New bid must be lower than current lowest (${currentLowest})`,
+        message: `New bid must be lower than current lowest (${currentLowestPrice})`,
       });
     }
 
     // 4. Update bid
     existingBid.bidPrice = bidPrice;
     await existingBid.save();
+
+    // 5. Update auction's current lowest bid
+    const isCurrentLowest = auction.currentLowestBid?._id.equals(
+      existingBid._id
+    );
+
+    if (bidPrice < currentLowestPrice || isCurrentLowest) {
+      // Find the actual lowest bid in case multiple bids exist
+      const lowestBid = await Bid.findOne({ auction: auction._id })
+        .sort({ bidPrice: 1 })
+        .limit(1);
+
+      if (lowestBid) {
+        auction.currentLowestBid = lowestBid._id;
+        await auction.save();
+      }
+    }
 
     // Update auction if this was the lowest bid
     if (auction.currentLowestBid?.toString() === bidId) {
