@@ -637,21 +637,45 @@ export const getWorkerRepairs = async (req, res, next) => {
     const { status } = req.query;
     const filter = {
       worker: req.user._id,
-      status: status || {
-        $in: [RepairStatus.IN_PROGRESS, RepairStatus.RETURNING_TO_CUSTOMER],
-      },
+      status: status
+        ? { $in: status.split(",") }
+        : { $in: [RepairStatus.IN_PROGRESS, RepairStatus.AWAITING_PAYMENT] },
     };
 
     const repairs = await RepairRequest.find(filter)
-      .populate("customer", "name email")
-      .select("itemType status paymentStatus createdAt")
+      .populate({
+        path: "customer",
+        select: "username profile.avatar",
+      })
+      .populate({
+        path: "auction",
+        select: "status expiresAt currentLowestBid",
+        populate: {
+          path: "currentLowestBid",
+          select: "bidPrice",
+        },
+      })
+      .populate({
+        path: "offers",
+        match: { status: "accepted" },
+        select: "price status",
+      })
       .sort("-createdAt")
       .lean();
 
+    const enhancedRepairs = repairs.map((repair) => ({
+      ...repair,
+      sourceType: repair.auction ? "auction" : "direct",
+      currentPrice:
+        repair.auction?.currentLowestBid?.bidPrice ||
+        repair.offers?.[0]?.price ||
+        "Not specified",
+    }));
+
     res.status(200).json({
       success: true,
-      count: repairs.length,
-      data: repairs,
+      count: enhancedRepairs.length,
+      data: enhancedRepairs,
     });
   } catch (error) {
     next(error);

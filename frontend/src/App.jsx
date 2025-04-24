@@ -23,6 +23,9 @@ import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
 import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
+import AuctionDetailPage from "./pages/worker/AuctionDetailPage";
+import WorkerRepairsPage from "./pages/worker/WorkerRepairsPage";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
 import Layout from "./components/layout/Layout";
@@ -31,7 +34,6 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import AuctionsPage from "./pages/worker/AuctionsPage";
-import AuctionDetailPage from "./pages/worker/AuctionDetailPage";
 
 function App() {
   return (
@@ -64,6 +66,7 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["worker"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+            <Route path="/repairs/active" element={<WorkerRepairsPage />} />
             <Route path="/repairs/auctions" element={<AuctionsPage />} />
             <Route
               path="/repairs/auctions/:id"

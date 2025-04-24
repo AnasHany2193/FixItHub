@@ -208,7 +208,7 @@ export const useAcceptOffer = () => {
 export const useWorkerRepairs = (status) =>
   useQuery({
     queryKey: ["worker-repairs", status],
-    queryFn: () => getWorkerRepairs(status),
+    queryFn: () => getWorkerRepairs({ status }),
   });
 
 export const useCompleteRepair = () => {

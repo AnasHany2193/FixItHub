@@ -103,7 +103,7 @@ export const acceptOffer = async (repairId, offerId) => {
 };
 
 // Worker endpoints
-export const getWorkerRepairs = async (status) => {
+export const getWorkerRepairs = async ({ status }) => {
   try {
     const { data } = await axiosClient.get("/repairs/workers", {
       params: { status },
