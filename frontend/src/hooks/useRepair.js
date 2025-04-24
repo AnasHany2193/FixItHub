@@ -208,13 +208,16 @@ export const useAcceptOffer = () => {
 
 export const useCreatePaymentSession = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createPaymentSession,
     onSuccess: (data) => {
+      queryClient.invalidateQueries(["repairs"]);
       window.location.href = data.url;
     },
     onError: (error) => {
+      console.log("useCreatePaymentSession error", error);
       toast({
         variant: "destructive",
         title: "Payment Failed",

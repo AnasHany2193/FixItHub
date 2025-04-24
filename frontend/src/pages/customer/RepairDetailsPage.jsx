@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
   Wrench,
@@ -15,11 +15,14 @@ import {
   Clock,
   CheckCircle,
   RefreshCw,
+  Loader2,
+  Wallet,
 } from "lucide-react";
 
 import {
   useAcceptBid,
   useCancelRepair,
+  useCreatePaymentSession,
   useRepairDetails,
 } from "@/hooks/useRepair";
 
@@ -38,6 +41,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
+import { useToast } from "@/hooks/useToast";
 
 const STATUS_CONFIG = {
   awaiting_assignment: {
@@ -84,11 +88,34 @@ const formatDate = (dateString) => {
 
 export default function RepairDetailsPage() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+
+  const { toast } = useToast();
   const navigate = useNavigate();
+
   const [showAuctionDialog, setShowAuctionDialog] = useState(false);
 
   const { mutate: cancelRepair } = useCancelRepair();
-  const { data: repair, isLoading, isError } = useRepairDetails(id);
+  const { data: repair, isLoading, isError, refetch } = useRepairDetails(id);
+  const { mutate: createPayment, isPending } = useCreatePaymentSession();
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      refetch();
+      toast.success({
+        title: "Payment Successful!",
+        description: "Your payment has been processed successfully",
+      });
+
+      searchParams.delete("payment");
+    } else if (paymentStatus === "cancelled") {
+      toast.error({
+        title: "Payment Cancelled",
+        description: "Your payment was not completed",
+      });
+    }
+  }, [searchParams, toast, refetch]);
 
   if (isLoading) return <PageSkeleton />;
   if (!repair || isError) return <NotFoundState />;
@@ -244,15 +271,46 @@ export default function RepairDetailsPage() {
                   }
                 />
                 <InfoItem
-                  label="Payment Method"
-                  value={repair.paymentDetails?.method || "Not specified"}
-                />
-                <InfoItem
                   label="Last Updated"
                   value={formatDate(repair.updatedAt)}
                 />
               </div>
             </SectionCard>
+
+            {repair.paymentStatus === "pending" && (
+              <SectionCard
+                icon={
+                  <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                }
+                title="Complete Payment"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                    <span className="font-medium">Total Due</span>
+                    <span className="font-mono">
+                      ${repair.paymentAmount?.toFixed(2)}
+                    </span>
+                  </div>
+
+                  <Button
+                    onClick={() => createPayment({ repairId: repair._id })}
+                    disabled={isPending}
+                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
+                  >
+                    {isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Wallet className="w-4 h-4" />
+                    )}
+                    Pay Now
+                  </Button>
+
+                  <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+                    Secure payment processed by Stripe
+                  </p>
+                </div>
+              </SectionCard>
+            )}
 
             {(repair.status === "awaiting_assignment" ||
               repair.status === "cancelled") && (
@@ -345,7 +403,7 @@ export const BidCard = ({ bid, repairId }) => {
             <span>•</span>
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>{formatDate(bid.createdAt)}</span>
+              <span>{formatDate(bid.submittedAt)}</span>
             </div>
           </div>
         </div>

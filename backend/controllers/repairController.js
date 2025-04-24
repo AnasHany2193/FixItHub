@@ -196,7 +196,7 @@ export const getRepairRequest = async (req, res, next) => {
             },
             {
               path: "bids",
-              select: "bidPrice status createdAt worker",
+              select: "bidPrice status submittedAt worker",
               populate: {
                 path: "worker",
                 select: "username profile.avatar rating.average",
