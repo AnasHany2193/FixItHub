@@ -36,7 +36,6 @@ export const trackingStatusOrder = [
   "awaiting_payment", // 5. NEW: Payment required before shipping
   "payment_received", // 6. Payment confirmed
   "shipped", // 7. Item dispatched
-  "payment_failed", // 8. Payment issues
 ];
 
 const STATUS_CONFIG = {
@@ -172,12 +171,14 @@ export default function WorkerRepairDetailsPage() {
               <div className="space-y-6">
                 <StatusTimeline trackingUpdates={repair.trackingUpdates} />
 
-                <Button
-                  className="w-full"
-                  onClick={() => setShowStatusDialog(true)}
-                >
-                  Update Status
-                </Button>
+                {repair.trackingUpdates !== "shipped" && (
+                  <Button
+                    className="w-full"
+                    onClick={() => setShowStatusDialog(true)}
+                  >
+                    Update Status
+                  </Button>
+                )}
               </div>
             </SectionCard>
           </div>

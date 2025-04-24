@@ -20,7 +20,6 @@ export const trackingStatusOrder = [
   "awaiting_payment", // 5. NEW: Payment required before shipping
   "payment_received", // 6. Payment confirmed
   "shipped", // 7. Item dispatched
-  "payment_failed", // 8. Payment issues
 ];
 
 const RepairRequestSchema = new mongoose.Schema(
