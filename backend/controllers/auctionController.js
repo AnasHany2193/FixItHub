@@ -127,26 +127,38 @@ export const getAuctionDetails = async (req, res, next) => {
     })
       .populate({
         path: "repairRequest",
-        select: "-customer -trackingUpdates -paymentDetails",
+        populate: {
+          path: "customer",
+          select: "username profile.avatar",
+        },
       })
       .populate({
         path: "bids",
-        match: { worker: req.user._id },
-        select: "bidPrice status",
+        select: "bidPrice status createdAt worker",
+        populate: {
+          path: "worker",
+          select: "_id username profile.avatar",
+        },
       })
       .populate({
         path: "currentLowestBid",
-        select: "bidPrice",
+        select: "bidPrice worker",
+        populate: {
+          path: "worker",
+          select: "_id username profile.avatar",
+        },
       })
       .lean();
 
     if (!auction) throw createHttpError(404, "Active auction not found");
 
-    // Add worker-specific context
+    // Convert to string for consistent comparison
+    const userId = req.user._id.toString();
+
     const response = {
       ...auction,
-      hasBid: auction.bids.length > 0,
-      myBid: auction.bids[0] || null,
+      hasBid: auction.bids.some((b) => b.worker?._id?.toString() === userId),
+      myBid: auction.bids.find((b) => b.worker?._id?.toString() === userId),
       currentLowest:
         auction.currentLowestBid?.bidPrice || auction.startingMaxPrice,
     };

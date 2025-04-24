@@ -2,7 +2,15 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Gavel, Clock, Hammer, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Gavel,
+  Clock,
+  Hammer,
+  AlertCircle,
+  Trophy,
+  DollarSign,
+} from "lucide-react";
 
 import { useAuctionDetails, useSubmitBid } from "@/hooks/useRepair";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +25,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UpdateBidDialog from "@/components/repair/UpdateBidDialog";
 import { Dialog } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const formatDate = (dateString) => {
   try {
@@ -34,6 +43,8 @@ export default function AuctionDetailPage() {
 
   const { data: auction, isLoading } = useAuctionDetails(id);
   const { mutate: submitBid } = useSubmitBid();
+
+  console.log("auction", auction);
 
   const handleBidSubmit = () => {
     submitBid({ auctionId: id, bidPrice });
@@ -96,6 +107,24 @@ export default function AuctionDetailPage() {
               </p>
             </div>
           </div>
+
+          {/* Add Customer Info */}
+          <div className="flex items-center gap-3 p-3 mt-4 rounded-lg bg-indigo-50 dark:bg-gray-800">
+            <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
+              <AvatarImage src={repair.customer?.profile?.avatar?.url} />
+              <AvatarFallback>
+                {repair.customer?.username?.[0]?.toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium text-indigo-600 dark:text-indigo-300">
+                Repair Requested By
+              </p>
+              <p className="font-medium dark:text-white">
+                {repair.customer?.username}
+              </p>
+            </div>
+          </div>
         </header>
 
         {/* Main Content Grid */}
@@ -106,7 +135,7 @@ export default function AuctionDetailPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="overflow-hidden border shadow-sm rounded-xl border-border"
+              className="overflow-hidden border rounded shadow-sm -xl border-border"
             >
               <Carousel>
                 <CarouselContent>
@@ -152,10 +181,14 @@ export default function AuctionDetailPage() {
               }
               title="Auction Details"
             >
-              <Tabs defaultValue="description">
-                <TabsList className="bg-gray-100 dark:bg-gray-800">
-                  <TabsTrigger value="description">Item Details</TabsTrigger>
-                  <TabsTrigger value="bids">Bid History</TabsTrigger>
+              <Tabs defaultValue="description" className="">
+                <TabsList className="flex w-full bg-gray-100 justify-evenly dark:bg-gray-600">
+                  <TabsTrigger value="description" className="w-1/2">
+                    Item Details
+                  </TabsTrigger>
+                  <TabsTrigger value="bids" className="w-1/2">
+                    Bid History
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="description" className="pt-4">
@@ -179,20 +212,46 @@ export default function AuctionDetailPage() {
                       auction.bids.map((bid) => (
                         <div
                           key={bid._id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted"
+                          className="flex items-center gap-4 p-3 rounded-lg bg-muted"
                         >
-                          <div>
-                            <p className="font-medium">${bid.bidPrice}</p>
+                          <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
+                            <AvatarImage
+                              src={bid.worker?.profile?.avatar?.url}
+                            />
+                            <AvatarFallback>
+                              {bid.worker?.username?.[0]?.toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">
+                                {bid.worker?.username || "Anonymous Technician"}
+                              </span>
+                              <Badge variant={bid.status}>
+                                {bid.status.toUpperCase()}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <DollarSign className="w-4 h-4" />
+                              <span>${bid.bidPrice?.toFixed(2)}</span>
+                            </div>
                           </div>
-                          <Badge variant={bid.status}>
-                            {bid.status.toUpperCase()}
-                          </Badge>
+
+                          {auction.currentLowestBid?._id === bid._id && (
+                            <Badge variant="indigo" className="ml-auto">
+                              <Trophy className="w-4 h-4 mr-1" />
+                              Lowest Bid
+                            </Badge>
+                          )}
                         </div>
                       ))
                     ) : (
-                      <p className="text-muted-foreground">
-                        No bids placed yet
-                      </p>
+                      <div className="p-4 text-center rounded-lg bg-muted">
+                        <p className="text-muted-foreground">
+                          No bids placed yet
+                        </p>
+                      </div>
                     )}
                   </div>
                 </TabsContent>
@@ -210,8 +269,23 @@ export default function AuctionDetailPage() {
             >
               <div className="space-y-4">
                 <InfoItem
-                  label="Current Lowest Bid"
-                  value={`$${auction.currentLowest}`}
+                  label="Current Lowest"
+                  value={
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarImage
+                          src={
+                            auction.currentLowestBid?.worker?.profile?.avatar
+                              ?.url
+                          }
+                        />
+                        <AvatarFallback>
+                          {auction.currentLowestBid?.worker?.username?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>${auction.currentLowest}</span>
+                    </div>
+                  }
                 />
                 <InfoItem
                   label="Starting Price"
@@ -274,6 +348,8 @@ export default function AuctionDetailPage() {
                     value={bidPrice}
                     onChange={(e) => setBidPrice(e.target.value)}
                     placeholder={`Must be below $${auction.currentLowest}`}
+                    min={0.01}
+                    step="0.01"
                   />
                   <Button className="w-full" onClick={handleBidSubmit}>
                     Submit Bid
