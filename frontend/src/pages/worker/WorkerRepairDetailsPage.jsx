@@ -28,7 +28,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-export const trackingStatusOrder = [
+const trackingStatusOrder = [
   "received", // 1. Item received
   "diagnosing", // 2. Diagnosis complete
   "repairing", // 3. Repair completed

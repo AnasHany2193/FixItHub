@@ -87,11 +87,7 @@ export const useUpdateRepair = () => {
 
   return useMutation({
     mutationFn: updateRepairRequest,
-    onSuccess: (data, variables) => {
-      // Update single repair cache
-      queryClient.setQueryData(["repairs", variables.repairId], data);
-
-      // Invalidate list cache to ensure freshness
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["repairs"]);
 
       toast({

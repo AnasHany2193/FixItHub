@@ -17,6 +17,10 @@ import {
   RefreshCw,
   Loader2,
   Wallet,
+  Package,
+  Search,
+  Banknote,
+  Truck,
 } from "lucide-react";
 
 import {
@@ -42,6 +46,16 @@ import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { useToast } from "@/hooks/useToast";
+
+const trackingStatusOrder = [
+  "received", // 1. Item received
+  "diagnosing", // 2. Diagnosis complete
+  "repairing", // 3. Repair completed
+  "quality_check", // 4. Quality verification passed
+  "awaiting_payment", // 5. NEW: Payment required before shipping
+  "payment_received", // 6. Payment confirmed
+  "shipped", // 7. Item dispatched
+];
 
 const STATUS_CONFIG = {
   awaiting_assignment: {
@@ -263,7 +277,9 @@ export default function RepairDetailsPage() {
                   value={
                     <Badge
                       variant={
-                        repair.paymentStatus === "paid" ? "success" : "warning"
+                        repair.paymentStatus === "paid"
+                          ? "default"
+                          : "destructive"
                       }
                     >
                       {repair.paymentStatus?.toUpperCase()}
@@ -277,7 +293,19 @@ export default function RepairDetailsPage() {
               </div>
             </SectionCard>
 
-            {repair.paymentStatus === "pending" && (
+            {/* Repair Progress Timeline */}
+            {repair.trackingUpdates.length > 0 && (
+              <SectionCard
+                icon={
+                  <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                }
+                title="Repair Journey"
+              >
+                <StatusTimeline trackingUpdates={repair.trackingUpdates} />
+              </SectionCard>
+            )}
+
+            {repair.paymentStatus === "pending" && repair.paymentAmount && (
               <SectionCard
                 icon={
                   <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
@@ -332,17 +360,19 @@ export default function RepairDetailsPage() {
               </div>
             )}
 
-            {repair.status === "auction_open" && (
-              <div className="flex gap-3 mt-4">
+            <div className="flex gap-3 mt-4">
+              {repair.status === "auction_open" && (
                 <Button
                   variant="destructive"
                   onClick={() => cancelRepair(repair._id)}
                   className="flex-1 gap-2"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span>Cancel Repair</span>
+                  <span>Cancel Auction</span>
                 </Button>
-
+              )}
+              {(repair.status === "awaiting_assignment" ||
+                repair.status === "cancelled") && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/repairs/${repair._id}/edit`)}
@@ -351,8 +381,8 @@ export default function RepairDetailsPage() {
                   <PencilLine className="w-4 h-4" />
                   <span>Edit Repair</span>
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -369,7 +399,119 @@ export default function RepairDetailsPage() {
   );
 }
 
-export const BidCard = ({ bid, repairId }) => {
+const StatusTimeline = ({ trackingUpdates }) => {
+  const lastStatus = trackingUpdates?.[trackingUpdates.length - 1]?.status;
+
+  // Helper function to find status details
+  const getStatusDetails = (status) => {
+    const details = {
+      received: {
+        icon: <Package className="w-4 h-4" />,
+        label: "Item Received",
+      },
+      diagnosing: {
+        icon: <Search className="w-4 h-4" />,
+        label: "Diagnosis Phase",
+      },
+      repairing: {
+        icon: <Wrench className="w-4 h-4" />,
+        label: "Repair in Progress",
+      },
+      quality_check: {
+        icon: <CheckCircle className="w-4 h-4" />,
+        label: "Quality Inspection",
+      },
+      awaiting_payment: {
+        icon: <Wallet className="w-4 h-4" />,
+        label: "Payment Pending",
+      },
+      payment_received: {
+        icon: <Banknote className="w-4 h-4" />,
+        label: "Payment Confirmed",
+      },
+      shipped: { icon: <Truck className="w-4 h-4" />, label: "Item Shipped" },
+    };
+    return details[status] || { icon: null, label: status.replace(/_/g, " ") };
+  };
+
+  return (
+    <div className="relative pl-6 space-y-8">
+      {trackingStatusOrder.map((status, index) => {
+        const { icon, label } = getStatusDetails(status);
+        const isCompleted =
+          trackingStatusOrder.indexOf(status) <=
+          trackingStatusOrder.indexOf(lastStatus);
+        const isCurrent = status === lastStatus;
+        const statusUpdate = trackingUpdates?.find((u) => u.status === status);
+
+        return (
+          <div key={status} className="relative flex items-center gap-4 group">
+            {/* Timeline connector */}
+            <div
+              className={`absolute w-0.5 h-full -left-[2px]  ${
+                isCompleted ? "bg-indigo-500" : "bg-gray-200 dark:bg-gray-700"
+              }`}
+            />
+
+            {/* Status indicator */}
+            <div
+              className={`flex items-center justify-center ml-3 w-8 h-8 rounded-full transition-colors ${
+                isCompleted
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800"
+              }`}
+            >
+              {isCompleted ? (
+                <CheckCircle className="w-4 h-4" />
+              ) : (
+                <span className="text-sm font-medium">{index + 1}</span>
+              )}
+            </div>
+
+            {/* Status card */}
+            <div
+              className={`flex-1 flex items-center p-4 rounded-lg transition-all ${
+                isCurrent
+                  ? "bg-indigo-50 border border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-800"
+                  : "bg-gray-50 dark:bg-gray-800"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className={`p-2 rounded-full ${
+                    isCompleted
+                      ? "bg-indigo-100 dark:bg-indigo-900/30"
+                      : "bg-gray-100 dark:bg-gray-700"
+                  }`}
+                >
+                  {icon}
+                </span>
+                <div>
+                  <h3
+                    className={`font-medium ${
+                      isCurrent
+                        ? "text-indigo-600 dark:text-indigo-300"
+                        : "text-gray-900 dark:text-gray-100"
+                    }`}
+                  >
+                    {label}
+                  </h3>
+                  {statusUpdate && (
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {formatDate(statusUpdate.timestamp)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+const BidCard = ({ bid, repairId }) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const { mutate: acceptBid, isPending } = useAcceptBid();
 
