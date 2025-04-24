@@ -106,6 +106,7 @@ const WorkerRegisterForm = ({ onBack }) => {
       })),
     [password]
   );
+
   const handleFileUpload = async (file) => {
     const formData = new FormData();
     formData.append("image", file); // Field name must match multer's .single('image')
@@ -116,7 +117,7 @@ const WorkerRegisterForm = ({ onBack }) => {
         setDocuments((prev) => [
           ...prev,
           {
-            url: result.secure_url,
+            url: result.url,
             public_id: result.public_id,
           },
         ]);
@@ -145,6 +146,8 @@ const WorkerRegisterForm = ({ onBack }) => {
       documents,
     });
   };
+
+  console.log(documents);
 
   return (
     <Form {...form}>
@@ -414,6 +417,7 @@ const WorkerRegisterForm = ({ onBack }) => {
                       alt="Document preview"
                       className="object-cover w-full h-24 border-2 border-blue-100 rounded-lg dark:border-indigo-800"
                     />
+                    {console.log(doc)}
                     <button
                       type="button"
                       onClick={() => removeDocument(doc.public_id)}

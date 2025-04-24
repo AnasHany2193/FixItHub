@@ -106,13 +106,13 @@ export default function AuctionsPage() {
                 value="price"
                 className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-indigo-sm dark:data-[state=active]:bg-indigo-700"
               >
-                Time Remaining
+                Starting Price
               </TabsTrigger>
               <TabsTrigger
                 value="expiry"
                 className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-purple-sm dark:data-[state=active]:bg-purple-700"
               >
-                Starting Price
+                Time Remaining
               </TabsTrigger>
             </TabsList>
           </Tabs>
