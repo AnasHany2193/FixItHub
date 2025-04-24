@@ -196,11 +196,14 @@ export const submitBid = async ({ auctionId, bidPrice }) => {
   }
 };
 
-export const updateBid = async (bidId, bidData) => {
+export const updateBid = async ({ bidId, bidPrice }) => {
   try {
-    const { data } = await axiosClient.put(`/repairs/bids/${bidId}`, bidData);
+    const { data } = await axiosClient.put(`/repairs/bids/${bidId}`, {
+      bidPrice,
+    });
     return data;
   } catch (error) {
+    console.log(error);
     throw new Error(error.response?.data?.error || "Bid update failed");
   }
 };

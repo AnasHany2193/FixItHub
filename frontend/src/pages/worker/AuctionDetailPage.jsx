@@ -15,6 +15,8 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import UpdateBidDialog from "@/components/repair/UpdateBidDialog";
+import { Dialog } from "@/components/ui/dialog";
 
 const formatDate = (dateString) => {
   try {
@@ -28,6 +30,7 @@ export default function AuctionDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [bidPrice, setBidPrice] = useState("");
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
   const { data: auction, isLoading } = useAuctionDetails(id);
   const { mutate: submitBid } = useSubmitBid();
@@ -236,15 +239,32 @@ export default function AuctionDetailPage() {
                 <div className="space-y-4">
                   <InfoItem
                     label="Your Bid"
-                    value={`$${auction.myBid.bidPrice}`}
+                    value={`$${auction.myBid.bidPrice.toFixed(2)}`}
                   />
                   <InfoItem
                     label="Status"
                     value={<Badge>{auction.myBid.status}</Badge>}
                   />
-                  <Button className="w-full" variant="outline">
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    onClick={() => setShowUpdateDialog(true)}
+                  >
                     Update Bid
                   </Button>
+
+                  <Dialog
+                    open={showUpdateDialog}
+                    onOpenChange={setShowUpdateDialog}
+                  >
+                    {showUpdateDialog && (
+                      <UpdateBidDialog
+                        bid={auction.myBid}
+                        lowestBid={auction.currentLowestBid.bidPrice}
+                        onOpenChange={setShowUpdateDialog}
+                      />
+                    )}
+                  </Dialog>
                 </div>
               ) : (
                 <div className="space-y-4">
