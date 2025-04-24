@@ -156,7 +156,7 @@ router.post(
   sensitiveActionLimiter,
   startRepairAuction
 );
-router.put("/:id/accept-bid", protect, roleCheck("customer"), acceptBid);
+router.put("/:repairId/accept-bid", protect, roleCheck("customer"), acceptBid);
 router.put("/:id/accept-offer", protect, roleCheck("customer"), acceptOffer);
 
 export default router;

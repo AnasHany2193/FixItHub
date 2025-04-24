@@ -9,8 +9,12 @@ import {
   User,
   Trash2,
   PencilLine,
-  Trophy,
   Gavel,
+  Star,
+  DollarSign,
+  Clock,
+  CheckCircle,
+  RefreshCw,
 } from "lucide-react";
 
 import {
@@ -21,7 +25,14 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
@@ -84,7 +95,7 @@ export default function RepairDetailsPage() {
 
   // New section for auction status
   const AuctionStatusSection = () => {
-    const { mutate: acceptBid } = useAcceptBid();
+    const { refetch, isFetching } = useRepairDetails(id);
 
     return (
       <SectionCard
@@ -93,22 +104,24 @@ export default function RepairDetailsPage() {
         }
         title="Active Bids"
       >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Submitted Bids</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+        </div>
         <div className="space-y-4">
           {repair.proposals?.length > 0 ? (
             repair.proposals.map((bid) => (
-              <div key={bid._id} className="relative group">
-                <BidCard bid={bid} />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute transition-opacity opacity-0 right-2 top-2 group-hover:opacity-100"
-                  onClick={() =>
-                    acceptBid({ repairId: repair._id, bidId: bid._id })
-                  }
-                >
-                  Accept Bid
-                </Button>
-              </div>
+              <BidCard key={bid._id} bid={bid} repairId={repair._id} />
             ))
           ) : (
             <div className="p-4 text-center rounded-lg bg-muted">
@@ -345,35 +358,94 @@ export default function RepairDetailsPage() {
   );
 }
 
-export const BidCard = ({ bid, index }) => (
-  <div className="flex flex-row flex-wrap items-center gap-4 p-4 rounded-lg bg-muted">
-    <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-      <AvatarImage src={bid.worker?.profile?.avatar?.url} />
-      <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
-        {bid.worker?.username?.[0]?.toUpperCase()}
-      </AvatarFallback>
-    </Avatar>
+export const BidCard = ({ bid, repairId }) => {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const { mutate: acceptBid, isPending } = useAcceptBid();
 
-    <div className="flex-1">
-      <div className="flex items-center gap-2">
-        <span className="font-medium">
-          {bid.worker?.username || "Anonymous"}
-        </span>
-        <Badge variant={bid.status}>{bid.status}</Badge>
-      </div>
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <span>${bid.bidPrice?.toFixed(2)}</span>
+  return (
+    <div className="relative p-4 transition-all border rounded-lg group hover:border-indigo-200 dark:hover:border-gray-600">
+      <div className="flex items-center gap-4">
+        <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
+          <AvatarImage src={bid.worker?.profile?.avatar?.url} />
+          <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+            {bid.worker?.username?.[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">
+              {bid.worker?.username || "Anonymous Technician"}
+            </span>
+            <Badge variant={bid.status}>{bid.status}</Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 text-amber-500" />
+              <span>{bid.worker?.rating?.average?.toFixed(1) || "New"}</span>
+            </div>
+            <span>•</span>
+            <div className="flex items-center gap-1">
+              <DollarSign className="w-4 h-4" />
+              <span>{bid.bidPrice?.toFixed(2)}</span>
+            </div>
+            <span>•</span>
+            <div className="flex items-center gap-1">
+              <Clock className="w-4 h-4" />
+              <span>{formatDate(bid.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+
+        {bid.status === "pending" && (
+          <>
+            <Button
+              variant="success"
+              size="sm"
+              className="transition-opacity opacity-0 group-hover:opacity-100 hover:bg-indigo-200 dark:hover:bg-gray-600"
+              onClick={() => setShowConfirm(true)}
+              disabled={isPending}
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Accept Bid
+            </Button>
+
+            <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Bid Acceptance</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to accept this bid from{" "}
+                    {bid.worker?.username}?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <div className="mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowConfirm(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="success"
+                      onClick={() => {
+                        acceptBid({ repairId, bidId: bid._id });
+                        setShowConfirm(false);
+                      }}
+                    >
+                      Confirm Acceptance
+                    </Button>
+                  </div>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
     </div>
-
-    {index === 0 && (
-      <Badge variant="indigo" className="ml-auto">
-        <Trophy className="w-4 h-4 mr-1" />
-        Current Lowest
-      </Badge>
-    )}
-  </div>
-);
+  );
+};
 
 // Sub-components
 const SectionCard = ({ icon, title, children }) => (

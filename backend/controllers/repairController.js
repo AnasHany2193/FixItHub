@@ -321,51 +321,44 @@ export const acceptBid = async (req, res, next) => {
     const { bidId } = req.body;
     const customerId = req.user._id;
 
-    // 1. Validate repair ownership
+    // 1. Find repair and validate
     const repair = await RepairRequest.findOne({
       _id: repairId,
       customer: customerId,
       status: RepairStatus.AUCTION_OPEN,
     });
-
-    if (!repair) {
+    if (!repair)
       return res.status(404).json({
         success: false,
         message: "Repair not found or not in auction state",
       });
-    }
 
-    // 2. Get and validate bid
-    const bid = await Bid.findOne({
-      _id: bidId,
-      auction: repair.auction,
-    });
+    // 2. Find bid and validate
+    const bid = await Bid.findOne({ _id: bidId, auction: repair.auction });
+    if (!bid)
+      return res
+        .status(404)
+        .json({ success: false, message: "Bid not found in this auction" });
 
-    if (!bid) {
-      return res.status(404).json({
-        success: false,
-        message: "Bid not found in this auction",
-      });
-    }
-
-    // 3. Close auction and update bids
-    await Auction.findByIdAndUpdate(repair.auction, { status: "closed" });
+    // 3. Update bids - SIMPLE VERSION
+    await Bid.findByIdAndUpdate(bidId, { status: "accepted" });
     await Bid.updateMany(
-      { auction: repair.auction },
-      { status: bid._id.equals(bidId) ? "accepted" : "rejected" }
+      { auction: repair.auction, _id: { $ne: bidId } },
+      { status: "rejected" }
     );
 
-    // 4. Assign worker and update repair
+    // 4. Close auction and update repair
+    await Auction.findByIdAndUpdate(repair.auction, { status: "closed" });
     const updatedRepair = await RepairRequest.findByIdAndUpdate(
       repairId,
       {
         worker: bid.worker,
-        status: RepairStatus.AWAITING_PAYMENT,
+        status: RepairStatus.IN_PROGRESS,
         paymentAmount: bid.bidPrice,
         paymentStatus: "pending",
       },
       { new: true }
-    ).populate("worker", "username");
+    );
 
     res.status(200).json({
       success: true,

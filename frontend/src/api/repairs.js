@@ -77,14 +77,16 @@ export const getCustomerHistory = async (params = {}) => {
   }
 };
 
-export const acceptBid = async (repairId, bidId) => {
+export const acceptBid = async ({ repairId, bidId }) => {
   try {
+    console.log({ repairId, bidId });
     const { data } = await axiosClient.put(`/repairs/${repairId}/accept-bid`, {
       bidId,
     });
     return data;
   } catch (error) {
-    throw new Error(error.response?.data?.error || "Bid acceptance failed");
+    console.log(error);
+    throw new Error(error.response?.data?.message || "Bid acceptance failed");
   }
 };
 
