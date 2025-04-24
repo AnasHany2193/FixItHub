@@ -237,7 +237,19 @@ export const getRepairRequest = async (req, res, next) => {
 export const getRepairRequests = async (req, res, next) => {
   try {
     const filter = { customer: req.user._id };
-    if (req.query.status) filter.status = req.query.status;
+
+    // Exclude historical statuses
+    const excludedStatuses = [
+      "completed",
+      "cancelled",
+      "returning_to_customer",
+    ];
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    } else {
+      filter.status = { $nin: excludedStatuses }; // Exclude historical statuses
+    }
 
     const repairs = await RepairRequest.find(filter)
       .populate("auction", "status expiresAt")
