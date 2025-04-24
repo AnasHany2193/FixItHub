@@ -4,16 +4,9 @@ import { protect, roleCheck } from "./../middlewares/authMiddleware.js";
 import {
   createProductPaymentIntent,
   paymentResponseFormatter,
-  createRepairPaymentSession,
 } from "../controllers/paymentController.js";
 
 const router = express.Router();
-
-router.post(
-  "/payment/create-checkout-session",
-  protect,
-  createRepairPaymentSession
-);
 
 // ===================================================
 //                 PAYMENT INITIATION

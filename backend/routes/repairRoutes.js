@@ -31,6 +31,7 @@ import {
   submitBid,
   updateBid,
 } from "../controllers/auctionController.js";
+import { createRepairPaymentSession } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
@@ -135,6 +136,11 @@ router.get(
   roleCheck("customer"),
   apiLimiter,
   getCustomerHistory
+);
+router.post(
+  "/payment/create-checkout-session",
+  protect,
+  createRepairPaymentSession
 );
 router.get(
   "/:id",

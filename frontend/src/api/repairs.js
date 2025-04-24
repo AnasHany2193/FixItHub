@@ -102,6 +102,22 @@ export const acceptOffer = async (repairId, offerId) => {
   }
 };
 
+export const createPaymentSession = async ({ repairId }) => {
+  try {
+    const { data } = await axiosClient.post(
+      "/repairs/payment/create-checkout-session",
+      {
+        repairId,
+      }
+    );
+    console.log("createPaymentSession", data);
+    return data;
+  } catch (error) {
+    console.log("createPaymentSession error", error);
+    throw new Error(error.response?.data?.message || "Payment failed");
+  }
+};
+
 // Worker endpoints
 export const getWorkerRepairs = async ({ status }) => {
   try {

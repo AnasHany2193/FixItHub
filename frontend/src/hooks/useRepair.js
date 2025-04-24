@@ -6,6 +6,7 @@ import {
   acceptOffer,
   cancelRepair,
   completeRepair,
+  createPaymentSession,
   createRepair,
   getAuctionDetails,
   getCustomerHistory,
@@ -200,6 +201,24 @@ export const useAcceptOffer = () => {
         variant: "error",
         title: "Acceptance Failed",
         description: error.message,
+      });
+    },
+  });
+};
+
+export const useCreatePaymentSession = () => {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: createPaymentSession,
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Payment Failed",
+        description: error.message || "Failed to initiate payment",
       });
     },
   });
