@@ -243,15 +243,15 @@ export const updateBid = async ({ bidId, bidPrice }) => {
 };
 
 // Non Auction Repairs endpoints
-export const getNonAuctionRepairs = async (filters = {}) => {
+export const directOffers = async (filters = {}) => {
   try {
-    const { data } = await axiosClient.get("/repairs/non-auctions", {
+    const { data } = await axiosClient.get("/repairs/direct-offers", {
       params: filters,
     });
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Failed to fetch direct offers"
+      error.response?.data?.message || "Failed to fetch direct repair requests"
     );
   }
 };

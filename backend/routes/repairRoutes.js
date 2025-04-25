@@ -74,7 +74,12 @@ router.get(
   apiLimiter,
   getAuctionDetails
 );
-router.get("/non-auctions", protect, roleCheck("worker"), getNonAuctionRepairs);
+router.get(
+  "/direct-offers",
+  protect,
+  roleCheck("worker"),
+  getNonAuctionRepairs
+);
 router.get(
   "/non-auctions/:id",
   protect,

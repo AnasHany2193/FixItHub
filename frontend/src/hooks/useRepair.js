@@ -8,10 +8,10 @@ import {
   completeRepair,
   createPaymentSession,
   createRepair,
+  directOffers,
   getAuctionDetails,
   getCustomerHistory,
   getNonAuctionRepairDetails,
-  getNonAuctionRepairs,
   getOpenAuctions,
   getRepairDetails,
   getRepairRequests,
@@ -187,7 +187,7 @@ export const useAcceptOffer = () => {
     mutationFn: acceptOffer,
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
-      queryClient.invalidateQueries(["non-auctions"]);
+      queryClient.invalidateQueries(["direct-offers"]);
       toast({
         variant: "success",
         title: "Offer Accepted",
@@ -385,15 +385,15 @@ export const useUpdateBid = () => {
 };
 
 // Non Auction Repairs endpoints
-export const useNonAuctionRepairs = (filters) =>
+export const useDirectOffers = (filters) =>
   useQuery({
-    queryKey: ["non-auctions", filters],
-    queryFn: () => getNonAuctionRepairs(filters),
+    queryKey: ["direct-offers", filters],
+    queryFn: () => directOffers(filters),
   });
 
 export const useNonAuctionRepairDetails = (repairId) =>
   useQuery({
-    queryKey: ["non-auctions", repairId],
+    queryKey: ["direct-offers", repairId],
     queryFn: () => getNonAuctionRepairDetails(repairId),
     enabled: !!repairId,
   });
@@ -405,8 +405,8 @@ export const useSubmitOffer = () => {
   return useMutation({
     mutationFn: submitOffer,
     onSuccess: (data, { repairId }) => {
-      queryClient.invalidateQueries(["non-auctions", repairId]);
-      queryClient.invalidateQueries(["non-auctions"]);
+      queryClient.invalidateQueries(["direct-offers", repairId]);
+      queryClient.invalidateQueries(["direct-offers"]);
 
       toast({
         variant: "success",
@@ -431,7 +431,7 @@ export const useUpdateOffer = () => {
   return useMutation({
     mutationFn: updateOffer,
     onSuccess: (data, { offerId, repairId }) => {
-      queryClient.invalidateQueries(["non-auctions", repairId]);
+      queryClient.invalidateQueries(["direct-offers", repairId]);
       queryClient.invalidateQueries(["offers", offerId]);
 
       toast({

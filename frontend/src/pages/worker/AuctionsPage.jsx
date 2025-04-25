@@ -144,65 +144,6 @@ export default function AuctionsPage() {
   );
 }
 
-// const AuctionCard = ({ auction, onClick }) => {
-//   const repair = auction.repairRequest;
-//   const timeLeft = formatDistanceToNow(new Date(auction.expiresAt));
-
-//   return (
-//     <motion.div
-//       whileHover={{ scale: 1.02 }}
-//       whileTap={{ scale: 0.98 }}
-//       className="cursor-pointer"
-//       onClick={onClick}
-//     >
-//       <Card className="h-full overflow-hidden transition-shadow border shadow-sm dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-md">
-//         <CardContent className="p-0">
-//           <div className="relative aspect-video group">
-//             {repair.photos[0]?.url ? (
-//               <img
-//                 src={repair.photos[0].url}
-//                 alt={repair.title}
-//                 className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
-//               />
-//             ) : (
-//               <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-//                 <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-//               </div>
-//             )}
-//             <Badge
-//               variant="indigo"
-//               className="absolute border border-gray-200 top-2 right-2 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
-//             >
-//               {repair.category}
-//             </Badge>
-//             <div className="absolute inset-0 bg-gradient-to-t from-gray-900/20 to-transparent" />
-//           </div>
-
-//           <div className="p-4 space-y-3">
-//             <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
-//               {repair.title}
-//             </h3>
-
-//             <div className="flex items-center gap-2 text-sm">
-//               <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-//               <span className="text-gray-600 dark:text-gray-300">
-//                 {timeLeft} remaining
-//               </span>
-//             </div>
-
-//             <div className="flex items-center gap-2 text-sm">
-//               <Gavel className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-//               <span className="font-medium text-gray-900 dark:text-white">
-//                 Starting at ${auction.startingMaxPrice}
-//               </span>
-//             </div>
-//           </div>
-//         </CardContent>
-//       </Card>
-//     </motion.div>
-//   );
-// };
-
 // Main changes in AuctionCard component
 const AuctionCard = ({ auction, onClick }) => {
   const repair = auction.repair;
@@ -244,12 +185,7 @@ const AuctionCard = ({ auction, onClick }) => {
             )}
 
             <div className="absolute flex gap-2 right-2 top-2">
-              <Badge
-                variant="premium"
-                className="border border-gray-200 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
-              >
-                {repair.category}
-              </Badge>
+              <Badge variant="premium">{repair.category}</Badge>
               <Badge
                 variant="success"
                 className="border border-gray-200 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
@@ -291,10 +227,20 @@ const AuctionCard = ({ auction, onClick }) => {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-start gap-1.5 text-gray-600 dark:text-gray-300 capitalize">
-                <User className="w-4 h-4" />
-                {auction.repair.customer?.username || "Anonymous"}
-              </span>
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                {auction.repair.customer?.profile?.avatar?.url ? (
+                  <img
+                    src={auction.repair.customer.profile.avatar.url}
+                    className="w-6 h-6 rounded-full"
+                    alt={auction.repair.customer.username}
+                  />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
+                <span className="capitalize">
+                  {auction.repair.customer?.username || "Anonymous"}
+                </span>
+              </div>
               <Badge variant="outline">{auction.bids?.length || 0} bids</Badge>
             </div>
           </div>

@@ -407,31 +407,40 @@ export const acceptBid = async (req, res, next) => {
 
 export const getNonAuctionRepairs = async (req, res, next) => {
   try {
-    const { category, itemType, sortBy } = req.query;
+    const { category, itemType, sort = "newest" } = req.query;
 
-    const filter = {
+    const repairs = await RepairRequest.find({
       status: RepairStatus.AWAITING_ASSIGNMENT,
-      auction: null, // Ensure no auction exists
-    };
-
-    if (category) filter.category = category;
-    if (itemType) filter.itemType = { $regex: itemType, $options: "i" };
-
-    const sortOptions = {
-      newest: "-createdAt",
-      price: "-startingMaxPrice",
-    };
-
-    const repairs = await RepairRequest.find(filter)
-      .select("-customer -paymentIntentId -trackingUpdates")
-      .sort(sortOptions[sortBy] || "-createdAt")
+      auction: null,
+      ...(category && category !== "all" && { category }),
+      ...(itemType && { itemType: new RegExp(itemType, "i") }),
+      ...(itemType && { title: new RegExp(itemType, "i") }),
+    })
+      .populate({
+        path: "customer",
+        select: "username profile.avatar",
+      })
+      .populate({
+        path: "offers",
+        select: "offerPrice",
+        match: { status: "pending" },
+      })
+      .sort(sort === "price" ? { "offers.offerPrice": -1 } : { createdAt: -1 })
       .lean();
 
-    res.status(200).json({
-      success: true,
-      count: repairs.length,
-      data: repairs,
-    });
+    const enhancedRepairs = repairs.map((repair) => ({
+      ...repair,
+      offerCount: repair.offers.length,
+      averageOffer:
+        repair.offers.length > 0
+          ? Math.round(
+              repair.offers.reduce((sum, o) => sum + o.offerPrice, 0) /
+                repair.offers.length
+            )
+          : null,
+    }));
+
+    res.status(200).json({ success: true, data: enhancedRepairs });
   } catch (error) {
     next(error);
   }
