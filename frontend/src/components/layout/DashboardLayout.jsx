@@ -27,14 +27,11 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import Sidebar from "./Sidebar";
-import { useRepairRequests } from "@/hooks/useRepair";
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const { darkMode, toggleDarkMode } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(true);
-
-  const { data, isLoading: gettingRequests } = useRepairRequests();
 
   const roleConfig = {
     customer: [
@@ -65,13 +62,11 @@ const DashboardLayout = () => {
             path: "/repairs/all",
             name: "Repair Requests",
             icon: <Clock className="w-4 h-4" />,
-            badge: gettingRequests ? 0 : data.length, // Ongoing repairs
           },
           {
             path: "/repairs/history",
             name: "Repair History",
             icon: <History className="w-4 h-4" />,
-            badge: 2, // Completed repairs
           },
           {
             path: "/repairs/new",
@@ -131,7 +126,6 @@ const DashboardLayout = () => {
             path: "/repairs/active",
             name: "Active Jobs",
             icon: <Activity className="w-4 h-4" />,
-            badge: 2, // Dynamic count from API
             description: "Currently assigned repairs",
           },
           {

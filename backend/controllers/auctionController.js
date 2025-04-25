@@ -51,62 +51,66 @@ export const getOpenAuctions = async (req, res, next) => {
   try {
     const { category, maxPrice, sortBy, search } = req.query;
 
-    const baseMatch = {
+    const query = {
       status: "open",
       expiresAt: { $gt: new Date() },
+      ...(maxPrice && { startingMaxPrice: { $lte: Number(maxPrice) } }),
     };
 
-    if (maxPrice && !isNaN(maxPrice))
-      baseMatch.startingMaxPrice = { $lte: Number(maxPrice) };
-
-    const searchFilters = [];
-
-    if (search)
-      searchFilters.push(
-        { "repairRequest.title": { $regex: search, $options: "i" } },
-        { "repairRequest.issueDescription": { $regex: search, $options: "i" } },
-        { "repairRequest.itemType": { $regex: search, $options: "i" } }
-      );
-
-    if (category && category !== "all")
-      searchFilters.push({ "repairRequest.category": category });
-
-    const matchAfterLookup =
-      searchFilters.length > 0 ? { $and: searchFilters } : {};
-
-    const sortField =
-      sortBy === "price" ? { startingMaxPrice: 1 } : { expiresAt: 1 };
-
-    const auctions = await Auction.aggregate([
-      { $match: baseMatch },
+    const aggregation = [
+      { $match: query },
       {
         $lookup: {
           from: "repairrequests",
           localField: "repairRequest",
           foreignField: "_id",
-          as: "repairRequest",
+          as: "repair",
         },
       },
-      { $unwind: "$repairRequest" },
-      { $match: matchAfterLookup },
+      { $unwind: "$repair" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "repair.customer",
+          foreignField: "_id",
+          as: "customer",
+        },
+      },
+      { $unwind: "$customer" },
+      {
+        $match: {
+          ...(category &&
+            category !== "all" && { "repair.category": category }),
+          ...(search && {
+            $or: [
+              { "repair.title": new RegExp(search, "i") },
+              { "repair.issueDescription": new RegExp(search, "i") },
+              { "repair.itemType": new RegExp(search, "i") },
+            ],
+          }),
+        },
+      },
       {
         $project: {
           startingMaxPrice: 1,
           expiresAt: 1,
+          status: 1,
           currentLowestBid: 1,
-          repairRequest: {
-            title: 1,
-            category: 1,
-            itemType: 1,
-            photos: 1,
-            shippingRequired: 1,
-            issueDescription: 1,
-          },
+          "repair.title": 1,
+          "repair.category": 1,
+          "repair.itemType": 1,
+          "repair.photos": 1,
+          "repair.issueDescription": 1,
+          "customer.username": 1,
+          "customer.profile.avatar": 1,
         },
       },
-      { $sort: sortField },
-    ]);
+      {
+        $sort: sortBy === "price" ? { startingMaxPrice: 1 } : { expiresAt: 1 },
+      },
+    ];
 
+    const auctions = await Auction.aggregate(aggregation);
     res.status(200).json({ success: true, data: auctions });
   } catch (error) {
     next(error);

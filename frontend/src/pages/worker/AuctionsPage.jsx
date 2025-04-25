@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
-import { Gavel, Clock, DollarSign, Zap } from "lucide-react";
+import { Gavel, Clock, DollarSign, Zap, User } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -144,9 +144,72 @@ export default function AuctionsPage() {
   );
 }
 
+// const AuctionCard = ({ auction, onClick }) => {
+//   const repair = auction.repairRequest;
+//   const timeLeft = formatDistanceToNow(new Date(auction.expiresAt));
+
+//   return (
+//     <motion.div
+//       whileHover={{ scale: 1.02 }}
+//       whileTap={{ scale: 0.98 }}
+//       className="cursor-pointer"
+//       onClick={onClick}
+//     >
+//       <Card className="h-full overflow-hidden transition-shadow border shadow-sm dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-md">
+//         <CardContent className="p-0">
+//           <div className="relative aspect-video group">
+//             {repair.photos[0]?.url ? (
+//               <img
+//                 src={repair.photos[0].url}
+//                 alt={repair.title}
+//                 className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
+//               />
+//             ) : (
+//               <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+//                 <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+//               </div>
+//             )}
+//             <Badge
+//               variant="indigo"
+//               className="absolute border border-gray-200 top-2 right-2 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
+//             >
+//               {repair.category}
+//             </Badge>
+//             <div className="absolute inset-0 bg-gradient-to-t from-gray-900/20 to-transparent" />
+//           </div>
+
+//           <div className="p-4 space-y-3">
+//             <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
+//               {repair.title}
+//             </h3>
+
+//             <div className="flex items-center gap-2 text-sm">
+//               <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+//               <span className="text-gray-600 dark:text-gray-300">
+//                 {timeLeft} remaining
+//               </span>
+//             </div>
+
+//             <div className="flex items-center gap-2 text-sm">
+//               <Gavel className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+//               <span className="font-medium text-gray-900 dark:text-white">
+//                 Starting at ${auction.startingMaxPrice}
+//               </span>
+//             </div>
+//           </div>
+//         </CardContent>
+//       </Card>
+//     </motion.div>
+//   );
+// };
+
+// Main changes in AuctionCard component
 const AuctionCard = ({ auction, onClick }) => {
-  const repair = auction.repairRequest;
+  console.log("auction", auction);
+  const repair = auction.repair;
   const timeLeft = formatDistanceToNow(new Date(auction.expiresAt));
+  const currentBid =
+    auction.currentLowestBid?.bidPrice || auction.startingMaxPrice;
 
   return (
     <motion.div
@@ -158,43 +221,82 @@ const AuctionCard = ({ auction, onClick }) => {
       <Card className="h-full overflow-hidden transition-shadow border shadow-sm dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-md">
         <CardContent className="p-0">
           <div className="relative aspect-video group">
-            {repair.photos[0]?.url ? (
-              <img
-                src={repair.photos[0].url}
-                alt={repair.title}
-                className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
-              />
+            {/* Image Gallery */}
+            {repair.photos?.length > 0 ? (
+              <div className="relative h-full">
+                <img
+                  src={repair.photos[0].url}
+                  alt={repair.title}
+                  className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
+                />
+                {repair.photos.length > 1 && (
+                  <Badge
+                    variant="secondary"
+                    className="absolute px-2 py-1 text-xs bottom-2 left-2"
+                  >
+                    +{repair.photos.length - 1} more
+                  </Badge>
+                )}
+              </div>
             ) : (
               <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
                 <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
               </div>
             )}
-            <Badge
-              variant="indigo"
-              className="absolute border border-gray-200 top-2 right-2 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
-            >
-              {repair.category}
-            </Badge>
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/20 to-transparent" />
+
+            <div className="absolute flex gap-2 right-2 top-2">
+              <Badge
+                variant="premium"
+                className="border border-gray-200 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
+              >
+                {repair.category}
+              </Badge>
+              <Badge
+                variant="success"
+                className="border border-gray-200 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 dark:border-gray-700"
+              >
+                {auction.status === "open" ? "Active" : "Closed"}
+              </Badge>
+            </div>
           </div>
 
           <div className="p-4 space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
-              {repair.title}
-            </h3>
-
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span className="text-gray-600 dark:text-gray-300">
-                {timeLeft} remaining
-              </span>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-1">
+                {repair.title}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                {repair.issueDescription}
+              </p>
             </div>
 
-            <div className="flex items-center gap-2 text-sm">
-              <Gavel className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="font-medium text-gray-900 dark:text-white">
-                Starting at ${auction.startingMaxPrice}
+            <div className="grid grid-cols-2 gap-3">
+              <StatItem
+                icon={
+                  <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                }
+                label="Time Left"
+                value={timeLeft}
+              />
+
+              <StatItem
+                icon={
+                  <Gavel className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                }
+                label={
+                  auction.bids?.length > 0 ? "Current Bid" : "Starting Price"
+                }
+                value={`$${currentBid}`}
+                highlight={!!auction.bids?.length}
+              />
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 capitalize">
+                <User className="w-4 h-4" />
+                {auction.customer?.username || "Anonymous"}
               </span>
+              <Badge variant="outline">{auction.bids?.length || 0} bids</Badge>
             </div>
           </div>
         </CardContent>
@@ -202,6 +304,25 @@ const AuctionCard = ({ auction, onClick }) => {
     </motion.div>
   );
 };
+
+// New StatItem component with highlight capability
+const StatItem = ({ icon, label, value, highlight = false }) => (
+  <div
+    className={`p-2 rounded-lg ${highlight ? "bg-indigo-50 dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-800"}`}
+  >
+    <div className="flex items-center gap-2">
+      {icon}
+      <div>
+        <p className="text-xs text-gray-600 dark:text-gray-300">{label}</p>
+        <p
+          className={`font-medium ${highlight ? "text-indigo-600 dark:text-indigo-300" : "text-gray-900 dark:text-white"}`}
+        >
+          {value}
+        </p>
+      </div>
+    </div>
+  </div>
+);
 
 const AuctionCardSkeleton = () => (
   <div className="p-4 space-y-4 border rounded-xl dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50">

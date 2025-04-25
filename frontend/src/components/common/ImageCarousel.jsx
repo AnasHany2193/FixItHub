@@ -21,7 +21,7 @@ export const ImageCarousel = ({ images }) => (
               <img
                 src={photo.url}
                 alt={photo.alt || "Repair item"}
-                className="object-contain w-full h-full"
+                className="object-cover w-full h-full"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20" />
             </div>
