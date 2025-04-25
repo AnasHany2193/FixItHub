@@ -372,7 +372,8 @@ export default function RepairDetailsPage() {
                 </Button>
               )}
               {(repair.status === "awaiting_assignment" ||
-                repair.status === "cancelled") && (
+                repair.status === "cancelled" ||
+                repair.status === "returning_to_customer") && (
                 <Button
                   variant="secondary"
                   onClick={() => navigate(`/repairs/${repair._id}/edit`)}
