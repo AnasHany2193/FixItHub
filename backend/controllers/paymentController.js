@@ -31,6 +31,9 @@ export const createRepairPaymentSession = async (req, res) => {
       _id: repairId,
       customer: userId,
       paymentStatus: "pending",
+    }).populate({
+      path: "worker",
+      select: "username profile.avatar", // Get worker details
     });
 
     if (!repair) {
@@ -48,7 +51,13 @@ export const createRepairPaymentSession = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Repair: ${repair.itemType}`,
+              name: `Repair Service: ${repair.title}`,
+              description: [
+                `Item: ${repair.itemType}`,
+                `Category: ${repair.category}`,
+                `Worker: ${repair.worker?.username || "Unknown Technician"}`,
+                `Issue: ${repair.issueDescription.substring(0, 100)}...`,
+              ].join(" | "), // Show key details
             },
             unit_amount: repair.paymentAmount * 100,
           },
@@ -56,7 +65,13 @@ export const createRepairPaymentSession = async (req, res) => {
         },
       ],
       mode: "payment",
-      metadata: { repairId: repairId.toString() },
+      metadata: {
+        repairId: repairId.toString(),
+        repairTitle: repair.title,
+        workerName: repair.worker?.username || "",
+        workerAvatar: repair.worker?.profile?.avatar || "",
+        itemType: repair.itemType,
+      },
       success_url: `${process.env.CLIENT_URL}/repairs/${repairId}?payment=success`,
       cancel_url: `${process.env.CLIENT_URL}/repairs/${repairId}?payment=cancelled`,
     });
