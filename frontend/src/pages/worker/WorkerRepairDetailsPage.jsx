@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Wrench,
   User,
-  Clock,
   DollarSign,
   CheckCircle,
   AlertCircle,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 
 import {
+  useCompleteRepair,
   useReturnRepair,
   useUpdateTracking,
   useWorkerRepair,
@@ -70,18 +70,26 @@ const formatDate = (dateString) => {
 export default function WorkerRepairDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const { mutate: updateStatus } = useUpdateTracking();
-  const { mutate: returnRepair, isPending: isReturning } = useReturnRepair();
   const { data: repair, isLoading } = useWorkerRepair(id);
+  const { mutate: returnRepair, isPending: isReturning } = useReturnRepair();
+  const { mutate: completeRepair, isPending: isCompleting } =
+    useCompleteRepair();
 
-  if (isLoading) return <PageSkeleton />;
-  if (!repair) return <NotFoundState navigate={navigate} />;
+  const handleCompleteRepair = () => {
+    completeRepair({ repairId: repair._id });
+    setIsDialogOpen(false);
+  };
 
   const statusConfig =
     STATUS_CONFIG[repair.status] || STATUS_CONFIG.in_progress;
+
+  if (isLoading) return <PageSkeleton />;
+  if (!repair) return <NotFoundState navigate={navigate} />;
 
   return (
     <div className="min-h-screen">
@@ -240,18 +248,48 @@ export default function WorkerRepairDetailsPage() {
                     </Badge>
                   }
                 />
-                {repair.status === "in_progress" && (
-                  <Button className="w-full" variant="success">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Mark as Completed
-                  </Button>
-                )}
-                {repair.status === "awaiting_payment" && (
-                  <Button className="w-full" variant="outline">
-                    <Clock className="w-4 h-4 mr-2" />
-                    Payment Pending
-                  </Button>
-                )}
+                {repair.status === "in_progress" &&
+                  repair.paymentStatus === "paid" && (
+                    <>
+                      <Button
+                        className="w-full"
+                        variant="default"
+                        onClick={() => setIsDialogOpen(true)} // Open the dialog on button click
+                        disabled={isCompleting}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Mark as Completed
+                      </Button>
+                      <Dialog
+                        open={isDialogOpen}
+                        onClose={() => setIsDialogOpen(false)}
+                      >
+                        <Dialog />
+                        <DialogContent>
+                          <DialogTitle>Confirm Completion</DialogTitle>
+                          <DialogDescription>
+                            Are you sure you want to mark this repair as
+                            completed? This action cannot be undone.
+                          </DialogDescription>
+                          <div className="flex justify-end mt-4">
+                            <Button
+                              variant="outline"
+                              onClick={() => setIsDialogOpen(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="default"
+                              onClick={handleCompleteRepair}
+                              className="ml-2"
+                            >
+                              Confirm
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </>
+                  )}
               </div>
             </SectionCard>
 

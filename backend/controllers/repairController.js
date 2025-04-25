@@ -743,6 +743,12 @@ export const completeRepair = async (req, res, next) => {
       },
       {
         status: RepairStatus.COMPLETED,
+        $push: {
+          trackingUpdates: {
+            status: "shipped",
+            timestamp: new Date(),
+          },
+        },
       },
       { new: true, runValidators: true }
     );
@@ -780,7 +786,6 @@ export const returnRepair = async (req, res, next) => {
       {
         status: RepairStatus.RETURNING_TO_CUSTOMER,
         trackingUpdates: [], // Clear tracking updates when returning
-        worker: null, // Remove the worker
         paymentAmount: null, // Remove payment amount
         offers: [], // Clear offers
         auction: null, // Remove auction details
