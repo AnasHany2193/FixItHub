@@ -133,12 +133,12 @@ export const getAuctionDetails = async (req, res, next) => {
         path: "repairRequest",
         populate: {
           path: "customer",
-          select: "username profile.avatar",
+          select: "username profile.avatar createdAt",
         },
       })
       .populate({
         path: "bids",
-        select: "bidPrice status createdAt worker",
+        select: "bidPrice status createdAt worker submittedAt",
         populate: {
           path: "worker",
           select: "_id username profile.avatar",

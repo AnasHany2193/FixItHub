@@ -11,6 +11,7 @@ import {
   Trophy,
   DollarSign,
   RefreshCw,
+  Package,
 } from "lucide-react";
 
 import { useAuctionDetails, useSubmitBid } from "@/hooks/useRepair";
@@ -87,9 +88,7 @@ export default function AuctionDetailPage() {
                 </Badge>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className="text-indigo-800 bg-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-400">
-                  Auction Active
-                </Badge>
+                <Badge variant="default">Auction Active</Badge>
                 <Badge
                   variant={repair.shippingRequired ? "default" : "secondary"}
                 >
@@ -98,9 +97,6 @@ export default function AuctionDetailPage() {
                     : "Local Service"}
                 </Badge>
               </div>
-              <p className="capitalize text-muted-foreground">
-                {repair.itemType} • {repair.category}
-              </p>
             </div>
 
             <div className="flex flex-col items-end gap-1">
@@ -109,24 +105,6 @@ export default function AuctionDetailPage() {
               </p>
               <p className="text-sm text-muted-foreground">
                 Updated: {formatDate(repair.updatedAt)}
-              </p>
-            </div>
-          </div>
-
-          {/* Add Customer Info */}
-          <div className="flex items-center gap-3 p-3 mt-4 rounded-lg bg-indigo-50 dark:bg-gray-800">
-            <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-              <AvatarImage src={repair.customer?.profile?.avatar?.url} />
-              <AvatarFallback>
-                {repair.customer?.username?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium text-indigo-600 dark:text-indigo-300">
-                Repair Requested By
-              </p>
-              <p className="font-medium dark:text-white">
-                {repair.customer?.username}
               </p>
             </div>
           </div>
@@ -139,14 +117,17 @@ export default function AuctionDetailPage() {
             {/* Image Carousel */}
             <ImageCarousel images={repair.photos} />
 
+            {/* Customer Info Section */}
+            <CustomerInfo repair={repair} />
+
             {/* Auction Details */}
             <SectionCard
               icon={
                 <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               }
-              title="Auction Details"
+              title="Repair Details"
             >
-              <Tabs defaultValue="description" className="">
+              <Tabs defaultValue="description">
                 <TabsList className="flex w-full bg-gray-100 justify-evenly dark:bg-gray-600">
                   <TabsTrigger value="description" className="w-1/2">
                     Item Details
@@ -162,18 +143,30 @@ export default function AuctionDetailPage() {
                     <InfoItem label="Category" value={repair.category} />
                     <div className="pt-4">
                       <h3 className="mb-2 font-medium text-foreground">
-                        Issue Description
+                        About This Repair
                       </h3>
                       <p className="text-muted-foreground">
                         {repair.issueDescription}
                       </p>
+                      {repair.shippingRequired && (
+                        <div className="p-4 mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                          <h4 className="flex items-center gap-2 font-medium">
+                            <Package className="w-5 h-5" />
+                            Shipping Instructions
+                          </h4>
+                          <p className="mt-2 text-sm">
+                            This item requires special shipping handling.
+                            Contact the customer for shipping details.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </TabsContent>
 
-                <TabsContent value="bids" className="pt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Bid History</h3>
+                <TabsContent value="bids">
+                  <div className="flex items-center justify-between my-4">
+                    <h3 className="text-lg font-semibold">Bid Activity</h3>
                     <Button
                       variant="outline"
                       size="sm"
@@ -181,54 +174,24 @@ export default function AuctionDetailPage() {
                       disabled={isFetching}
                     >
                       <RefreshCw
-                        className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`}
+                        className={`mr-2 ${isFetching ? "animate-spin" : ""}`}
                       />
-                      {isFetching ? "Refreshing..." : "Refresh Bids"}
+                      Refresh
                     </Button>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {auction.bids?.length > 0 ? (
                       auction.bids.map((bid) => (
-                        <div
+                        <BidItem
                           key={bid._id}
-                          className="flex items-center gap-4 p-3 rounded-lg bg-muted"
-                        >
-                          <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-                            <AvatarImage
-                              src={bid.worker?.profile?.avatar?.url}
-                            />
-                            <AvatarFallback>
-                              {bid.worker?.username?.[0]?.toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">
-                                {bid.worker?.username || "Anonymous Technician"}
-                              </span>
-                              <Badge variant={bid.status}>
-                                {bid.status.toUpperCase()}
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <DollarSign className="w-4 h-4" />
-                              <span>${bid.bidPrice?.toFixed(2)}</span>
-                            </div>
-                          </div>
-
-                          {auction.currentLowestBid?._id === bid._id && (
-                            <Badge variant="indigo" className="ml-auto">
-                              <Trophy className="w-4 h-4 mr-1" />
-                              Lowest Bid
-                            </Badge>
-                          )}
-                        </div>
+                          bid={bid}
+                          currentLowestBid={auction.currentLowestBid}
+                        />
                       ))
                     ) : (
                       <div className="p-4 text-center rounded-lg bg-muted">
                         <p className="text-muted-foreground">
-                          No bids placed yet
+                          No bids placed yet - be the first!
                         </p>
                       </div>
                     )}
@@ -244,35 +207,25 @@ export default function AuctionDetailPage() {
               icon={
                 <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               }
-              title="Auction Status"
+              title="Auction Timeline"
             >
               <div className="space-y-4">
                 <InfoItem
-                  label="Current Lowest"
-                  value={
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
-                        <AvatarImage
-                          src={
-                            auction.currentLowestBid?.worker?.profile?.avatar
-                              ?.url
-                          }
-                        />
-                        <AvatarFallback>
-                          {auction.currentLowestBid?.worker?.username?.[0]}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>${auction.currentLowest}</span>
-                    </div>
-                  }
+                  label="Time Remaining"
+                  value={formatDistanceToNow(new Date(auction.expiresAt))}
                 />
                 <InfoItem
                   label="Starting Price"
                   value={`$${auction.startingMaxPrice}`}
                 />
                 <InfoItem
-                  label="Time Remaining"
-                  value={formatDistanceToNow(new Date(auction.expiresAt))}
+                  label="Current Lowest"
+                  value={
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-amber-500" />
+                      <span>${auction.currentLowest}</span>
+                    </div>
+                  }
                 />
                 <InfoItem
                   label="Total Bids"
@@ -291,51 +244,59 @@ export default function AuctionDetailPage() {
               {auction.hasBid ? (
                 <div className="space-y-4">
                   <InfoItem
-                    label="Your Bid"
+                    label="Your Offer"
                     value={`$${auction.myBid.bidPrice.toFixed(2)}`}
                   />
                   <InfoItem
-                    label="Status"
-                    value={<Badge>{auction.myBid.status}</Badge>}
+                    label="Bid Status"
+                    value={
+                      <Badge variant="default">{auction.myBid.status}</Badge>
+                    }
                   />
                   <Button
-                    className="w-full"
                     variant="outline"
+                    className="w-full"
                     onClick={() => setShowUpdateDialog(true)}
                   >
-                    Update Bid
+                    Modify Bid
                   </Button>
-
-                  <Dialog
-                    open={showUpdateDialog}
-                    onOpenChange={setShowUpdateDialog}
-                  >
-                    {showUpdateDialog && (
-                      <UpdateBidDialog
-                        bid={auction.myBid}
-                        lowestBid={auction.currentLowestBid.bidPrice}
-                        onOpenChange={setShowUpdateDialog}
-                      />
-                    )}
-                  </Dialog>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Input
-                    type="number"
-                    label="Bid Amount"
-                    value={bidPrice}
-                    onChange={(e) => setBidPrice(e.target.value)}
-                    placeholder={`Must be below $${auction.currentLowest}`}
-                    min={0.01}
-                    step="0.01"
-                  />
-                  <Button className="w-full" onClick={handleBidSubmit}>
-                    Submit Bid
+                  <div className="space-y-2">
+                    <Input
+                      type="number"
+                      label="Enter Bid Amount"
+                      value={bidPrice}
+                      onChange={(e) => {
+                        setBidPrice(e.target.value);
+                      }}
+                      placeholder={`Max $${auction.currentLowest - 0.01}`}
+                      min={0.01}
+                      max={auction.currentLowest - 0.01}
+                      step="0.01"
+                    />
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleBidSubmit}
+                    disabled={!bidPrice}
+                  >
+                    Submit Competitive Bid
                   </Button>
                 </div>
               )}
             </SectionCard>
+
+            <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+              {showUpdateDialog && (
+                <UpdateBidDialog
+                  bid={auction.myBid}
+                  lowestBid={auction.currentLowestBid.bidPrice}
+                  onOpenChange={setShowUpdateDialog}
+                />
+              )}
+            </Dialog>
           </div>
         </div>
       </div>
@@ -397,6 +358,69 @@ const NotFoundState = () => {
       <Button className="mt-4" onClick={() => navigate(-1)}>
         Return to Auctions
       </Button>
+    </div>
+  );
+};
+
+const CustomerInfo = ({ repair }) => (
+  <div className="p-4 rounded-lg bg-indigo-50 dark:bg-gray-800">
+    <div className="flex items-center gap-4">
+      <Avatar className="w-12 h-12 border-2 border-indigo-100 dark:border-gray-600">
+        <AvatarImage src={repair.customer?.profile?.avatar?.url} />
+        <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+          {repair.customer?.username?.[0]?.toUpperCase() || "U"}
+        </AvatarFallback>
+      </Avatar>
+      <div>
+        <h3 className="text-sm font-medium text-indigo-600 dark:text-indigo-300">
+          Repair Requester
+        </h3>
+        <p className="text-lg font-semibold dark:text-white">
+          {repair.customer?.username || "Anonymous User"}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Member since {formatDate(repair.customer?.createdAt)}
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const BidItem = ({ bid, currentLowestBid }) => {
+  console.log("bid", bid);
+  return (
+    <div className="flex items-center gap-5 p-4 rounded-lg bg-muted">
+      <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
+        <AvatarImage src={bid.worker?.profile?.avatar?.url} />
+        <AvatarFallback>
+          {bid.worker?.username?.[0]?.toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">
+            {bid.worker?.username || "Anonymous Technician"}
+          </span>
+          <Badge variant={bid.status === "pending" ? "default" : "secondary"}>
+            {bid.status.toUpperCase()}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-start">
+            <DollarSign className="w-4 h-4" />
+            <span>{bid.bidPrice?.toFixed(2)}</span>
+          </div>
+          <span className="ml-2 text-xs">
+            {formatDistanceToNow(new Date(bid.submittedAt))} ago
+          </span>
+        </div>
+      </div>
+      {currentLowestBid?._id === bid._id && (
+        <Badge variant="premium" className="gap-1">
+          <Trophy className="w-4 h-4" />
+          Leading
+        </Badge>
+      )}
     </div>
   );
 };
