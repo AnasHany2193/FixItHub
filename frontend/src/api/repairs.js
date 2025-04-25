@@ -193,20 +193,19 @@ export const getWorkerHistory = async (params = {}) => {
   }
 };
 
-// Auction endpoints
-export const getOpenAuctions = async (filters = {}) => {
+// Auction & Non-Auction endpoints
+export const getRepairList = async (type, filters) => {
   try {
-    const { data } = await axiosClient.get("/repairs/auctions", {
+    const { data } = await axiosClient.get(`/repairs/${type}`, {
       params: filters,
     });
     return data.data;
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch auctions"
-    );
+    throw new Error(error.response?.data?.message || "Failed to fetch repairs");
   }
 };
 
+// Auction endpoints
 export const getAuctionDetails = async (auctionId) => {
   try {
     const { data } = await axiosClient.get(`/repairs/auctions/${auctionId}`);
@@ -243,19 +242,6 @@ export const updateBid = async ({ bidId, bidPrice }) => {
 };
 
 // Non Auction Repairs endpoints
-export const directOffers = async (filters = {}) => {
-  try {
-    const { data } = await axiosClient.get("/repairs/direct-offers", {
-      params: filters,
-    });
-    return data.data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch direct repair requests"
-    );
-  }
-};
-
 export const getNonAuctionRepairDetails = async (repairId) => {
   try {
     const { data } = await axiosClient.get(`/repairs/non-auctions/${repairId}`);

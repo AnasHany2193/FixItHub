@@ -8,12 +8,11 @@ import {
   completeRepair,
   createPaymentSession,
   createRepair,
-  directOffers,
   getAuctionDetails,
   getCustomerHistory,
   getNonAuctionRepairDetails,
-  getOpenAuctions,
   getRepairDetails,
+  getRepairList,
   getRepairRequests,
   getWorkerHistory,
   getWorkerRepair,
@@ -320,14 +319,14 @@ export const useWorkerHistory = (filters) =>
     queryFn: () => getWorkerHistory(filters),
   });
 
-// Auction endpoints
-export const useOpenAuctions = (filters) =>
+// Auction & Non-Auction endpoints
+export const useRepairList = (type, filters) =>
   useQuery({
-    queryKey: ["auctions", filters],
-    queryFn: () => getOpenAuctions(filters),
-    staleTime: 60 * 1000, // 1 minute cache
+    queryKey: [type, filters],
+    queryFn: () => getRepairList(type, filters),
   });
 
+// Auction endpoints
 export const useAuctionDetails = (auctionId) =>
   useQuery({
     queryKey: ["auctions", auctionId],
@@ -385,12 +384,6 @@ export const useUpdateBid = () => {
 };
 
 // Non Auction Repairs endpoints
-export const useDirectOffers = (filters) =>
-  useQuery({
-    queryKey: ["direct-offers", filters],
-    queryFn: () => directOffers(filters),
-  });
-
 export const useNonAuctionRepairDetails = (repairId) =>
   useQuery({
     queryKey: ["direct-offers", repairId],

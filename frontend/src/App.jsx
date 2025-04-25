@@ -23,11 +23,10 @@ import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
 import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
-import AuctionsPage from "./pages/worker/AuctionsPage";
+import FindRepairsPage from "./pages/worker/FindRepairsPage";
 import AuctionDetailPage from "./pages/worker/AuctionDetailPage";
 import WorkerRepairsPage from "./pages/worker/WorkerRepairsPage";
 import WorkerRepairDetailsPage from "./pages/worker/WorkerRepairDetailsPage";
-import DirectOffersPage from "./pages/worker/DirectOffersPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -68,19 +67,24 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["worker"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
+
+            <Route
+              path="/repairs/auctions"
+              element={<FindRepairsPage type="auctions" />}
+            />
+            <Route
+              path="/repairs/direct-offers"
+              element={<FindRepairsPage type="direct-offers" />}
+            />
+
             <Route path="/repairs/active" element={<WorkerRepairsPage />} />
             <Route
               path="/repairs/active/:id"
               element={<WorkerRepairDetailsPage />}
             />
-            <Route path="/repairs/auctions" element={<AuctionsPage />} />
             <Route
               path="/repairs/auctions/:id"
               element={<AuctionDetailPage />}
-            />
-            <Route
-              path="/repairs/direct-offers"
-              element={<DirectOffersPage />}
             />
           </Route>
         </Route>
