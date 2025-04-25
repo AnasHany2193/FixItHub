@@ -405,7 +405,7 @@ export const acceptBid = async (req, res, next) => {
   }
 };
 
-export const getNonAuctionRepairs = async (req, res, next) => {
+export const getDirectOffersRepairs = async (req, res, next) => {
   try {
     const { category, itemType, sort = "newest" } = req.query;
 
@@ -446,13 +446,14 @@ export const getNonAuctionRepairs = async (req, res, next) => {
   }
 };
 
-export const getNonAuctionRepairDetails = async (req, res, next) => {
+export const getDirectOffersRepairDetails = async (req, res, next) => {
   try {
     const repair = await RepairRequest.findOne({
       _id: req.params.id,
       status: RepairStatus.AWAITING_ASSIGNMENT,
       auction: null,
     })
+      .populate("customer", "username profile.avatar")
       .populate("worker", "username rating.average")
       .select("-customer -paymentIntentId");
 

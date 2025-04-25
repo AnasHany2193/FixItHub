@@ -15,8 +15,6 @@ import {
   startRepairAuction,
   updateRepairRequest,
   acceptBid,
-  getNonAuctionRepairs,
-  getNonAuctionRepairDetails,
   submitOffer,
   updateOffer,
   acceptOffer,
@@ -24,6 +22,8 @@ import {
   getWorkerRepairsHistory,
   returnRepair,
   getWorkerRepair,
+  getDirectOffersRepairs,
+  getDirectOffersRepairDetails,
 } from "../controllers/repairController.js";
 import {
   getAuctionDetails,
@@ -78,13 +78,13 @@ router.get(
   "/direct-offers",
   protect,
   roleCheck("worker"),
-  getNonAuctionRepairs
+  getDirectOffersRepairs
 );
 router.get(
-  "/non-auctions/:id",
+  "/direct-offers/:id",
   protect,
   roleCheck("worker"),
-  getNonAuctionRepairDetails
+  getDirectOffersRepairDetails
 );
 
 // Worker actions with unique paths

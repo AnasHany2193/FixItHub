@@ -25,6 +25,7 @@ import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import FindRepairsPage from "./pages/worker/FindRepairsPage";
 import AuctionDetailPage from "./pages/worker/AuctionDetailPage";
+import DirectOffersRepairPage from "./pages/worker/DirectOffersRepairPage";
 import WorkerRepairsPage from "./pages/worker/WorkerRepairsPage";
 import WorkerRepairDetailsPage from "./pages/worker/WorkerRepairDetailsPage";
 
@@ -73,18 +74,22 @@ function App() {
               element={<FindRepairsPage type="auctions" />}
             />
             <Route
+              path="/repairs/auctions/:id"
+              element={<AuctionDetailPage />}
+            />
+            <Route
               path="/repairs/direct-offers"
               element={<FindRepairsPage type="direct-offers" />}
+            />
+            <Route
+              path="/repairs/direct-offers/:id"
+              element={<DirectOffersRepairPage />}
             />
 
             <Route path="/repairs/active" element={<WorkerRepairsPage />} />
             <Route
               path="/repairs/active/:id"
               element={<WorkerRepairDetailsPage />}
-            />
-            <Route
-              path="/repairs/auctions/:id"
-              element={<AuctionDetailPage />}
             />
           </Route>
         </Route>

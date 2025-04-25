@@ -241,10 +241,12 @@ export const updateBid = async ({ bidId, bidPrice }) => {
   }
 };
 
-// Non Auction Repairs endpoints
-export const getNonAuctionRepairDetails = async (repairId) => {
+// Direct Offer Repairs endpoints
+export const getDirectOffersRepairDetails = async (repairId) => {
   try {
-    const { data } = await axiosClient.get(`/repairs/non-auctions/${repairId}`);
+    const { data } = await axiosClient.get(
+      `/repairs/direct-offers/${repairId}`
+    );
     return data.data;
   } catch (error) {
     throw new Error(

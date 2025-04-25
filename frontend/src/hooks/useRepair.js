@@ -10,7 +10,7 @@ import {
   createRepair,
   getAuctionDetails,
   getCustomerHistory,
-  getNonAuctionRepairDetails,
+  getDirectOffersRepairDetails,
   getRepairDetails,
   getRepairList,
   getRepairRequests,
@@ -384,10 +384,10 @@ export const useUpdateBid = () => {
 };
 
 // Non Auction Repairs endpoints
-export const useNonAuctionRepairDetails = (repairId) =>
+export const useDirectOffersRepairDetails = (repairId) =>
   useQuery({
     queryKey: ["direct-offers", repairId],
-    queryFn: () => getNonAuctionRepairDetails(repairId),
+    queryFn: () => getDirectOffersRepairDetails(repairId),
     enabled: !!repairId,
   });
 

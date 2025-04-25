@@ -387,7 +387,6 @@ const CustomerInfo = ({ repair }) => (
 );
 
 const BidItem = ({ bid, currentLowestBid }) => {
-  console.log("bid", bid);
   return (
     <div className="flex items-center gap-5 p-4 rounded-lg bg-muted">
       <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
