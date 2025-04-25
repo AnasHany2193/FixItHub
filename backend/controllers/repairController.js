@@ -730,23 +730,19 @@ export const getWorkerRepair = async (req, res, next) => {
 
 export const completeRepair = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { repairId } = req.params;
     const workerId = req.user._id;
 
+    // Find the repair request and ensure it is in progress and payment has been received
     const repair = await RepairRequest.findOneAndUpdate(
       {
-        _id: id,
+        _id: repairId,
         worker: workerId,
         status: RepairStatus.IN_PROGRESS,
+        paymentStatus: "paid", // Ensure payment has been received
       },
       {
         status: RepairStatus.COMPLETED,
-        $push: {
-          trackingUpdates: {
-            status: "completed",
-            timestamp: new Date(),
-          },
-        },
       },
       { new: true, runValidators: true }
     );

@@ -145,9 +145,9 @@ export const getWorkerRepair = async ({ repairId }) => {
   }
 };
 
-export const completeRepair = async (repairId) => {
+export const completeRepair = async ({ repairId }) => {
   try {
-    const { data } = await axiosClient.patch(`/repairs/${repairId}/complete`);
+    const { data } = await axiosClient.patch(`/repairs/complete/${repairId}`);
     return data;
   } catch (error) {
     throw new Error(
