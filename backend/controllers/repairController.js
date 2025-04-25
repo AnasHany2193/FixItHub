@@ -453,20 +453,34 @@ export const getDirectOffersRepairDetails = async (req, res, next) => {
       status: RepairStatus.AWAITING_ASSIGNMENT,
       auction: null,
     })
-      .populate("customer", "username profile.avatar")
-      .populate("worker", "username rating.average")
-      .select("-customer -paymentIntentId");
+      .populate({
+        path: "customer",
+        select: "username profile.avatar createdAt",
+      })
+      .populate({
+        path: "offers",
+        select: "offerPrice status createdAt worker",
+        populate: {
+          path: "worker",
+          select: "_id username profile.avatar",
+        },
+      })
+      .lean();
 
-    if (!repair) {
-      return res.status(404).json({
-        success: false,
-        message: "Non-auction repair not found",
-      });
-    }
+    if (!repair) throw createHttpError(404, "Active repair not found");
+
+    // Convert to string for consistent comparison
+    const userId = req.user._id.toString();
+
+    const response = {
+      ...repair,
+      hasOffer: repair.offers.some((o) => o.worker?._id?.toString() === userId),
+      myOffer: repair.offers.find((o) => o.worker?._id?.toString() === userId),
+    };
 
     res.status(200).json({
       success: true,
-      data: repair,
+      data: response,
     });
   } catch (error) {
     next(error);
@@ -493,6 +507,14 @@ export const submitOffer = async (req, res, next) => {
       });
     }
 
+    // Validate offer price
+    if (offerPrice < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum offer price is $1",
+      });
+    }
+
     // Check existing offer
     const existingOffer = await Offer.findOne({
       repairRequest: repairId,
@@ -507,16 +529,21 @@ export const submitOffer = async (req, res, next) => {
     }
 
     // Create offer
-    const offer = await Offer.create({
+    const newOffer = await Offer.create({
       worker: workerId,
       repairRequest: repairId,
       offerPrice,
     });
 
+    // Update repair request
+    await RepairRequest.findByIdAndUpdate(repairId, {
+      $push: { offers: newOffer._id },
+    });
+
     res.status(201).json({
       success: true,
       message: "Offer submitted successfully",
-      data: offer,
+      data: newOffer,
     });
   } catch (error) {
     next(error);
@@ -529,27 +556,48 @@ export const updateOffer = async (req, res, next) => {
     const { offerPrice } = req.body;
     const workerId = req.user._id;
 
-    const offer = await Offer.findOneAndUpdate(
-      {
-        _id: offerId,
-        worker: workerId,
-        status: "pending",
-      },
-      { offerPrice },
-      { new: true, runValidators: true }
-    );
+    // Find existing offer
+    const existingOffer = await Offer.findOne({
+      _id: offerId,
+      worker: workerId,
+      status: "pending",
+    }).populate("repairRequest");
 
-    if (!offer) {
+    if (!existingOffer) {
       return res.status(404).json({
         success: false,
         message: "Offer not found or cannot be modified",
       });
     }
 
+    // Validate repair status
+    const repair = await RepairRequest.findById(
+      existingOffer.repairRequest._id
+    );
+
+    if (repair.status !== RepairStatus.AWAITING_ASSIGNMENT || repair.auction) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update offer on assigned repair",
+      });
+    }
+
+    // Validate new offer price
+    if (offerPrice < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum offer price is $1",
+      });
+    }
+
+    // Update offer
+    existingOffer.offerPrice = offerPrice;
+    await existingOffer.save();
+
     res.status(200).json({
       success: true,
       message: "Offer updated successfully",
-      data: offer,
+      data: existingOffer,
     });
   } catch (error) {
     next(error);
