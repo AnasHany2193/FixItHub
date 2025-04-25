@@ -237,29 +237,52 @@ export const getRepairRequest = async (req, res, next) => {
 export const getRepairRequests = async (req, res, next) => {
   try {
     const filter = { customer: req.user._id };
-
-    // Exclude historical statuses
     const excludedStatuses = [
       "completed",
       "cancelled",
       "returning_to_customer",
     ];
 
-    if (req.query.status) {
-      filter.status = req.query.status;
-    } else {
-      filter.status = { $nin: excludedStatuses }; // Exclude historical statuses
-    }
+    // Status filtering
+    filter.status = req.query.status
+      ? req.query.status
+      : { $nin: excludedStatuses };
 
     const repairs = await RepairRequest.find(filter)
-      .populate("auction", "status expiresAt")
+      .populate([
+        {
+          path: "auction",
+          select: "status expiresAt bids currentLowestBid",
+          populate: {
+            path: "currentLowestBid",
+            select: "bidPrice",
+          },
+        },
+        {
+          path: "offers",
+          select: "offerPrice status",
+          match: { status: "pending" },
+        },
+      ])
       .sort("-createdAt")
       .lean();
 
+    // Transform data for frontend
+    const enhancedRepairs = repairs.map((repair) => ({
+      ...repair,
+      type: repair.auction ? "auction" : "direct",
+      currentPrice:
+        repair.auction?.currentLowestBid?.bidPrice ||
+        repair.offers?.[0]?.offerPrice ||
+        repair.auction?.startingMaxPrice,
+      bidCount: repair.auction?.bids?.length || 0,
+      offerCount: repair.offers?.length || 0,
+    }));
+
     res.status(200).json({
       success: true,
-      count: repairs.length,
-      data: repairs,
+      count: enhancedRepairs.length,
+      data: enhancedRepairs,
     });
   } catch (error) {
     next(error);

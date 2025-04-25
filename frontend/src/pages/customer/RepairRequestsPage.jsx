@@ -190,12 +190,9 @@ const RepairGrid = ({ data, cancelRepair }) => (
 
 const RepairCard = ({ repair, cancelRepair }) => {
   const navigate = useNavigate();
-  const currentStatus = statusStages[repair.status] || {
-    step: 0,
-    label: "Unknown Status",
-    color: "bg-gray-500",
-  };
-  const isAuction = !!repair.auction;
+  const currentStatus = statusStages[repair.status];
+  const isAuction = repair.status === "auction_open";
+
   const auctionDetails = repair.auction || {};
   const offerCount = repair.offers?.length || 0;
 
@@ -240,13 +237,11 @@ const RepairCard = ({ repair, cancelRepair }) => {
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
             <div className="flex items-start justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {repair.title}
-              </h3>
+              <h3 className="w-2/3 text-lg font-semibold">{repair.title}</h3>
               {!isAuction && <Badge variant="success">Direct Offers</Badge>}
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {repair.itemType}
+            <p className="text-sm capitalize text-muted-foreground">
+              {repair.itemType} • {repair.category}
             </p>
           </div>
 
