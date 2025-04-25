@@ -101,16 +101,16 @@ export default function AuctionsPage() {
             onValueChange={(value) => setFilters({ ...filters, sortBy: value })}
             className="w-full md:w-auto"
           >
-            <TabsList className="grid grid-cols-2 bg-gray-100 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <TabsList className="grid-cols-2 bg-gray-100 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
               <TabsTrigger
                 value="price"
-                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-indigo-sm dark:data-[state=active]:bg-indigo-700"
+                className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-indigo-sm dark:data-[state=active]:bg-indigo-700 px-5"
               >
                 Starting Price
               </TabsTrigger>
               <TabsTrigger
                 value="expiry"
-                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-purple-sm dark:data-[state=active]:bg-purple-700"
+                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-purple-sm dark:data-[state=active]:bg-purple-700 px-5"
               >
                 Time Remaining
               </TabsTrigger>
@@ -205,7 +205,6 @@ export default function AuctionsPage() {
 
 // Main changes in AuctionCard component
 const AuctionCard = ({ auction, onClick }) => {
-  console.log("auction", auction);
   const repair = auction.repair;
   const timeLeft = formatDistanceToNow(new Date(auction.expiresAt));
   const currentBid =
@@ -292,9 +291,9 @@ const AuctionCard = ({ auction, onClick }) => {
             </div>
 
             <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300 capitalize">
+              <span className="flex items-start gap-1.5 text-gray-600 dark:text-gray-300 capitalize">
                 <User className="w-4 h-4" />
-                {auction.customer?.username || "Anonymous"}
+                {auction.repair.customer?.username || "Anonymous"}
               </span>
               <Badge variant="outline">{auction.bids?.length || 0} bids</Badge>
             </div>
