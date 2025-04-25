@@ -172,10 +172,7 @@ const EmptyState = () => (
 );
 
 const RepairGrid = ({ data, cancelRepair }) => (
-  <motion.div
-    layout
-    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-  >
+  <motion.div layout className="grid grid-cols-1 gap-4 md:grid-cols-2">
     <AnimatePresence>
       {data.map((repair) => (
         <RepairCard
@@ -187,6 +184,131 @@ const RepairGrid = ({ data, cancelRepair }) => (
     </AnimatePresence>
   </motion.div>
 );
+
+// const RepairCard = ({ repair, cancelRepair }) => {
+//   const navigate = useNavigate();
+//   const currentStatus = statusStages[repair.status] || {
+//     step: 0,
+//     label: "Unknown Status",
+//     color: "bg-gray-500",
+//   };
+//   const hasAuction = !!repair.auction;
+//   const lowestBid = repair.auction?.currentLowestBid?.bidPrice;
+//   const bidCount = repair.auction?.bids?.length || 0;
+
+//   return (
+//     <motion.div
+//       layout
+//       initial={{ opacity: 0, scale: 0.96 }}
+//       animate={{ opacity: 1, scale: 1 }}
+//       exit={{ opacity: 0, scale: 0.9 }}
+//       transition={{ type: "spring", stiffness: 300 }}
+//     >
+//       <Card className="flex flex-col justify-between h-full overflow-hidden transition-all border shadow-lg hover:shadow-xl dark:border-gray-700 group backdrop-blur-sm bg-white/50 dark:bg-gray-800/50">
+//         {/* Status Header */}
+//         <div className="relative p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-gray-800 dark:to-gray-900">
+//           <div className="flex items-center justify-between">
+//             <Badge variant="premium" className="gap-1.5">
+//               {currentStatus.label}
+//             </Badge>
+//             <span className="text-sm">
+//               {formatDistanceToNow(new Date(repair.createdAt), {
+//                 addSuffix: true,
+//               })}
+//             </span>
+//           </div>
+
+//           <Progress
+//             value={(currentStatus.step / 4) * 100}
+//             className="mt-3 h-1.5 bg-white/20 dark:bg-gray-700"
+//           />
+//         </div>
+
+//         <CardContent className="p-4 space-y-4">
+//           <div className="space-y-2">
+//             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+//               {repair.title}
+//             </h3>
+//             <p className="text-sm text-gray-600 dark:text-gray-300">
+//               {repair.itemType}
+//             </p>
+//           </div>
+
+//           <div className="grid grid-cols-2 gap-3">
+//             <StatItem
+//               label="Current Bid"
+//               value={
+//                 hasAuction
+//                   ? lowestBid
+//                     ? `$${lowestBid}`
+//                     : `No bids (${bidCount} offers)`
+//                   : "Direct assignment"
+//               }
+//               icon={
+//                 <Gavel className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+//               }
+//             />
+
+//             <StatItem
+//               label="Time Left"
+//               value={
+//                 hasAuction && repair.auction.expiresAt
+//                   ? formatDistanceToNow(new Date(repair.auction.expiresAt), {
+//                       addSuffix: true,
+//                     })
+//                   : "N/A"
+//               }
+//               icon={
+//                 <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+//               }
+//             />
+//           </div>
+//         </CardContent>
+
+//         <CardFooter className="flex gap-2 p-4 pt-0">
+//           <div className="flex flex-1 gap-2">
+//             <Button
+//               variant="outline"
+//               className="flex-1 hover:bg-indigo-50 dark:hover:bg-gray-700"
+//               onClick={() => navigate(`/repairs/${repair._id}`)}
+//             >
+//               Service Details
+//             </Button>
+
+//             {/* Add Edit Button */}
+//             {["awaiting_assignment", "auction_open"].includes(
+//               repair.status
+//             ) && (
+//               <motion.div whileHover={{ scale: 1.05 }}>
+//                 <Button
+//                   variant="ghost"
+//                   size="icon"
+//                   className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+//                   onClick={() => navigate(`/repairs/${repair._id}/edit`)}
+//                 >
+//                   <Pencil className="w-4 h-4" />
+//                 </Button>
+//               </motion.div>
+//             )}
+//           </div>
+
+//           {repair.status === "auction_open" && (
+//             <motion.div whileHover={{ scale: 1.05 }}>
+//               <Button
+//                 variant="ghost"
+//                 size="icon"
+//                 className="text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20"
+//                 onClick={() => cancelRepair(repair._id)}
+//               >
+//                 <X className="w-5 h-5" />
+//               </Button>
+//             </motion.div>
+//           )}
+//         </CardFooter>
+//       </Card>
+//     </motion.div>
+//   );
+// };
 
 const RepairCard = ({ repair, cancelRepair }) => {
   const navigate = useNavigate();
@@ -216,12 +338,9 @@ const RepairCard = ({ repair, cancelRepair }) => {
                 {currentStatus.label}
               </Badge>
               {isAuction && (
-                <Badge
-                  variant="indicator"
-                  className="before:bg-amber-400 dark:before:bg-amber-300"
-                >
-                  Auction
-                </Badge>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-white/20">
+                  🏷️ Auction
+                </span>
               )}
             </div>
             <span className="text-sm">
@@ -239,11 +358,15 @@ const RepairCard = ({ repair, cancelRepair }) => {
 
         <CardContent className="p-4 space-y-4">
           <div className="space-y-2">
-            <div className="flex items-start justify-between">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {repair.title}
               </h3>
-              {!isAuction && <Badge variant="success">Direct Offers</Badge>}
+              {!isAuction && (
+                <span className="px-2 py-1 text-sm text-green-600 bg-green-100 rounded-full dark:bg-green-800/30 dark:text-green-400">
+                  ✨ Direct Offers
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {repair.itemType}
