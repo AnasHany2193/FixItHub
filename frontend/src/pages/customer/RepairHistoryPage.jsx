@@ -10,7 +10,7 @@ import {
   HistoryIcon,
   CalendarDays,
 } from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -202,7 +202,6 @@ export default function RepairHistoryPage() {
               {filteredRepairs.map((repair) => {
                 const status =
                   statusConfig[repair.status] || statusConfig.completed;
-                const timeline = repair.trackingUpdates || [];
 
                 return (
                   <motion.div
@@ -235,30 +234,6 @@ export default function RepairHistoryPage() {
                             {status.label}
                           </Badge>
                         </div>
-
-                        {/* Timeline */}
-                        {timeline.length > 0 && (
-                          <div className="pl-2 ml-3 space-y-3 border-l-2 border-indigo-200 dark:border-gray-700">
-                            {timeline.map((update, index) => (
-                              <div key={index} className="relative pl-6">
-                                <div className="absolute w-3 h-3 -left-[9px] top-2.5 bg-indigo-400 rounded-full dark:bg-indigo-600" />
-                                <div className="text-sm">
-                                  <p className="font-medium text-gray-900 dark:text-white">
-                                    {update.status.replace(/_/g, " ")}
-                                  </p>
-                                  <p className="text-gray-600 dark:text-gray-300">
-                                    {formatDistanceToNow(
-                                      new Date(update.timestamp),
-                                      {
-                                        addSuffix: true,
-                                      }
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
                       </CardContent>
 
                       <CardFooter className="flex items-center justify-between p-4 pt-0 text-sm">
