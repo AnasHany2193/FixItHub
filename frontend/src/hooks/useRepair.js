@@ -62,8 +62,8 @@ export const useStartRepairAuction = () => {
 
   return useMutation({
     mutationFn: startRepairAuction,
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries(["repairs", variables.repairId]);
+    onSuccess: (data, repairId) => {
+      queryClient.invalidateQueries(["repairs", repairId]);
       toast({
         variant: "success",
         title: "Auction Started",
@@ -87,7 +87,8 @@ export const useUpdateRepair = () => {
 
   return useMutation({
     mutationFn: updateRepairRequest,
-    onSuccess: (data) => {
+    onSuccess: (data, repairId) => {
+      queryClient.invalidateQueries(["repairs", repairId]);
       queryClient.invalidateQueries(["repairs"]);
 
       toast({
@@ -128,7 +129,8 @@ export const useCancelRepair = () => {
 
   return useMutation({
     mutationFn: cancelRepair,
-    onSuccess: (data) => {
+    onSuccess: (data, repairId) => {
+      queryClient.invalidateQueries(["repairs", repairId]);
       queryClient.invalidateQueries(["repairs"]);
       toast({
         variant: "success",
@@ -158,7 +160,7 @@ export const useAcceptBid = () => {
 
   return useMutation({
     mutationFn: acceptBid,
-    onSuccess: (data, { repairId }) => {
+    onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
       queryClient.invalidateQueries(["auctions"]);
       toast({
@@ -183,7 +185,7 @@ export const useAcceptOffer = () => {
 
   return useMutation({
     mutationFn: acceptOffer,
-    onSuccess: (data, { repairId }) => {
+    onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
       queryClient.invalidateQueries(["non-auctions"]);
       toast({

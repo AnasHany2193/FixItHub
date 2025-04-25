@@ -12,7 +12,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-import { useUpdateTracking, useWorkerRepair } from "@/hooks/useRepair";
+import {
+  useReturnRepair,
+  useUpdateTracking,
+  useWorkerRepair,
+} from "@/hooks/useRepair";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -66,11 +70,11 @@ const formatDate = (dateString) => {
 export default function WorkerRepairDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-
   const [selectedStatus, setSelectedStatus] = useState("");
   const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const { mutate: updateStatus } = useUpdateTracking();
+  const { mutate: returnRepair, isPending: isReturning } = useReturnRepair();
   const { data: repair, isLoading } = useWorkerRepair(id);
 
   if (isLoading) return <PageSkeleton />;
@@ -162,25 +166,27 @@ export default function WorkerRepairDetailsPage() {
             </SectionCard>
 
             {/* Status Tracking Section */}
-            <SectionCard
-              icon={
-                <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Repair Progress"
-            >
-              <div className="space-y-6">
-                <StatusTimeline trackingUpdates={repair.trackingUpdates} />
+            {repair.trackingUpdates.length > 0 && (
+              <SectionCard
+                icon={
+                  <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                }
+                title="Repair Progress"
+              >
+                <div className="space-y-6">
+                  <StatusTimeline trackingUpdates={repair.trackingUpdates} />
 
-                {repair.trackingUpdates !== "shipped" && (
-                  <Button
-                    className="w-full"
-                    onClick={() => setShowStatusDialog(true)}
-                  >
-                    Update Status
-                  </Button>
-                )}
-              </div>
-            </SectionCard>
+                  {repair.trackingUpdates !== "shipped" && (
+                    <Button
+                      className="w-full"
+                      onClick={() => setShowStatusDialog(true)}
+                    >
+                      Update Status
+                    </Button>
+                  )}
+                </div>
+              </SectionCard>
+            )}
           </div>
 
           {/* Right Column */}
@@ -248,6 +254,27 @@ export default function WorkerRepairDetailsPage() {
                 )}
               </div>
             </SectionCard>
+
+            {repair.status === "in_progress" &&
+              repair.paymentStatus !== "paid" && (
+                <SectionCard
+                  title="Return Item"
+                  icon={<RefreshCw className="w-5 h-5 text-red-600" />}
+                >
+                  <p className="mb-4">
+                    If you are unable to fix the item, you can initiate a
+                    return. Please ensure that the item has not been paid for
+                    before proceeding.
+                  </p>
+                  <Button
+                    className="w-full"
+                    onClick={() => returnRepair({ repairId: repair._id })}
+                    disabled={isReturning}
+                  >
+                    Return Item
+                  </Button>
+                </SectionCard>
+              )}
           </div>
         </div>
       </div>
