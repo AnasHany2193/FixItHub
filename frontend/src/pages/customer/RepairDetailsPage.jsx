@@ -48,6 +48,7 @@ import StartAuctionDialog from "@/components/repair/StartAuctionDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { useToast } from "@/hooks/useToast";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 const trackingStatusOrder = [
   "received", // 1. Item received
@@ -132,7 +133,15 @@ export default function RepairDetailsPage() {
   }, [searchParams, toast, refetch]);
 
   if (isLoading) return <PageSkeleton />;
-  if (!repair || isError) return <NotFoundState />;
+  if (!repair || isError)
+    return (
+      <NotFoundStatus
+        icon={<ShieldAlert />}
+        title="Repair Not Found"
+        message="The requested repair could not be found."
+        buttonText="Return to Repairs"
+      />
+    );
 
   const statusConfig =
     STATUS_CONFIG[repair.status] || STATUS_CONFIG.awaiting_assignment;
@@ -765,19 +774,5 @@ const PageSkeleton = () => (
         <Skeleton className="h-48 rounded-xl" />
       </div>
     </div>
-  </div>
-);
-
-// Not Found State
-const NotFoundState = () => (
-  <div className="p-8 mx-auto mt-8 text-center max-w-7xl">
-    <ShieldAlert className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-    <h3 className="mb-2 text-2xl font-semibold">Repair Not Found</h3>
-    <p className="mb-4 text-muted-foreground">
-      The requested repair could not be found.
-    </p>
-    <Button className="mt-4" onClick={() => window.history.back()}>
-      Return to Repairs
-    </Button>
   </div>
 );

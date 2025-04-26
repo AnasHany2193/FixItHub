@@ -39,6 +39,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 const trackingStatusOrder = [
   "received", // 1. Item received
@@ -94,7 +95,15 @@ export default function WorkerActiveRepairDetailsPage() {
   const statusConfig = STATUS_CONFIG[repair?.status || "in_progress"];
 
   if (isLoading) return <PageSkeleton />;
-  if (!repair) return <NotFoundState navigate={navigate} />;
+  if (!repair)
+    return (
+      <NotFoundStatus
+        icon={<AlertCircle />}
+        title="Job Not Found"
+        message="The requested repair job could not be found"
+        buttonText="Return to Jobs"
+      />
+    );
 
   return (
     <div className="min-h-screen">
@@ -462,16 +471,5 @@ const PageSkeleton = () => (
         <Skeleton className="h-48 rounded-xl" />
       </div>
     </div>
-  </div>
-);
-
-const NotFoundState = ({ navigate }) => (
-  <div className="p-8 mx-auto mt-8 text-center max-w-7xl">
-    <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-    <h3 className="mb-2 text-2xl font-semibold">Job Not Found</h3>
-    <p className="mb-4 text-muted-foreground">
-      The requested repair job could not be found
-    </p>
-    <Button onClick={() => navigate(-1)}>Return to Jobs</Button>
   </div>
 );

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { DollarSign, User, Gavel, Zap, Wrench, Clock } from "lucide-react";
@@ -17,6 +17,7 @@ import { useRepairList } from "@/hooks/useRepair";
 import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 const categories = [
   { value: "all", label: "All Categories" },
@@ -42,35 +43,44 @@ export default function FindRepairsPage({ type }) {
       <RepairListHeader type={type} filters={filters} setFilters={setFilters} />
 
       {/* Content */}
-      <motion.div
-        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        {isLoading ? (
-          [1, 2, 3].map((i) => <CardSkeleton key={i} />)
-        ) : repairs?.length === 0 ? (
-          <EmptyState
-            icon={type === "auctions" ? <Gavel /> : <Wrench />}
-            title={
-              type === "auctions"
-                ? "No Active Auctions"
-                : "No Direct Offers Available"
-            }
-            message={"Check back later for new repair opportunities"}
-          />
-        ) : (
-          repairs?.map((repair) => (
+      {isLoading ? (
+        <motion.div
+          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          {[1, 2, 3].map((i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </motion.div>
+      ) : repairs?.length === 0 ? (
+        <NotFoundStatus
+          icon={type === "auctions" ? <Gavel /> : <Wrench />}
+          title={
+            type === "auctions"
+              ? "No Active Auctions"
+              : "No Direct Offers Available"
+          }
+          message={"Check back later for new repair opportunities"}
+        />
+      ) : (
+        <motion.div
+          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+        >
+          {repairs?.map((repair) => (
             <RepairCard
               key={repair._id}
               repair={repair}
               type={type}
               onClick={() => navigate(`/repairs/${type}/${repair._id}`)}
             />
-          ))
-        )}
-      </motion.div>
+          ))}
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -318,24 +328,6 @@ const CardSkeleton = () => (
     </div>
     <Skeleton className="w-full h-8 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
   </div>
-);
-
-const EmptyState = ({ icon, title, message = "" }) => (
-  <motion.div
-    initial={{ scale: 0.95, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    className="flex flex-col items-center py-12 text-center col-span-full"
-  >
-    <div className="p-4 mb-4 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800 w-fit">
-      {React.cloneElement(icon, {
-        className: "w-12 h-12 text-indigo-600 dark:text-indigo-400",
-      })}
-    </div>
-    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
-      {title}
-    </h3>
-    <p className="text-gray-600 dark:text-gray-300">{message}</p>
-  </motion.div>
 );
 
 const StatItem = ({ icon, label, value, highlight = false }) => (

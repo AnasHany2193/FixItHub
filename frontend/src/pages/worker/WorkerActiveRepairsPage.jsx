@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Clock,
   Box,
@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useNavigate } from "react-router";
 import { formatDistanceToNow } from "date-fns";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 export default function WorkerActiveRepairsPage() {
   const [selectedStatus, setSelectedStatus] = useState("");
@@ -35,28 +36,32 @@ export default function WorkerActiveRepairsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            [1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <LoadingSkeleton />
-              </motion.div>
-            ))
-          ) : repairs?.length > 0 ? (
-            repairs.map((repair) => (
-              <RepairCard key={repair._id} repair={repair} />
-            ))
-          ) : (
-            <EmptyState />
-          )}
-        </AnimatePresence>
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <LoadingSkeleton />
+            </motion.div>
+          ))}
+        </div>
+      ) : repairs?.length > 0 ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {repairs.map((repair) => (
+            <RepairCard key={repair._id} repair={repair} />
+          ))}
+        </div>
+      ) : (
+        <NotFoundStatus
+          icon={<Box />}
+          title="No Active Assignments"
+          message="You currently don't have any active repair jobs"
+        />
+      )}
     </div>
   );
 }
@@ -218,20 +223,4 @@ const LoadingSkeleton = () => (
     </div>
     <Skeleton className="w-full h-10 bg-gray-100 dark:bg-gray-800" />
   </Card>
-);
-
-const EmptyState = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="flex flex-col items-center col-span-3 py-12 text-center"
-  >
-    <Box className="w-12 h-12 mb-4 text-gray-400 dark:text-gray-500" />
-    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      No Active Assignments
-    </h3>
-    <p className="text-gray-600 dark:text-gray-400">
-      You currently don&apos;t have any active repair jobs
-    </p>
-  </motion.div>
 );

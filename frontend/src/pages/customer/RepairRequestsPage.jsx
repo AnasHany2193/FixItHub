@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 import { useCancelRepair, useRepairRequests } from "@/hooks/useRepair";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 export const statusStages = {
   awaiting_assignment: {
@@ -76,7 +77,13 @@ export default function RepairRequestsPage() {
         {isLoading && <LoadingState />}
 
         {/* Empty State */}
-        {!isLoading && data?.length === 0 && <EmptyState />}
+        {!isLoading && data?.length === 0 && (
+          <NotFoundStatus
+            icon={<Package />}
+            title="No Active Services"
+            message="Start by creating a new repair request to connect with our certified technicians."
+          />
+        )}
 
         {/* Repair Grid */}
         {!isLoading && data?.length > 0 && (
@@ -150,25 +157,6 @@ const LoadingState = () => (
       </motion.div>
     ))}
   </div>
-);
-
-const EmptyState = () => (
-  <motion.div
-    initial={{ scale: 0.95, opacity: 0 }}
-    animate={{ scale: 1, opacity: 1 }}
-    className="flex flex-col items-center justify-center py-12 text-center rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-gray-800 dark:to-gray-900"
-  >
-    <div className="p-4 mb-4 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-gray-700 dark:to-gray-800">
-      <Package className="w-12 h-12 text-indigo-600 dark:text-indigo-400" />
-    </div>
-    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
-      No Active Services
-    </h3>
-    <p className="max-w-md mx-auto text-gray-600 dark:text-gray-300">
-      Start by creating a new repair request to connect with our certified
-      technicians.
-    </p>
-  </motion.div>
 );
 
 const RepairGrid = ({ data, cancelRepair }) => (

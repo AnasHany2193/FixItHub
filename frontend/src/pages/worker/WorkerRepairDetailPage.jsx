@@ -30,6 +30,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import UpdateProposalDialog from "@/components/common/UpdateProposalDialog";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 const formatDate = (dateString) => {
   try {
@@ -79,7 +80,19 @@ export default function WorkerRepairDetailPage({ type = "auction" }) {
   };
 
   if (isLoading) return <PageSkeleton type={type} />;
-  if (!repairData) return <NotFoundState type={type} />;
+  if (repairData)
+    return (
+      <NotFoundStatus
+        icon={<AlertCircle />}
+        title={`${type === "auction" ? "Auction" : "Repair"} Not Found`}
+        message={
+          type === "auction"
+            ? "The requested auction could not be found or has expired"
+            : "The requested repair offer could not be found"
+        }
+        buttonText={`Return to ${type === "auction" ? "Auctions" : "Offers"}`}
+      />
+    );
 
   const repair = type === "auction" ? repairData.repairRequest : repairData;
 
@@ -407,27 +420,6 @@ const ProposalItem = ({ proposal, type, isLeading }) => {
           Leading
         </Badge>
       )}
-    </div>
-  );
-};
-
-const NotFoundState = ({ type }) => {
-  const navigate = useNavigate();
-
-  return (
-    <div className="p-8 mx-auto mt-8 text-center max-w-7xl">
-      <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-      <h3 className="mb-2 text-2xl font-semibold">
-        {type === "auction" ? "Auction" : "Repair"} Not Found
-      </h3>
-      <p className="mb-4 text-muted-foreground">
-        {type === "auction"
-          ? "The requested auction could not be found or has expired"
-          : "The requested repair offer could not be found"}
-      </p>
-      <Button className="mt-4" onClick={() => navigate(-1)}>
-        Return to {type === "auction" ? "Auctions" : "Offers"}
-      </Button>
     </div>
   );
 };

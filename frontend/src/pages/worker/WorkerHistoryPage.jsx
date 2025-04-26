@@ -21,6 +21,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 const statusOptions = [
   { value: "all", label: "All Statuses" },
@@ -81,7 +82,11 @@ export default function WorkerHistoryPage() {
             </motion.div>
           ))
         ) : data?.data?.length === 0 ? (
-          <EmptyState />
+          <NotFoundStatus
+            icon={<Box />}
+            title="No Repair History Found"
+            message="Your completed and returned repairs will appear here"
+          />
         ) : (
           data?.data?.map((repair) => (
             <HistoryCard key={repair._id} repair={repair} />
@@ -213,21 +218,5 @@ const HistoryCardSkeleton = () => (
       <Skeleton className="h-4 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
       <Skeleton className="w-3/4 h-4 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
     </div>
-  </motion.div>
-);
-
-const EmptyState = () => (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="flex flex-col items-center col-span-3 py-12 text-center"
-  >
-    <Box className="w-12 h-12 mb-4 text-gray-400 dark:text-gray-500" />
-    <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
-      No Repair History Found
-    </h3>
-    <p className="text-gray-600 dark:text-gray-400">
-      Your completed and returned repairs will appear here
-    </p>
   </motion.div>
 );
