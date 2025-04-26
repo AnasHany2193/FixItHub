@@ -125,12 +125,14 @@ export const createPaymentSession = async ({ repairId }) => {
 export const getWorkerRepairs = async ({ status }) => {
   try {
     const { data } = await axiosClient.get("/repairs/workers", {
-      params: { status },
+      params: {
+        status: Array.isArray(status) ? status.join(",") : status,
+      },
     });
     return data.data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Failed to fetch worker repairs"
+      error.response?.data?.message || "Failed to fetch your active repairs"
     );
   }
 };

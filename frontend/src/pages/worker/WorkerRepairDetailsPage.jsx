@@ -85,11 +85,11 @@ export default function WorkerRepairDetailsPage() {
     setIsDialogOpen(false);
   };
 
-  const statusConfig =
-    STATUS_CONFIG[repair.status] || STATUS_CONFIG.in_progress;
-
   if (isLoading) return <PageSkeleton />;
   if (!repair) return <NotFoundState navigate={navigate} />;
+
+  const statusConfig =
+    STATUS_CONFIG[repair.status] || STATUS_CONFIG.in_progress;
 
   return (
     <div className="min-h-screen">

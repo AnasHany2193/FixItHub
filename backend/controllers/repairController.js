@@ -434,14 +434,12 @@ export const acceptBid = async (req, res, next) => {
 
 export const getDirectOffersRepairs = async (req, res, next) => {
   try {
-    const { category, itemType, sort = "newest" } = req.query;
+    const { category, sort = "newest" } = req.query;
 
     const repairs = await RepairRequest.find({
       status: RepairStatus.AWAITING_ASSIGNMENT,
       auction: null,
       ...(category && category !== "all" && { category }),
-      ...(itemType && { itemType: new RegExp(itemType, "i") }),
-      ...(itemType && { title: new RegExp(itemType, "i") }),
     })
       .populate({
         path: "customer",
@@ -455,17 +453,18 @@ export const getDirectOffersRepairs = async (req, res, next) => {
       .sort(sort === "price" ? { "offers.offerPrice": -1 } : { createdAt: -1 })
       .lean();
 
-    const enhancedRepairs = repairs.map((repair) => ({
-      ...repair,
-      offerCount: repair.offers.length,
-      averageOffer:
-        repair.offers.length > 0
-          ? Math.round(
-              repair.offers.reduce((sum, o) => sum + o.offerPrice, 0) /
-                repair.offers.length
-            )
-          : null,
-    }));
+    const enhancedRepairs = repairs.map((repair) => {
+      const validOffers = repair.offers?.filter((o) => o.offerPrice) || [];
+      const total = validOffers.reduce((sum, o) => sum + o.offerPrice, 0);
+      const average =
+        validOffers.length > 0 ? total / validOffers.length : null;
+
+      return {
+        ...repair,
+        offerCount: validOffers.length,
+        averageOffer: average ? Math.round(average * 100) / 100 : null, // Keep 2 decimal places
+      };
+    });
 
     res.status(200).json({ success: true, data: enhancedRepairs });
   } catch (error) {
@@ -499,10 +498,19 @@ export const getDirectOffersRepairDetails = async (req, res, next) => {
     // Convert to string for consistent comparison
     const userId = req.user._id.toString();
 
+    const validOffers = repair.offers?.filter((o) => o.offerPrice) || [];
+    const total = validOffers.reduce((sum, o) => sum + o.offerPrice, 0);
+    const averageOffer =
+      validOffers.length > 0
+        ? Math.round((total / validOffers.length) * 100) / 100
+        : null;
+
     const response = {
       ...repair,
-      hasOffer: repair.offers.some((o) => o.worker?._id?.toString() === userId),
-      myOffer: repair.offers.find((o) => o.worker?._id?.toString() === userId),
+      averageOffer,
+      offerCount: validOffers.length,
+      hasOffer: validOffers.some((o) => o.worker?._id?.toString() === userId),
+      myOffer: validOffers.find((o) => o.worker?._id?.toString() === userId),
     };
 
     res.status(200).json({
@@ -768,16 +776,16 @@ export const getWorkerRepairs = async (req, res, next) => {
       })
       .populate({
         path: "auction",
-        select: "status expiresAt currentLowestBid",
+        select: "status expiresAt startingMaxPrice currentLowestBid", // Added startingMaxPrice
         populate: {
           path: "currentLowestBid",
-          select: "bidPrice",
+          select: "bidPrice worker", // Added worker for context
         },
       })
       .populate({
         path: "offers",
         match: { status: "accepted" },
-        select: "price status",
+        select: "offerPrice status", // Fixed field name (price → offerPrice)
       })
       .sort("-createdAt")
       .lean();
@@ -787,8 +795,9 @@ export const getWorkerRepairs = async (req, res, next) => {
       sourceType: repair.auction ? "auction" : "direct",
       currentPrice:
         repair.auction?.currentLowestBid?.bidPrice ||
-        repair.offers?.[0]?.price ||
-        "Not specified",
+        repair.offers?.[0]?.offerPrice || // Fixed field name
+        repair.auction?.startingMaxPrice || // Added fallback
+        null,
     }));
 
     res.status(200).json({

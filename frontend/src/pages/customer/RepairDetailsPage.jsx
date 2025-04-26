@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -307,7 +307,7 @@ export default function RepairDetailsPage() {
                 />
                 <InfoItem
                   label="Last Updated"
-                  value={formatDate(repair.updatedAt)}
+                  value={formatDistanceToNow(repair.updatedAt)}
                 />
               </div>
             </SectionCard>
@@ -324,41 +324,43 @@ export default function RepairDetailsPage() {
               </SectionCard>
             )}
 
-            {repair.paymentStatus === "pending" && repair.paymentAmount && (
-              <SectionCard
-                icon={
-                  <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                }
-                title="Complete Payment"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
-                    <span className="font-medium">Total Due</span>
-                    <span className="font-mono">
-                      ${repair.paymentAmount?.toFixed(2)}
-                    </span>
+            {repair.paymentStatus === "pending" &&
+              repair.paymentAmount &&
+              repair.status === "awaiting_payment" && (
+                <SectionCard
+                  icon={
+                    <Wallet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  }
+                  title="Complete Payment"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                      <span className="font-medium">Total Due</span>
+                      <span className="font-mono">
+                        ${repair.paymentAmount?.toFixed(2)}
+                      </span>
+                    </div>
+
+                    <Button
+                      onClick={() => createPayment({ repairId: repair._id })}
+                      disabled={isPending}
+                      variant="ghost"
+                      className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
+                    >
+                      {isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Wallet className="w-4 h-4" />
+                      )}
+                      Pay Now
+                    </Button>
+
+                    <p className="text-sm text-center text-gray-500 dark:text-gray-400">
+                      Secure payment processed by Stripe
+                    </p>
                   </div>
-
-                  <Button
-                    onClick={() => createPayment({ repairId: repair._id })}
-                    disabled={isPending}
-                    variant="ghost"
-                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
-                  >
-                    {isPending ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Wallet className="w-4 h-4" />
-                    )}
-                    Pay Now
-                  </Button>
-
-                  <p className="text-sm text-center text-gray-500 dark:text-gray-400">
-                    Secure payment processed by Stripe
-                  </p>
-                </div>
-              </SectionCard>
-            )}
+                </SectionCard>
+              )}
 
             {(repair.status === "awaiting_assignment" ||
               repair.status === "cancelled") && (
@@ -527,7 +529,7 @@ const StatusTimeline = ({ trackingUpdates }) => {
                   </h3>
                   {statusUpdate && (
                     <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {formatDate(statusUpdate.timestamp)}
+                      {formatDistanceToNow(statusUpdate.timestamp)}
                     </p>
                   )}
                 </div>
@@ -554,12 +556,16 @@ const BidCard = ({ bid, repairId }) => {
           </AvatarFallback>
         </Avatar>
 
-        <div className="flex-1">
+        <div className="flex flex-col flex-1 gap-3">
           <div className="flex items-center gap-2">
             <span className="font-medium">
               {bid.worker?.username || "Anonymous Technician"}
             </span>
-            <Badge variant={bid.status}>{bid.status}</Badge>
+            <Badge
+              variant={bid.status === "accepted" ? "success" : "destructive"}
+            >
+              {bid.status}
+            </Badge>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
@@ -574,7 +580,7 @@ const BidCard = ({ bid, repairId }) => {
             <span>•</span>
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
-              <span>{formatDate(bid.submittedAt)}</span>
+              <span>{formatDistanceToNow(bid.submittedAt)}</span>
             </div>
           </div>
         </div>

@@ -24,7 +24,7 @@ import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import FindRepairsPage from "./pages/worker/FindRepairsPage";
-import WorkerRepairsPage from "./pages/worker/WorkerRepairsPage";
+import WorkerActiveRepairsPage from "./pages/worker/WorkerActiveRepairsPage";
 import WorkerRepairDetailPage from "./pages/worker/WorkerRepairDetailPage";
 import WorkerRepairDetailsPage from "./pages/worker/WorkerRepairDetailsPage";
 
@@ -86,7 +86,10 @@ function App() {
               element={<WorkerRepairDetailPage type="offer" />}
             />
 
-            <Route path="/repairs/active" element={<WorkerRepairsPage />} />
+            <Route
+              path="/repairs/active"
+              element={<WorkerActiveRepairsPage />}
+            />
             <Route
               path="/repairs/active/:id"
               element={<WorkerRepairDetailsPage />}

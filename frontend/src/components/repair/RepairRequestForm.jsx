@@ -317,7 +317,7 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="relative group aspect-square"
+                    className="relative group aspect-video"
                   >
                     <img
                       src={img.url}
@@ -335,7 +335,7 @@ const RepairRequestForm = ({ repair: existingRepair, isEdit = false }) => {
                 ))}
               </AnimatePresence>
 
-              <label className="flex flex-col items-center justify-center p-6 transition-colors border-2 border-indigo-200 border-dashed rounded-lg cursor-pointer aspect-square dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400">
+              <label className="flex flex-col items-center justify-center p-6 transition-colors border-2 border-indigo-200 border-dashed rounded-lg cursor-pointer aspect-video dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400">
                 <div className="space-y-2 text-center">
                   {isUploading ? (
                     <LoadingSpinner size="sm" />
