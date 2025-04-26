@@ -189,16 +189,19 @@ export const returnRepair = async ({ repairId }) => {
 export const getWorkerHistory = async (params = {}) => {
   try {
     const { data } = await axiosClient.get("/repairs/workers/history", {
-      params,
+      params: {
+        status: params.status || "",
+        limit: params.limit || 20,
+        offset: params.offset || 0,
+      },
     });
-    return data.data;
+    return data;
   } catch (error) {
     throw new Error(
-      error.response?.data?.message || "Failed to fetch worker history"
+      error.response?.data?.message || "Failed to fetch repair history"
     );
   }
 };
-
 // Auction & Non-Auction endpoints
 export const getRepairList = async (type, filters) => {
   try {

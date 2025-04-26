@@ -939,36 +939,53 @@ export const returnRepair = async (req, res, next) => {
 
 export const getWorkerRepairsHistory = async (req, res, next) => {
   try {
-    const { status } = req.query;
+    const { status, limit = 20, offset = 0 } = req.query;
     const filter = {
       worker: req.user._id,
-      ...(status && { status }),
+      status: { $in: ["completed", "returning_to_customer"] },
+      ...(status && status !== "all" && { status }),
     };
 
-    const repairs = await RepairRequest.find(filter)
-      .populate("customer", "name email")
-      .populate({
-        path: "auction",
-        select: "startingMaxPrice",
-        match: { status: "closed" },
-      })
-      .sort("-createdAt")
-      .lean();
+    const [repairs, count] = await Promise.all([
+      RepairRequest.find(filter)
+        .populate("customer", "username profile.avatar")
+        .populate({
+          path: "auction",
+          select: "startingMaxPrice currentLowestBid",
+          match: { status: "closed" },
+        })
+        .populate({
+          path: "offers",
+          match: { status: "accepted" },
+          select: "offerPrice",
+        })
+        .sort("-createdAt")
+        .skip(Number(offset))
+        .limit(Number(limit))
+        .lean(),
+      RepairRequest.countDocuments(filter),
+    ]);
 
     const history = repairs.map((repair) => ({
       _id: repair._id,
       itemType: repair.itemType,
+      title: repair.title,
       status: repair.status,
       paymentStatus: repair.paymentStatus,
-      completedAt: repair.trackingUpdates.find((t) => t.status === "completed")
+      completedAt: repair.trackingUpdates.find((t) => t.status === "shipped")
         ?.timestamp,
       customer: repair.customer,
-      price: repair.auction?.startingMaxPrice || repair.paymentAmount,
+      price:
+        repair.auction?.currentLowestBid?.bidPrice ||
+        repair.offers?.[0]?.offerPrice ||
+        repair.paymentAmount,
+      sourceType: repair.auction ? "auction" : "direct",
+      createdAt: repair.createdAt,
     }));
 
     res.status(200).json({
       success: true,
-      count: history.length,
+      count,
       data: history,
     });
   } catch (error) {

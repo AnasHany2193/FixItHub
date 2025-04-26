@@ -2,12 +2,9 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
   Activity,
-  BarChart,
   Briefcase,
-  CheckCircle,
   Clock,
   Cog,
-  DollarSign,
   Gavel,
   Handshake,
   History,
@@ -17,9 +14,7 @@ import {
   PocketKnife,
   Search,
   Settings,
-  Undo,
   Users,
-  WalletMinimal,
   Wrench,
   Zap,
 } from "lucide-react";
@@ -91,7 +86,7 @@ const DashboardLayout = () => {
           },
           {
             name: "New Opportunities",
-            path: "/repairs/opportunities",
+            path: "/repairs/auctions",
             icon: <Zap className="w-4 h-4" />,
           },
         ],
@@ -129,33 +124,10 @@ const DashboardLayout = () => {
             description: "Currently assigned repairs",
           },
           {
-            path: "/repairs/completed",
-            name: "Completed Work",
-            icon: <CheckCircle className="w-4 h-4" />,
+            path: "/repairs/worker-history",
+            name: "Work History",
+            icon: <History className="w-4 h-4" />,
             description: "Finished repair history",
-          },
-          {
-            path: "/repairs/returns",
-            name: "Returned Jobs",
-            icon: <Undo className="w-4 h-4" />,
-            description: "Repairs sent back to customers",
-          },
-        ],
-      },
-      {
-        type: "group",
-        name: "Earnings & History",
-        icon: <DollarSign className="w-5 h-5" />,
-        items: [
-          {
-            path: "/earnings",
-            name: "Payment History",
-            icon: <WalletMinimal className="w-4 h-4" />,
-          },
-          {
-            path: "/performance",
-            name: "Work Stats",
-            icon: <BarChart className="w-4 h-4" />,
           },
         ],
       },

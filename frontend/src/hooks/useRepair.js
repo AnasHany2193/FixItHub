@@ -313,10 +313,10 @@ export const useReturnRepair = () => {
   });
 };
 
-export const useWorkerHistory = (filters) =>
+export const useWorkerHistory = (params = {}) =>
   useQuery({
-    queryKey: ["worker-history", filters],
-    queryFn: () => getWorkerHistory(filters),
+    queryKey: ["worker-history", params],
+    queryFn: () => getWorkerHistory(params),
   });
 
 // Auction & Non-Auction endpoints

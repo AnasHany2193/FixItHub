@@ -35,6 +35,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import WorkerHistoryPage from "./pages/worker/WorkerHistoryPage";
 
 function App() {
   return (
@@ -67,7 +68,6 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["worker"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
-
             <Route
               path="/repairs/auctions"
               element={<FindRepairsPage type="auctions" />}
@@ -76,7 +76,10 @@ function App() {
               path="/repairs/direct-offers"
               element={<FindRepairsPage type="direct-offers" />}
             />
-
+            <Route
+              path="/repairs/worker-history"
+              element={<WorkerHistoryPage />}
+            />
             <Route
               path="/repairs/auctions/:id"
               element={<WorkerRepairDetailPage type="auction" />}
@@ -85,7 +88,6 @@ function App() {
               path="/repairs/direct-offers/:id"
               element={<WorkerRepairDetailPage type="offer" />}
             />
-
             <Route
               path="/repairs/active"
               element={<WorkerActiveRepairsPage />}
