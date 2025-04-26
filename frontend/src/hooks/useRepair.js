@@ -98,7 +98,6 @@ export const useUpdateRepair = () => {
       navigate("/repairs/all");
     },
     onError: (error) => {
-      console.log("error", error);
       toast({
         variant: "error",
         title: "Update Failed",
@@ -214,7 +213,6 @@ export const useCreatePaymentSession = () => {
       window.location.href = data.url;
     },
     onError: (error) => {
-      console.log("useCreatePaymentSession error", error);
       toast({
         variant: "destructive",
         title: "Payment Failed",

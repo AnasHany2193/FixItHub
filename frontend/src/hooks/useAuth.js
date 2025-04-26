@@ -144,7 +144,6 @@ export const useUpload = () => {
       });
     },
     onError: (error) => {
-      console.log("error", error);
       toast({
         variant: "error",
         title: "Upload Failed",

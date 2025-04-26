@@ -44,7 +44,6 @@ export default function StartAuctionDialog({ repair, onOpenChange }) {
   });
 
   const onSubmit = async (data) => {
-    console.log(data);
     try {
       await startAuction({
         repairId: repair._id,

@@ -175,8 +175,6 @@ export const submitBid = async (req, res, next) => {
   try {
     const { auctionId } = req.params;
     const { bidPrice } = req.body;
-    console.log("bidPrice", bidPrice);
-    console.log("auctionId", auctionId);
     const workerId = req.user._id;
 
     // 1. Validate auction

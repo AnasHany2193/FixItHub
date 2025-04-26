@@ -113,7 +113,6 @@ const WorkerRegisterForm = ({ onBack }) => {
 
     uploadDocument(formData, {
       onSuccess: ({ result }) => {
-        console.log("result", result);
         setDocuments((prev) => [
           ...prev,
           {
@@ -146,8 +145,6 @@ const WorkerRegisterForm = ({ onBack }) => {
       documents,
     });
   };
-
-  console.log(documents);
 
   return (
     <Form {...form}>
@@ -417,7 +414,6 @@ const WorkerRegisterForm = ({ onBack }) => {
                       alt="Document preview"
                       className="object-cover w-full h-24 border-2 border-blue-100 rounded-lg dark:border-indigo-800"
                     />
-                    {console.log(doc)}
                     <button
                       type="button"
                       onClick={() => removeDocument(doc.public_id)}

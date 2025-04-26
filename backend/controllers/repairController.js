@@ -147,8 +147,6 @@ export const startRepairAuction = async (req, res, next) => {
     const { startingMaxPrice, expiresAt } = req.body;
     const userId = req.user._id;
 
-    console.log({ startingMaxPrice, expiresAt });
-
     const repair = await RepairRequest.findOne({
       _id: id,
       customer: userId,
@@ -318,10 +316,7 @@ export const getRepairRequests = async (req, res, next) => {
 
 export const getCustomerHistory = async (req, res, next) => {
   try {
-    console.log("---------------------------------------------");
     const { status } = req.query;
-    console.log("status", status);
-    console.log("req.user._id", req.user._id);
     const filter = {
       customer: req.user._id,
       status: status || {
@@ -533,7 +528,6 @@ export const submitOffer = async (req, res, next) => {
     const { repairId } = req.params;
     const { offerPrice } = req.body;
     const workerId = req.user._id;
-    console.log({ repairId, offerPrice, workerId });
 
     // Validate repair
     const repair = await RepairRequest.findOne({

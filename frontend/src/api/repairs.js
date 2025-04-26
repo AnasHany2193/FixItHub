@@ -79,13 +79,11 @@ export const getCustomerHistory = async (params = {}) => {
 
 export const acceptBid = async ({ repairId, bidId }) => {
   try {
-    console.log({ repairId, bidId });
     const { data } = await axiosClient.put(`/repairs/${repairId}/accept-bid`, {
       bidId,
     });
     return data;
   } catch (error) {
-    console.log(error);
     throw new Error(error.response?.data?.message || "Bid acceptance failed");
   }
 };
@@ -100,7 +98,6 @@ export const acceptOffer = async ({ repairId, offerId }) => {
     );
     return data;
   } catch (error) {
-    console.log(error);
     throw new Error(error.response?.data?.message || "Offer acceptance failed");
   }
 };
@@ -113,10 +110,8 @@ export const createPaymentSession = async ({ repairId }) => {
         repairId,
       }
     );
-    console.log("createPaymentSession", data);
     return data;
   } catch (error) {
-    console.log("createPaymentSession error", error);
     throw new Error(error.response?.data?.message || "Payment failed");
   }
 };
@@ -179,7 +174,6 @@ export const returnRepair = async ({ repairId }) => {
     const { data } = await axiosClient.patch(`/repairs/return/${repairId}`);
     return data;
   } catch (error) {
-    console.log(error);
     throw new Error(
       error.response?.data?.message || "Failed to initiate return"
     );
@@ -245,7 +239,6 @@ export const updateBid = async ({ bidId, bidPrice }) => {
     });
     return data;
   } catch (error) {
-    console.log(error);
     throw new Error(error.response?.data?.message || "Bid update failed");
   }
 };
@@ -266,14 +259,12 @@ export const getDirectOffersRepairDetails = async (repairId) => {
 
 export const submitOffer = async ({ repairId, offerPrice }) => {
   try {
-    console.log({ repairId, offerPrice });
     const { data } = await axiosClient.post(
       `/repairs/direct-offers/${repairId}/offers`,
       { offerPrice }
     );
     return data;
   } catch (error) {
-    console.log("error", error);
     throw new Error(error.response?.data?.message || "Offer submission failed");
   }
 };
