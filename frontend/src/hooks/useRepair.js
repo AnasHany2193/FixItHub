@@ -63,6 +63,9 @@ export const useStartRepairAuction = () => {
     mutationFn: startRepairAuction,
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
+      queryClient.invalidateQueries(["repairs", repairId]);
+      queryClient.invalidateQueries(["repairs"]);
+      queryClient.invalidateQueries(["auctions"]);
       toast({
         variant: "success",
         title: "Auction Started",
@@ -161,6 +164,7 @@ export const useAcceptBid = () => {
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
       queryClient.invalidateQueries(["auctions"]);
+      queryClient.invalidateQueries(["repairs"]);
       toast({
         variant: "success",
         title: "Bid Accepted",
@@ -186,6 +190,7 @@ export const useAcceptOffer = () => {
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
       queryClient.invalidateQueries(["direct-offers"]);
+      queryClient.invalidateQueries(["repairs"]);
       toast({
         variant: "success",
         title: "Offer Accepted",
@@ -210,6 +215,8 @@ export const useCreatePaymentSession = () => {
     mutationFn: createPaymentSession,
     onSuccess: (data) => {
       queryClient.invalidateQueries(["repairs"]);
+      queryClient.invalidateQueries(["customer-history"]); // Add customer history
+      queryClient.invalidateQueries(["repairs", data.repairId]); // Specific repair
       window.location.href = data.url;
     },
     onError: (error) => {
@@ -246,6 +253,8 @@ export const useCompleteRepair = () => {
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["worker-repairs"]);
       queryClient.invalidateQueries(["repairs", repairId]);
+      queryClient.invalidateQueries(["worker-history"]); // Add worker history
+      queryClient.invalidateQueries(["customer-history"]); // Add customer history
       toast({
         variant: "success",
         title: "Repair Completed",
@@ -270,6 +279,8 @@ export const useUpdateTracking = () => {
     mutationFn: updateTrackingStatus,
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["repairs", repairId]);
+      queryClient.invalidateQueries(["worker-repairs"]); // Add worker repairs list
+
       toast({
         variant: "success",
         title: "Status Updated",
@@ -295,6 +306,8 @@ export const useReturnRepair = () => {
     onSuccess: (data, repairId) => {
       queryClient.invalidateQueries(["worker-repairs"]);
       queryClient.invalidateQueries(["repairs", repairId]);
+      queryClient.invalidateQueries(["worker-history"]); // Add worker history
+      queryClient.invalidateQueries(["customer-history"]); // Add customer history
       toast({
         variant: "success",
         title: "Return Initiated",
@@ -341,6 +354,7 @@ export const useSubmitBid = () => {
     mutationFn: submitBid,
     onSuccess: (data, { auctionId }) => {
       queryClient.invalidateQueries(["auctions", auctionId]);
+      queryClient.invalidateQueries(["auctions"]); // Invalidate auctions list
       toast({
         variant: "success",
         title: "Bid Submitted",
@@ -363,8 +377,9 @@ export const useUpdateBid = () => {
 
   return useMutation({
     mutationFn: updateBid,
-    onSuccess: (data, { bidId }) => {
-      queryClient.invalidateQueries(["auctions", bidId]);
+    onSuccess: (data, { auctionId }) => {
+      queryClient.invalidateQueries(["auctions", auctionId]);
+      queryClient.invalidateQueries(["auctions"]); // Invalidate auctions list
       toast({
         variant: "success",
         title: "Bid Updated",
@@ -398,6 +413,7 @@ export const useSubmitOffer = () => {
     onSuccess: (data, { repairId }) => {
       queryClient.invalidateQueries(["direct-offers", repairId]);
       queryClient.invalidateQueries(["direct-offers"]);
+      queryClient.invalidateQueries(["repairs"]); // Add main repairs list
 
       toast({
         variant: "success",
@@ -424,6 +440,8 @@ export const useUpdateOffer = () => {
     onSuccess: (data, { offerId, repairId }) => {
       queryClient.invalidateQueries(["direct-offers", repairId]);
       queryClient.invalidateQueries(["offers", offerId]);
+      queryClient.invalidateQueries(["direct-offers"]); // Invalidate all direct offers
+      queryClient.invalidateQueries(["repairs"]); // Invalidate main repairs list
 
       toast({
         variant: "success",

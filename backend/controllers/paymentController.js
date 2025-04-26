@@ -89,6 +89,7 @@ export const createRepairPaymentSession = async (req, res) => {
     res.status(200).json({
       success: true,
       url: session.url,
+      repairId: repairId,
     });
   } catch (error) {
     res.status(500).json({
