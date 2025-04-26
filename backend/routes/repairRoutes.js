@@ -176,6 +176,11 @@ router.post(
   startRepairAuction
 );
 router.put("/:repairId/accept-bid", protect, roleCheck("customer"), acceptBid);
-router.put("/:id/accept-offer", protect, roleCheck("customer"), acceptOffer);
+router.put(
+  "/:repairId/accept-offer",
+  protect,
+  roleCheck("customer"),
+  acceptOffer
+);
 
 export default router;

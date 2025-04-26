@@ -90,14 +90,17 @@ export const acceptBid = async ({ repairId, bidId }) => {
   }
 };
 
-export const acceptOffer = async (repairId, offerId) => {
+export const acceptOffer = async ({ repairId, offerId }) => {
   try {
     const { data } = await axiosClient.put(
       `/repairs/${repairId}/accept-offer`,
-      { offerId }
+      {
+        offerId,
+      }
     );
     return data;
   } catch (error) {
+    console.log(error);
     throw new Error(error.response?.data?.message || "Offer acceptance failed");
   }
 };

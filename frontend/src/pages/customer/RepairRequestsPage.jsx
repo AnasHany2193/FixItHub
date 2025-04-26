@@ -350,18 +350,14 @@ const RepairCard = ({ repair, cancelRepair }) => {
   );
 };
 
-const StatItem = ({ label, value, icon, className }) => (
-  <div
-    className={`flex items-center gap-2 p-3 rounded-lg bg-indigo-50/50 dark:bg-gray-700/50 ${className}`}
-  >
-    <div className="p-1.5 rounded-md bg-white dark:bg-gray-800">{icon}</div>
-    <div>
-      <p className="text-sm font-medium text-gray-600 dark:text-gray- 300">
-        {label}
-      </p>
-      <p className="text-base font-semibold text-gray-900 dark:text-white">
-        {value}
-      </p>
+const StatItem = ({ icon, label, value }) => (
+  <div className="flex p-2 rounded-lg bg-gray-50 dark:bg-gray-800">
+    <div className="flex items-center gap-3">
+      {icon}
+      <div>
+        <p className="text-xs text-gray-600 dark:text-gray-300">{label}</p>
+        <p className="font-medium text-gray-900 dark:text-white">{value}</p>
+      </div>
     </div>
   </div>
 );

@@ -205,6 +205,14 @@ export const getRepairRequest = async (req, res, next) => {
           ],
         },
         {
+          path: "offers",
+          select: "offerPrice status createdAt worker",
+          populate: {
+            path: "worker",
+            select: "username profile.avatar rating.average",
+          },
+        },
+        {
           path: "worker",
           select: "username profile.avatar rating.average",
         },
@@ -213,17 +221,36 @@ export const getRepairRequest = async (req, res, next) => {
 
     if (!repair) throw createHttpError(404, "Repair not found");
 
-    // Extract bids from auction if exists
-    const response = {
+    // Determine repair type and format response accordingly
+    const isAuction = !!repair.auction;
+    const baseData = {
       ...repair,
-      proposals: repair.auction?.bids || [],
-      auction: {
-        ...repair.auction,
-        currentLowest:
-          repair.auction?.currentLowestBid?.bidPrice ||
-          repair.auction?.startingMaxPrice,
-      },
+      type: isAuction ? "auction" : "direct-offer",
+      proposals: isAuction ? repair.auction?.bids || [] : repair.offers || [],
     };
+
+    // Add type-specific data
+    const response = isAuction
+      ? {
+          ...baseData,
+          auction: {
+            ...repair.auction,
+            currentLowest:
+              repair.auction?.currentLowestBid?.bidPrice ||
+              repair.auction?.startingMaxPrice,
+            bidCount: repair.auction?.bids?.length || 0,
+          },
+        }
+      : {
+          ...baseData,
+          offers: {
+            averageOffer: repair.offers?.length
+              ? repair.offers.reduce((sum, o) => sum + o.offerPrice, 0) /
+                repair.offers.length
+              : null,
+            offerCount: repair.offers?.length || 0,
+          },
+        };
 
     res.status(200).json({
       success: true,
@@ -611,7 +638,7 @@ export const acceptOffer = async (req, res, next) => {
     const { offerId } = req.body;
     const customerId = req.user._id;
 
-    // Validate repair ownership
+    // 1. Find repair and validate
     const repair = await RepairRequest.findOne({
       _id: repairId,
       customer: customerId,
@@ -621,11 +648,11 @@ export const acceptOffer = async (req, res, next) => {
     if (!repair) {
       return res.status(404).json({
         success: false,
-        message: "Repair not found or not eligible",
+        message: "Repair not found or not eligible for offer acceptance",
       });
     }
 
-    // Validate offer
+    // 2. Find offer and validate
     const offer = await Offer.findOne({
       _id: offerId,
       repairRequest: repairId,
@@ -638,14 +665,14 @@ export const acceptOffer = async (req, res, next) => {
       });
     }
 
-    // Update offer statuses
+    // 3. Update offers - same pattern as bids
     await Offer.findByIdAndUpdate(offerId, { status: "accepted" });
     await Offer.updateMany(
       { repairRequest: repairId, _id: { $ne: offerId } },
       { status: "rejected" }
     );
 
-    // Update repair
+    // 4. Update repair - similar structure to bid acceptance
     const updatedRepair = await RepairRequest.findByIdAndUpdate(
       repairId,
       {

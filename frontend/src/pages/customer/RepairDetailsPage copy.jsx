@@ -21,12 +21,10 @@ import {
   Search,
   Banknote,
   Truck,
-  Handshake,
 } from "lucide-react";
 
 import {
   useAcceptBid,
-  useAcceptOffer,
   useCancelRepair,
   useCreatePaymentSession,
   useRepairDetails,
@@ -62,7 +60,8 @@ const trackingStatusOrder = [
 const STATUS_CONFIG = {
   awaiting_assignment: {
     label: "Awaiting Assignment",
-    color: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+    color:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400",
   },
   auction_open: {
     label: "Auction Active",
@@ -122,13 +121,14 @@ export default function RepairDetailsPage() {
         title: "Payment Successful!",
         description: "Your payment has been processed successfully",
       });
+
+      searchParams.delete("payment");
     } else if (paymentStatus === "cancelled") {
       toast.error({
         title: "Payment Cancelled",
         description: "Your payment was not completed",
       });
     }
-    searchParams.delete("payment");
   }, [searchParams, toast, refetch]);
 
   if (isLoading) return <PageSkeleton />;
@@ -138,25 +138,18 @@ export default function RepairDetailsPage() {
     STATUS_CONFIG[repair.status] || STATUS_CONFIG.awaiting_assignment;
 
   // New section for auction status
-  const ProposalsSection = () => {
+  const AuctionStatusSection = () => {
     const { refetch, isFetching } = useRepairDetails(id);
-    const isAuction = repair.type === "auction";
 
     return (
       <SectionCard
         icon={
-          isAuction ? (
-            <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-          ) : (
-            <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
-          )
+          <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
         }
-        title={isAuction ? "Active Bids" : "Submitted Offers"}
+        title="Active Bids"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">
-            {isAuction ? "Bid" : "Offer"} Activity
-          </h3>
+          <h3 className="text-lg font-semibold">Submitted Bids</h3>
           <Button
             variant="outline"
             size="sm"
@@ -171,26 +164,12 @@ export default function RepairDetailsPage() {
         </div>
         <div className="space-y-4">
           {repair.proposals?.length > 0 ? (
-            repair.proposals.map((proposal) =>
-              isAuction ? (
-                <BidCard
-                  key={proposal._id}
-                  bid={proposal}
-                  repairId={repair._id}
-                />
-              ) : (
-                <OfferCard
-                  key={proposal._id}
-                  offer={proposal}
-                  repairId={repair._id}
-                />
-              )
-            )
+            repair.proposals.map((bid) => (
+              <BidCard key={bid._id} bid={bid} repairId={repair._id} />
+            ))
           ) : (
             <div className="p-4 text-center rounded-lg bg-muted">
-              <p className="text-muted-foreground">
-                No {isAuction ? "bids" : "offers"} yet
-              </p>
+              <p className="text-muted-foreground">No active bids yet</p>
             </div>
           )}
         </div>
@@ -207,7 +186,7 @@ export default function RepairDetailsPage() {
             <Button
               variant="ghost"
               className="gap-2 -ml-2 group text-muted-foreground hover:text-foreground"
-              onClick={() => navigate(-1)}
+              onClick={() => window.history.back()}
             >
               <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
               <span className="text-sm">Back to Repairs</span>
@@ -280,7 +259,7 @@ export default function RepairDetailsPage() {
               </div>
             </SectionCard>
 
-            <ProposalsSection />
+            <AuctionStatusSection />
           </div>
 
           {/* Right Column */}
@@ -298,7 +277,9 @@ export default function RepairDetailsPage() {
                   value={
                     <Badge
                       variant={
-                        repair.paymentStatus === "paid" ? "success" : "warning"
+                        repair.paymentStatus === "paid"
+                          ? "default"
+                          : "destructive"
                       }
                     >
                       {repair.paymentStatus?.toUpperCase()}
@@ -342,7 +323,6 @@ export default function RepairDetailsPage() {
                   <Button
                     onClick={() => createPayment({ repairId: repair._id })}
                     disabled={isPending}
-                    variant="ghost"
                     className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600"
                   >
                     {isPending ? (
@@ -362,29 +342,21 @@ export default function RepairDetailsPage() {
 
             {(repair.status === "awaiting_assignment" ||
               repair.status === "cancelled") && (
-              <div className="p-6 space-y-4 border rounded-xl bg-indigo-50 dark:border-gray-700 dark:bg-gray-800">
+              <div className="p-6 space-y-4 border border-indigo-100 rounded-xl bg-indigo-50 dark:border-gray-700 dark:bg-gray-800">
                 <div className="space-y-2">
                   <h3 className="font-medium text-indigo-900 dark:text-indigo-200">
-                    {repair.type === "auction"
-                      ? "Manage Auction"
-                      : "Assignment Options"}
+                    Start Auction
                   </h3>
                   <p className="text-sm text-indigo-700 dark:text-indigo-400">
-                    {repair.type === "auction"
-                      ? "Manage your active auction"
-                      : "Choose how to assign this repair"}
+                    Get competitive bids from certified technicians
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  <Button
-                    className="flex-1 bg-indigo-600 dark:text-indigo-200 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600"
-                    onClick={() => setShowAuctionDialog(true)}
-                  >
-                    {repair.type === "auction"
-                      ? "Manage Auction"
-                      : "Start Auction"}
-                  </Button>
-                </div>
+                <Button
+                  className="w-full bg-indigo-600 dark:text-indigo-200 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600"
+                  onClick={() => setShowAuctionDialog(true)}
+                >
+                  Start Auction
+                </Button>
               </div>
             )}
 
@@ -602,7 +574,7 @@ const BidCard = ({ bid, repairId }) => {
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <div className="mt-6 space-x-4">
+                  <div className="mt-6">
                     <Button
                       variant="outline"
                       onClick={() => setShowConfirm(false)}
@@ -610,98 +582,9 @@ const BidCard = ({ bid, repairId }) => {
                       Cancel
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="success"
                       onClick={() => {
                         acceptBid({ repairId, bidId: bid._id });
-                        setShowConfirm(false);
-                      }}
-                    >
-                      Confirm Acceptance
-                    </Button>
-                  </div>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const OfferCard = ({ offer, repairId }) => {
-  const [showConfirm, setShowConfirm] = useState(false);
-  const { mutate: acceptOffer, isPending } = useAcceptOffer();
-
-  return (
-    <div className="relative p-4 transition-all border rounded-lg group hover:border-green-200 dark:hover:border-gray-600">
-      <div className="flex items-center gap-4">
-        <Avatar className="border-2 border-green-100 dark:border-gray-600">
-          <AvatarImage src={offer.worker?.profile?.avatar?.url} />
-          <AvatarFallback className="bg-green-100 dark:bg-gray-700">
-            {offer.worker?.username?.[0]?.toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">
-              {offer.worker?.username || "Anonymous Technician"}
-            </span>
-            <Badge variant={offer.status}>{offer.status}</Badge>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-amber-500" />
-              <span>{offer.worker?.rating?.average?.toFixed(1) || "New"}</span>
-            </div>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <DollarSign className="w-4 h-4" />
-              <span>{offer.offerPrice?.toFixed(2)}</span>
-            </div>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
-              <span>{formatDate(offer.createdAt)}</span>
-            </div>
-          </div>
-        </div>
-
-        {offer.status === "pending" && (
-          <>
-            <Button
-              variant="success"
-              size="sm"
-              className="transition-opacity opacity-0 group-hover:opacity-100 hover:bg-green-200 dark:hover:bg-gray-600"
-              onClick={() => setShowConfirm(true)}
-              disabled={isPending}
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Accept Offer
-            </Button>
-
-            <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Confirm Offer Acceptance</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to accept this offer from{" "}
-                    {offer.worker?.username}?
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <div className="mt-6 space-x-4">
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowConfirm(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        acceptOffer({ repairId, offerId: offer._id });
                         setShowConfirm(false);
                       }}
                     >

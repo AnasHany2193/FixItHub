@@ -25,6 +25,7 @@ import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import FindRepairsPage from "./pages/worker/FindRepairsPage";
 import WorkerRepairsPage from "./pages/worker/WorkerRepairsPage";
+import WorkerRepairDetailPage from "./pages/worker/WorkerRepairDetailPage";
 import WorkerRepairDetailsPage from "./pages/worker/WorkerRepairDetailsPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -34,7 +35,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import RepairDetailPage from "./pages/worker/RepairDetailPage";
 
 function App() {
   return (
@@ -72,26 +72,18 @@ function App() {
               path="/repairs/auctions"
               element={<FindRepairsPage type="auctions" />}
             />
-            {/* <Route
-              path="/repairs/auctions/:id"
-              element={<AuctionDetailPage />}
-            /> */}
             <Route
               path="/repairs/direct-offers"
               element={<FindRepairsPage type="direct-offers" />}
             />
-            {/* <Route
-              path="/repairs/direct-offers/:id"
-              element={<DirectOffersRepairPage />}
-            /> */}
 
             <Route
               path="/repairs/auctions/:id"
-              element={<RepairDetailPage type="auction" />}
+              element={<WorkerRepairDetailPage type="auction" />}
             />
             <Route
               path="/repairs/direct-offers/:id"
-              element={<RepairDetailPage type="offer" />}
+              element={<WorkerRepairDetailPage type="offer" />}
             />
 
             <Route path="/repairs/active" element={<WorkerRepairsPage />} />

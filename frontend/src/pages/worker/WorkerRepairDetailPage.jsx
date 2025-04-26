@@ -39,7 +39,7 @@ const formatDate = (dateString) => {
   }
 };
 
-export default function RepairDetailPage({ type = "auction" }) {
+export default function WorkerRepairDetailPage({ type = "auction" }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [price, setPrice] = useState("");

@@ -51,15 +51,21 @@ export const createRepairPaymentSession = async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: `Repair Service: ${repair.title}`,
-              description: [
-                `Item: ${repair.itemType}`,
-                `Category: ${repair.category}`,
-                `Worker: ${repair.worker?.username || "Unknown Technician"}`,
-                `Issue: ${repair.issueDescription.substring(0, 100)}...`,
-              ].join(" | "), // Show key details
+              name: "Repair Service Fee",
+              description: "Base service charge",
             },
-            unit_amount: repair.paymentAmount * 100,
+            unit_amount: Math.round(repair.paymentAmount * 100 * 0.7),
+          },
+          quantity: 1,
+        },
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "Parts & Materials",
+              description: "Replacement components",
+            },
+            unit_amount: Math.round(repair.paymentAmount * 100 * 0.3),
           },
           quantity: 1,
         },
