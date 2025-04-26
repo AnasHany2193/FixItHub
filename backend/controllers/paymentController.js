@@ -43,6 +43,8 @@ export const createRepairPaymentSession = async (req, res) => {
       });
     }
 
+    console.log("repair", repair);
+
     // Create Stripe session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -75,7 +77,7 @@ export const createRepairPaymentSession = async (req, res) => {
         repairId: repairId.toString(),
         repairTitle: repair.title,
         workerName: repair.worker?.username || "",
-        workerAvatar: repair.worker?.profile?.avatar || "",
+        workerAvatar: repair.worker?.profile?.avatar.url || "",
         itemType: repair.itemType,
       },
       success_url: `${process.env.CLIENT_URL}/repairs/${repairId}?payment=success`,
@@ -91,6 +93,7 @@ export const createRepairPaymentSession = async (req, res) => {
       url: session.url,
     });
   } catch (error) {
+    console.log("error", error.message);
     res.status(500).json({
       success: false,
       message: "Payment session creation failed",

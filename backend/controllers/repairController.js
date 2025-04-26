@@ -418,6 +418,12 @@ export const acceptBid = async (req, res, next) => {
         status: RepairStatus.IN_PROGRESS,
         paymentAmount: bid.bidPrice,
         paymentStatus: "pending",
+        $push: {
+          trackingUpdates: {
+            status: "received",
+            timestamp: new Date(),
+          },
+        },
       },
       { new: true }
     );
@@ -688,6 +694,12 @@ export const acceptOffer = async (req, res, next) => {
         status: RepairStatus.IN_PROGRESS,
         paymentAmount: offer.offerPrice,
         paymentStatus: "pending",
+        $push: {
+          trackingUpdates: {
+            status: "received",
+            timestamp: new Date(),
+          },
+        },
       },
       { new: true }
     );

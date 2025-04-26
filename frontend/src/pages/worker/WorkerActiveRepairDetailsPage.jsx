@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,6 +9,8 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Hammer,
+  Package,
 } from "lucide-react";
 
 import {
@@ -31,6 +33,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from "@/components/ui/select";
 
 const trackingStatusOrder = [
   "received", // 1. Item received
@@ -67,29 +75,25 @@ const formatDate = (dateString) => {
   }
 };
 
-export default function WorkerRepairDetailsPage() {
+export default function WorkerActiveRepairDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [showStatusDialog, setShowStatusDialog] = useState(false);
 
-  const { mutate: updateStatus } = useUpdateTracking();
   const { data: repair, isLoading } = useWorkerRepair(id);
+  const { mutate: updateStatus } = useUpdateTracking();
   const { mutate: returnRepair, isPending: isReturning } = useReturnRepair();
   const { mutate: completeRepair, isPending: isCompleting } =
     useCompleteRepair();
 
-  const handleCompleteRepair = () => {
-    completeRepair({ repairId: repair._id });
-    setIsDialogOpen(false);
-  };
+  const statusConfig = STATUS_CONFIG[repair?.status || "in_progress"];
+
+  console.log(repair.trackingUpdates.length > 4);
+  console.log(repair.trackingUpdates[4]);
 
   if (isLoading) return <PageSkeleton />;
   if (!repair) return <NotFoundState navigate={navigate} />;
-
-  const statusConfig =
-    STATUS_CONFIG[repair.status] || STATUS_CONFIG.in_progress;
 
   return (
     <div className="min-h-screen">
@@ -103,7 +107,7 @@ export default function WorkerRepairDetailsPage() {
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              <span className="text-sm">Back to Jobs</span>
+              <span className="text-sm">Back to Repairs</span>
             </Button>
           </motion.div>
 
@@ -111,7 +115,7 @@ export default function WorkerRepairDetailsPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                  {repair.itemType}
+                  {repair.title}
                 </h1>
                 <Badge variant="outline" className="font-mono">
                   #{id.slice(-6)}
@@ -124,20 +128,19 @@ export default function WorkerRepairDetailsPage() {
                 <Badge
                   variant={repair.shippingRequired ? "default" : "secondary"}
                 >
-                  {repair.shippingRequired ? "Shipping" : "Local Service"}
+                  {repair.shippingRequired
+                    ? "Shipping Required"
+                    : "Local Service"}
                 </Badge>
               </div>
-              <p className="capitalize text-muted-foreground">
-                {repair.category} • {repair.status.replace(/_/g, " ")}
-              </p>
             </div>
 
             <div className="flex flex-col items-end gap-1">
               <p className="text-sm text-muted-foreground">
-                Accepted: {formatDate(repair.updatedAt)}
+                Created: {formatDate(repair.createdAt)}
               </p>
               <p className="text-sm text-muted-foreground">
-                Due: {formatDate(repair.auction?.expiresAt)}
+                Updated: {formatDate(repair.updatedAt)}
               </p>
             </div>
           </div>
@@ -147,10 +150,9 @@ export default function WorkerRepairDetailsPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Column */}
           <div className="space-y-8 lg:col-span-2">
-            {/* Image Carousel */}
             <ImageCarousel images={repair.photos} />
 
-            {/* Technical Details */}
+            {/* Issue Details */}
             <SectionCard
               icon={
                 <Wrench className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -158,63 +160,51 @@ export default function WorkerRepairDetailsPage() {
               title="Job Details"
             >
               <div className="space-y-4">
-                <InfoItem
-                  label="Customer Issue"
-                  value={repair.issueDescription}
-                />
-                <InfoItem
-                  label="Special Instructions"
-                  value={repair.notes || "None"}
-                />
-                <InfoItem
-                  label="Required Materials"
-                  value={repair.materials?.join(", ") || "Not specified"}
-                />
+                <InfoItem label="Item Type" value={repair.itemType} />
+                <InfoItem label="Category" value={repair.category} />
+                <div className="pt-4">
+                  <h3 className="mb-2 font-medium text-foreground">
+                    Customer Issue
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {repair.issueDescription}
+                  </p>
+                </div>
               </div>
             </SectionCard>
 
-            {/* Status Tracking Section */}
-            {repair.trackingUpdates.length > 0 && (
-              <SectionCard
-                icon={
-                  <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                }
-                title="Repair Progress"
-              >
-                <div className="space-y-6">
-                  <StatusTimeline trackingUpdates={repair.trackingUpdates} />
-
-                  {repair.trackingUpdates !== "shipped" && (
-                    <Button
-                      className="w-full"
-                      onClick={() => setShowStatusDialog(true)}
-                    >
-                      Update Status
-                    </Button>
-                  )}
-                </div>
-              </SectionCard>
-            )}
+            <SectionCard
+              icon={
+                <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="Repair Journey"
+            >
+              <StatusTimeline
+                trackingUpdates={repair.trackingUpdates}
+                onAddStep={() => setSelectedStatus("")}
+              />
+            </SectionCard>
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            {/* Customer Info */}
             <SectionCard
               icon={
                 <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               }
               title="Customer Information"
             >
-              <div className="flex items-center gap-4 p-4">
+              <div className="flex items-center gap-4 p-3">
                 <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
                   <AvatarImage src={repair.customer?.profile?.avatar?.url} />
-                  <AvatarFallback>
-                    {repair.customer?.username?.[0]?.toUpperCase()}
+                  <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+                    {repair.customer?.username?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{repair.customer?.username}</p>
+                  <p className="font-medium">
+                    {repair.customer?.username || "Customer"}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {repair.shippingRequired
                       ? "Remote Service"
@@ -224,7 +214,6 @@ export default function WorkerRepairDetailsPage() {
               </div>
             </SectionCard>
 
-            {/* Payment & Actions */}
             <SectionCard
               icon={
                 <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -248,132 +237,122 @@ export default function WorkerRepairDetailsPage() {
                     </Badge>
                   }
                 />
-                {repair.status === "in_progress" &&
-                  repair.paymentStatus === "paid" && (
-                    <>
-                      <Button
-                        className="w-full"
-                        variant="default"
-                        onClick={() => setIsDialogOpen(true)} // Open the dialog on button click
-                        disabled={isCompleting}
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Mark as Completed
-                      </Button>
-                      <Dialog
-                        open={isDialogOpen}
-                        onClose={() => setIsDialogOpen(false)}
-                      >
-                        <Dialog />
-                        <DialogContent>
-                          <DialogTitle>Confirm Completion</DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to mark this repair as
-                            completed? This action cannot be undone.
-                          </DialogDescription>
-                          <div className="flex justify-end mt-4">
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsDialogOpen(false)}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              variant="default"
-                              onClick={handleCompleteRepair}
-                              className="ml-2"
-                            >
-                              Confirm
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </>
+
+                {repair.paymentStatus === "paid" &&
+                  repair.status === "in_progress" && (
+                    <Button
+                      className="w-full gap-2"
+                      onClick={() => setShowCompleteDialog(true)}
+                      disabled={isCompleting}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Mark as Completed
+                    </Button>
                   )}
               </div>
             </SectionCard>
 
-            {repair.status === "in_progress" &&
-              repair.paymentStatus !== "paid" && (
-                <SectionCard
-                  title="Return Item"
-                  icon={<RefreshCw className="w-5 h-5 text-red-600" />}
-                >
-                  <p className="mb-4">
-                    If you are unable to fix the item, you can initiate a
-                    return. Please ensure that the item has not been paid for
-                    before proceeding.
-                  </p>
-                  <Button
-                    className="w-full"
-                    onClick={() => returnRepair({ repairId: repair._id })}
-                    disabled={isReturning}
-                  >
-                    Return Item
-                  </Button>
-                </SectionCard>
-              )}
+            {(repair.status === "in_progress" ||
+              repair.status === "awaiting_payment") && (
+              <SectionCard
+                icon={
+                  <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                }
+                title="Repair Actions"
+              >
+                <div className="space-y-4">
+                  {/* Status update controls */}
+                  {repair.trackingUpdates.length > 0 && (
+                    <>
+                      <Select
+                        onValueChange={setSelectedStatus}
+                        value={selectedStatus}
+                        disabled={repair.paymentStatus === "paid"}
+                      >
+                        <SelectTrigger className="w-full capitalize">
+                          {selectedStatus.replace(/_/g, " ") ||
+                            "Select next status"}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {trackingStatusOrder
+                            .slice(1, 5) // Only allow up to 'awaiting_payment'
+                            .filter((status) => {
+                              const currentIndex = trackingStatusOrder.indexOf(
+                                repair.trackingUpdates.slice(-1)[0].status
+                              );
+                              return (
+                                trackingStatusOrder.indexOf(status) ===
+                                currentIndex + 1
+                              );
+                            })
+                            .map((status) => (
+                              <SelectItem
+                                key={status}
+                                value={status}
+                                className="capitalize"
+                              >
+                                {status.replace(/_/g, " ")}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        className="w-full"
+                        onClick={() =>
+                          updateStatus({ repairId: id, status: selectedStatus })
+                        }
+                        disabled={
+                          !selectedStatus || repair.paymentStatus === "paid"
+                        }
+                      >
+                        Update Status
+                      </Button>
+                    </>
+                  )}
+
+                  {/* Return item button - only show if not paid */}
+                  {repair.paymentStatus !== "paid" && (
+                    <Button
+                      variant="destructive"
+                      className="w-full gap-2"
+                      onClick={() => returnRepair({ repairId: id })}
+                      disabled={isReturning}
+                    >
+                      <Package className="w-4 h-4" />
+                      Return Item
+                    </Button>
+                  )}
+                </div>
+              </SectionCard>
+            )}
           </div>
         </div>
       </div>
 
-      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-        <DialogContent className="max-h-[90vh] overflow-auto">
+      {/* Completion Dialog */}
+      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <DialogContent className="space-y-5">
           <DialogHeader>
-            <DialogTitle>Update Repair Status</DialogTitle>
+            <DialogTitle>Confirm Repair Completion</DialogTitle>
             <DialogDescription>
-              Select the current progress stage of this repair
+              This action will mark the repair as completed and notify the
+              customer.
             </DialogDescription>
           </DialogHeader>
-
-          <div className="py-6 space-y-4">
-            {trackingStatusOrder.map((status) => {
-              const currentIndex = trackingStatusOrder.indexOf(
-                repair.trackingUpdates?.slice(-1)[0]?.status || "received"
-              );
-              const statusIndex = trackingStatusOrder.indexOf(status);
-              const isAllowed =
-                statusIndex === 0 || statusIndex <= currentIndex + 1;
-
-              return (
-                <Button
-                  key={status}
-                  variant={statusIndex <= currentIndex ? "default" : "outline"}
-                  className="justify-start w-full gap-2"
-                  disabled={!isAllowed}
-                  onClick={() => setSelectedStatus(status)}
-                >
-                  {statusIndex <= currentIndex ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span className="w-4 h-4" />
-                  )}
-                  {status.replace(/_/g, " ").toUpperCase()}
-                </Button>
-              );
-            })}
-          </div>
-
           <DialogFooter>
             <Button
-              variant="secondary"
-              onClick={() => setShowStatusDialog(false)}
+              variant="outline"
+              onClick={() => setShowCompleteDialog(false)}
             >
               Cancel
             </Button>
             <Button
               onClick={() => {
-                console.log({ repairId: repair._id, status: selectedStatus });
-                updateStatus(
-                  { repairId: repair._id, status: selectedStatus },
-                  {
-                    onSuccess: () => setShowStatusDialog(false),
-                  }
-                );
+                completeRepair({ repairId: id });
+                setShowCompleteDialog(false);
               }}
-              disabled={!selectedStatus}
             >
-              Confirm Update
+              Confirm Completion
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -427,7 +406,7 @@ const StatusTimeline = ({ trackingUpdates }) => {
               </p>
               {trackingUpdates?.find((u) => u.status === status) && (
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {formatDate(
+                  {formatDistanceToNow(
                     trackingUpdates.find((u) => u.status === status).timestamp
                   )}
                 </p>

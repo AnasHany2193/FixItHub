@@ -26,7 +26,7 @@ import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import FindRepairsPage from "./pages/worker/FindRepairsPage";
 import WorkerActiveRepairsPage from "./pages/worker/WorkerActiveRepairsPage";
 import WorkerRepairDetailPage from "./pages/worker/WorkerRepairDetailPage";
-import WorkerRepairDetailsPage from "./pages/worker/WorkerRepairDetailsPage";
+import WorkerActiveRepairDetailsPage from "./pages/worker/WorkerActiveRepairDetailsPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -92,7 +92,7 @@ function App() {
             />
             <Route
               path="/repairs/active/:id"
-              element={<WorkerRepairDetailsPage />}
+              element={<WorkerActiveRepairDetailsPage />}
             />
           </Route>
         </Route>
