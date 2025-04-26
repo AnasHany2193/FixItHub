@@ -915,10 +915,7 @@ export const returnRepair = async (req, res, next) => {
       },
       {
         status: RepairStatus.RETURNING_TO_CUSTOMER,
-        trackingUpdates: [], // Clear tracking updates when returning
-        paymentAmount: null, // Remove payment amount
-        offers: [], // Clear offers
-        auction: null, // Remove auction details
+        paymentStatus: "refunded",
       },
       { new: true }
     ).populate("customer", "name email");

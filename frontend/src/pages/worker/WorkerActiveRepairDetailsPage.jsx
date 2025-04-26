@@ -65,6 +65,10 @@ const STATUS_CONFIG = {
     color:
       "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400",
   },
+  returning_to_customer: {
+    label: "Returned To Customer",
+    color: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
+  },
 };
 
 const formatDate = (dateString) => {
@@ -88,9 +92,6 @@ export default function WorkerActiveRepairDetailsPage() {
     useCompleteRepair();
 
   const statusConfig = STATUS_CONFIG[repair?.status || "in_progress"];
-
-  console.log(repair.trackingUpdates.length > 4);
-  console.log(repair.trackingUpdates[4]);
 
   if (isLoading) return <PageSkeleton />;
   if (!repair) return <NotFoundState navigate={navigate} />;
@@ -230,7 +231,11 @@ export default function WorkerActiveRepairDetailsPage() {
                   value={
                     <Badge
                       variant={
-                        repair.paymentStatus === "paid" ? "success" : "warning"
+                        repair.paymentStatus === "paid"
+                          ? "success"
+                          : repair.paymentStatus === "refunded"
+                            ? "destructive"
+                            : "warning"
                       }
                     >
                       {repair.paymentStatus?.toUpperCase()}
