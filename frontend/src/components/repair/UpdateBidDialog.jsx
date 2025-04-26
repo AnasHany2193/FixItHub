@@ -36,7 +36,6 @@ export default function UpdateBidDialog({ bid, lowestBid, onOpenChange }) {
   });
 
   const onSubmit = async ({ bidPrice }) => {
-    console.log("data", bidPrice);
     try {
       await updateBid({
         bidId: bid._id,

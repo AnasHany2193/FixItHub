@@ -11,20 +11,25 @@ import {
   Trophy,
   DollarSign,
   RefreshCw,
+  Handshake,
   Package,
 } from "lucide-react";
 
-import { useAuctionDetails, useSubmitBid } from "@/hooks/useRepair";
+import {
+  useAuctionDetails,
+  useSubmitBid,
+  useDirectOffersRepairDetails,
+  useSubmitOffer,
+} from "@/hooks/useRepair";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import UpdateBidDialog from "@/components/repair/UpdateBidDialog";
 import { Dialog } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
+import UpdateProposalDialog from "@/components/common/UpdateProposalDialog";
 
 const formatDate = (dateString) => {
   try {
@@ -34,32 +39,53 @@ const formatDate = (dateString) => {
   }
 };
 
-export default function AuctionDetailPage() {
+export default function RepairDetailPage({ type = "auction" }) {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [bidPrice, setBidPrice] = useState("");
+  const [price, setPrice] = useState("");
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
+  // Hook selection based on type
+  const hooks = {
+    auction: {
+      useDetails: useAuctionDetails,
+      useSubmit: useSubmitBid,
+    },
+    offer: {
+      useDetails: useDirectOffersRepairDetails,
+      useSubmit: useSubmitOffer,
+    },
+  };
+
   const {
-    data: auction,
+    data: repairData,
     isFetching,
     refetch,
     isLoading,
-  } = useAuctionDetails(id);
-  const { mutate: submitBid } = useSubmitBid();
+  } = hooks[type].useDetails(id);
+  const { mutate: submitProposal } = hooks[type].useSubmit();
 
-  const handleBidSubmit = () => {
-    submitBid({ auctionId: id, bidPrice });
+  const handleProposalSubmit = () => {
+    const submissionData =
+      type === "auction"
+        ? { auctionId: id, bidPrice: price }
+        : { repairId: id, offerPrice: price };
+
+    submitProposal(submissionData);
   };
 
-  const handleRefreshBids = async () => {
+  const handleRefresh = async () => {
     await refetch();
   };
 
-  if (isLoading) return <PageSkeleton />;
-  if (!auction) return <NotFoundState />;
+  if (isLoading) return <PageSkeleton type={type} />;
+  if (!repairData) return <NotFoundState type={type} />;
 
-  const repair = auction.repairRequest;
+  const repair = type === "auction" ? repairData.repairRequest : repairData;
+
+  const proposals = type === "auction" ? repairData.bids : repairData.offers;
+  const currentPrice =
+    type === "auction" ? repairData.currentLowest : repairData.averageOffer;
 
   return (
     <div className="min-h-screen">
@@ -73,7 +99,9 @@ export default function AuctionDetailPage() {
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              <span className="text-sm">Back to Auctions</span>
+              <span className="text-sm">
+                Back to {type === "auction" ? "Auctions" : "Offers"}
+              </span>
             </Button>
           </motion.div>
 
@@ -120,7 +148,7 @@ export default function AuctionDetailPage() {
             {/* Customer Info Section */}
             <CustomerInfo repair={repair} />
 
-            {/* Auction Details */}
+            {/* Details Section */}
             <SectionCard
               icon={
                 <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
@@ -132,8 +160,8 @@ export default function AuctionDetailPage() {
                   <TabsTrigger value="description" className="w-1/2">
                     Item Details
                   </TabsTrigger>
-                  <TabsTrigger value="bids" className="w-1/2">
-                    Bids
+                  <TabsTrigger value="proposals" className="w-1/2">
+                    {type === "auction" ? "Bids" : "Offers"}
                   </TabsTrigger>
                 </TabsList>
 
@@ -164,13 +192,15 @@ export default function AuctionDetailPage() {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="bids">
+                <TabsContent value="proposals">
                   <div className="flex items-center justify-between my-4">
-                    <h3 className="text-lg font-semibold">Bid Activity</h3>
+                    <h3 className="text-lg font-semibold">
+                      {type === "auction" ? "Bid" : "Offer"} Activity
+                    </h3>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleRefreshBids}
+                      onClick={handleRefresh}
                       disabled={isFetching}
                     >
                       <RefreshCw
@@ -180,18 +210,25 @@ export default function AuctionDetailPage() {
                     </Button>
                   </div>
                   <div className="space-y-3">
-                    {auction.bids?.length > 0 ? (
-                      auction.bids.map((bid) => (
-                        <BidItem
-                          key={bid._id}
-                          bid={bid}
-                          currentLowestBid={auction.currentLowestBid}
+                    {proposals?.length > 0 ? (
+                      proposals.map((proposal) => (
+                        <ProposalItem
+                          key={proposal._id}
+                          proposal={proposal}
+                          type={type}
+                          isLeading={
+                            type === "auction"
+                              ? repairData.currentLowestBid?._id ===
+                                proposal._id
+                              : false
+                          }
                         />
                       ))
                     ) : (
                       <div className="p-4 text-center rounded-lg bg-muted">
                         <p className="text-muted-foreground">
-                          No bids placed yet - be the first!
+                          No {type === "auction" ? "bids" : "offers"} yet - be
+                          the first!
                         </p>
                       </div>
                     )}
@@ -205,52 +242,76 @@ export default function AuctionDetailPage() {
           <div className="space-y-8">
             <SectionCard
               icon={
-                <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                type === "auction" ? (
+                  <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                ) : (
+                  <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
+                )
               }
-              title="Auction Timeline"
+              title={type === "auction" ? "Auction Timeline" : "Offer Details"}
             >
               <div className="space-y-4">
+                {type === "auction" && (
+                  <InfoItem
+                    label="Time Remaining"
+                    value={formatDistanceToNow(new Date(repairData.expiresAt))}
+                  />
+                )}
                 <InfoItem
-                  label="Time Remaining"
-                  value={formatDistanceToNow(new Date(auction.expiresAt))}
-                />
-                <InfoItem
-                  label="Starting Price"
-                  value={`$${auction.startingMaxPrice}`}
-                />
-                <InfoItem
-                  label="Current Lowest"
-                  value={
-                    <div className="flex items-center gap-2">
-                      <Trophy className="w-4 h-4 text-amber-500" />
-                      <span>${auction.currentLowest}</span>
-                    </div>
+                  label={
+                    type === "auction" ? "Starting Price" : "Average Offer"
                   }
+                  value={`$${
+                    type === "auction"
+                      ? repairData.startingMaxPrice
+                      : currentPrice?.toFixed(2) || "N/A"
+                  }`}
                 />
+                {type === "auction" && (
+                  <InfoItem
+                    label="Current Lowest"
+                    value={
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-amber-500" />
+                        <span>${currentPrice}</span>
+                      </div>
+                    }
+                  />
+                )}
                 <InfoItem
-                  label="Total Bids"
-                  value={auction.bids?.length || 0}
+                  label={`Total ${type === "auction" ? "Bids" : "Offers"}`}
+                  value={proposals?.length || 0}
                 />
               </div>
             </SectionCard>
 
-            {/* Bid Form */}
+            {/* Proposal Form */}
             <SectionCard
               icon={
-                <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                type === "auction" ? (
+                  <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                ) : (
+                  <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
+                )
               }
-              title={auction.hasBid ? "Your Bid" : "Place Bid"}
+              title={
+                repairData.hasBid || repairData.hasOffer
+                  ? "Your Proposal"
+                  : `Place ${type === "auction" ? "Bid" : "Offer"}`
+              }
             >
-              {auction.hasBid ? (
+              {repairData.hasBid || repairData.hasOffer ? (
                 <div className="space-y-4">
                   <InfoItem
-                    label="Your Offer"
-                    value={`$${auction.myBid.bidPrice.toFixed(2)}`}
+                    label={`Your ${type === "auction" ? "Bid" : "Offer"}`}
+                    value={`$${repairData.myBid?.bidPrice?.toFixed(2) || repairData.myOffer?.offerPrice?.toFixed(2)}`}
                   />
                   <InfoItem
-                    label="Bid Status"
+                    label="Status"
                     value={
-                      <Badge variant="default">{auction.myBid.status}</Badge>
+                      <Badge variant="default">
+                        {repairData.myBid?.status || repairData.myOffer?.status}
+                      </Badge>
                     }
                   />
                   <Button
@@ -258,7 +319,7 @@ export default function AuctionDetailPage() {
                     className="w-full"
                     onClick={() => setShowUpdateDialog(true)}
                   >
-                    Modify Bid
+                    Modify {type === "auction" ? "Bid" : "Offer"}
                   </Button>
                 </div>
               ) : (
@@ -266,23 +327,24 @@ export default function AuctionDetailPage() {
                   <div className="space-y-2">
                     <Input
                       type="number"
-                      label="Enter Bid Amount"
-                      value={bidPrice}
-                      onChange={(e) => {
-                        setBidPrice(e.target.value);
-                      }}
-                      placeholder={`Max $${auction.currentLowest - 0.01}`}
-                      min={0.01}
-                      max={auction.currentLowest - 0.01}
+                      label={`Enter ${type === "auction" ? "Bid" : "Offer"} Amount`}
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder={
+                        type === "auction"
+                          ? `Max $${currentPrice - 0.01}`
+                          : "Minimum $1"
+                      }
+                      min={type === "auction" ? 0.01 : 1}
                       step="0.01"
                     />
                   </div>
                   <Button
                     className="w-full"
-                    onClick={handleBidSubmit}
-                    disabled={!bidPrice}
+                    onClick={handleProposalSubmit}
+                    disabled={!price}
                   >
-                    Submit Competitive Bid
+                    Submit {type === "auction" ? "Competitive Bid" : "Offer"}
                   </Button>
                 </div>
               )}
@@ -290,9 +352,10 @@ export default function AuctionDetailPage() {
 
             <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
               {showUpdateDialog && (
-                <UpdateBidDialog
-                  bid={auction.myBid}
-                  lowestBid={auction.currentLowestBid.bidPrice}
+                <UpdateProposalDialog
+                  proposal={repairData.myBid || repairData.myOffer}
+                  type={type}
+                  currentPrice={currentPrice}
                   onOpenChange={setShowUpdateDialog}
                 />
               )}
@@ -304,7 +367,71 @@ export default function AuctionDetailPage() {
   );
 }
 
-// Reused components from repair detail page
+// Updated ProposalItem component
+const ProposalItem = ({ proposal, type, isLeading }) => {
+  const price = type === "auction" ? proposal.bidPrice : proposal.offerPrice;
+  const date = type === "auction" ? proposal.submittedAt : proposal.createdAt;
+
+  return (
+    <div className="flex items-center gap-5 p-4 rounded-lg bg-muted">
+      <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
+        <AvatarImage src={proposal.worker?.profile?.avatar?.url} />
+        <AvatarFallback>
+          {proposal.worker?.username?.[0]?.toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">
+            {proposal.worker?.username || "Anonymous Technician"}
+          </span>
+          <Badge
+            variant={proposal.status === "pending" ? "default" : "secondary"}
+          >
+            {proposal.status.toUpperCase()}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-start">
+            <DollarSign className="w-4 h-4" />
+            <span>{price?.toFixed(2)}</span>
+          </div>
+          <span className="ml-2 text-xs">
+            {formatDistanceToNow(new Date(date))} ago
+          </span>
+        </div>
+      </div>
+      {isLeading && type === "auction" && (
+        <Badge variant="premium" className="gap-1">
+          <Trophy className="w-4 h-4" />
+          Leading
+        </Badge>
+      )}
+    </div>
+  );
+};
+
+const NotFoundState = ({ type }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="p-8 mx-auto mt-8 text-center max-w-7xl">
+      <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+      <h3 className="mb-2 text-2xl font-semibold">
+        {type === "auction" ? "Auction" : "Repair"} Not Found
+      </h3>
+      <p className="mb-4 text-muted-foreground">
+        {type === "auction"
+          ? "The requested auction could not be found or has expired"
+          : "The requested repair offer could not be found"}
+      </p>
+      <Button className="mt-4" onClick={() => navigate(-1)}>
+        Return to {type === "auction" ? "Auctions" : "Offers"}
+      </Button>
+    </div>
+  );
+};
+
 const SectionCard = ({ icon, title, children }) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -345,23 +472,6 @@ const PageSkeleton = () => (
   </div>
 );
 
-const NotFoundState = () => {
-  const navigate = useNavigate();
-
-  return (
-    <div className="p-8 mx-auto mt-8 text-center max-w-7xl">
-      <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-      <h3 className="mb-2 text-2xl font-semibold">Auction Not Found</h3>
-      <p className="mb-4 text-muted-foreground">
-        The requested auction could not be found or has expired
-      </p>
-      <Button className="mt-4" onClick={() => navigate(-1)}>
-        Return to Auctions
-      </Button>
-    </div>
-  );
-};
-
 const CustomerInfo = ({ repair }) => (
   <div className="p-4 rounded-lg bg-indigo-50 dark:bg-gray-800">
     <div className="flex items-center gap-4">
@@ -385,41 +495,3 @@ const CustomerInfo = ({ repair }) => (
     </div>
   </div>
 );
-
-const BidItem = ({ bid, currentLowestBid }) => {
-  return (
-    <div className="flex items-center gap-5 p-4 rounded-lg bg-muted">
-      <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-        <AvatarImage src={bid.worker?.profile?.avatar?.url} />
-        <AvatarFallback>
-          {bid.worker?.username?.[0]?.toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">
-            {bid.worker?.username || "Anonymous Technician"}
-          </span>
-          <Badge variant={bid.status === "pending" ? "default" : "secondary"}>
-            {bid.status.toUpperCase()}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div className="flex items-start">
-            <DollarSign className="w-4 h-4" />
-            <span>{bid.bidPrice?.toFixed(2)}</span>
-          </div>
-          <span className="ml-2 text-xs">
-            {formatDistanceToNow(new Date(bid.submittedAt))} ago
-          </span>
-        </div>
-      </div>
-      {currentLowestBid?._id === bid._id && (
-        <Badge variant="premium" className="gap-1">
-          <Trophy className="w-4 h-4" />
-          Leading
-        </Badge>
-      )}
-    </div>
-  );
-};

@@ -255,24 +255,25 @@ export const getDirectOffersRepairDetails = async (repairId) => {
   }
 };
 
-export const submitOffer = async (repairId, offerData) => {
+export const submitOffer = async ({ repairId, offerPrice }) => {
   try {
+    console.log({ repairId, offerPrice });
     const { data } = await axiosClient.post(
-      `/repairs/non-auctions/${repairId}/offers`,
-      offerData
+      `/repairs/direct-offers/${repairId}/offers`,
+      { offerPrice }
     );
     return data;
   } catch (error) {
+    console.log("error", error);
     throw new Error(error.response?.data?.message || "Offer submission failed");
   }
 };
 
-export const updateOffer = async (offerId, offerData) => {
+export const updateOffer = async ({ offerId, offerPrice }) => {
   try {
-    const { data } = await axiosClient.put(
-      `/repairs/offers/${offerId}`,
-      offerData
-    );
+    const { data } = await axiosClient.put(`/repairs/offers/${offerId}`, {
+      offerPrice,
+    });
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Offer update failed");

@@ -492,6 +492,7 @@ export const submitOffer = async (req, res, next) => {
     const { repairId } = req.params;
     const { offerPrice } = req.body;
     const workerId = req.user._id;
+    console.log({ repairId, offerPrice, workerId });
 
     // Validate repair
     const repair = await RepairRequest.findOne({

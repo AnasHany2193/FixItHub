@@ -96,7 +96,7 @@ router.post(
 );
 router.put("/bids/:bidId", protect, roleCheck("worker"), updateBid);
 router.post(
-  "/non-auctions/:repairId/offers",
+  "/direct-offers/:repairId/offers",
   protect,
   roleCheck("worker"),
   submitOffer
