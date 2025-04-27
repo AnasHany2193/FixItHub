@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, DollarSign, Zap, Heart } from "lucide-react";
+import {
+  Search,
+  DollarSign,
+  Zap,
+  Heart,
+  Plus,
+  ShoppingCart,
+} from "lucide-react";
 
 import {
   Select,
@@ -15,10 +22,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  useAddToCart,
   useAddToFavorites,
   useFavorites,
+  useGetCart,
   useProducts,
   useRemoveFromFavorites,
+  useUpdateCartItem,
 } from "@/hooks/useMarketplace";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 
@@ -155,10 +165,31 @@ export default function CustomerMarketplacePage() {
 
 const ProductCard = ({ product, onClick }) => {
   const { data: favorites } = useFavorites();
+  const { data: cart } = useGetCart();
   const addFavorite = useAddToFavorites();
   const removeFavorite = useRemoveFromFavorites();
+  const addToCart = useAddToCart();
+  const updateCartItem = useUpdateCartItem();
 
   const isFavorite = favorites?.some((fav) => fav._id === product._id);
+  const cartItem = cart?.items?.find(
+    (item) => item.product._id === product._id
+  );
+  const isInCart = Boolean(cartItem);
+
+  const handleCartAction = async (e) => {
+    e.stopPropagation();
+    try {
+      if (isInCart)
+        await updateCartItem.mutateAsync({
+          productId: product._id,
+          action: "increment",
+        });
+      else await addToCart.mutateAsync(product._id);
+    } catch (error) {
+      console.error("Cart error:", error);
+    }
+  };
 
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
@@ -173,69 +204,109 @@ const ProductCard = ({ product, onClick }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className="cursor-pointer"
+      className="cursor-pointer group"
       onClick={onClick}
     >
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden transition-all shadow-sm hover:shadow-lg dark:hover:shadow-gray-700/30">
         {/* Image section */}
         <div className="relative aspect-video">
-          {product.images?.[0]?.url ? (
-            <div className="relative h-full">
-              <img
-                src={product.images[0].url}
-                alt={product.name}
-                className="object-cover w-full h-full"
-              />
-              {product.images.length > 1 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute px-2 py-1 text-xs bottom-2 left-2"
-                >
+          <div className="relative h-full overflow-hidden">
+            {product.images?.[0]?.url ? (
+              <>
+                <img
+                  src={product.images[0].url}
+                  alt={product.name}
+                  className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 via-transparent to-transparent" />
+              </>
+            ) : (
+              <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+            )}
+
+            {/* Top badges */}
+            <div className="absolute flex gap-2 top-2 left-2">
+              <Badge variant="secondary" className="shadow-sm">
+                {product.category}
+              </Badge>
+              {product.images?.length > 1 && (
+                <Badge variant="secondary" className="shadow-sm">
                   +{product.images.length - 1}
                 </Badge>
               )}
             </div>
-          ) : (
-            <div>
-              <div className="flex items-center justify-center w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-                <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-              </div>
-            </div>
-          )}
-          <Badge variant="secondary" className="absolute top-2 left-2">
-            {product.category}
-          </Badge>
+          </div>
 
-          {/* Favorite Button */}
-          <button
-            onClick={handleFavoriteClick}
-            className="absolute p-2 transition-colors rounded-full shadow-sm top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-red-50"
-          >
-            <Heart
-              className={`w-5 h-5 ${isFavorite ? "text-red-600 fill-red-600" : "text-gray-600"}`}
-              strokeWidth={1.5}
-            />
-          </button>
+          {/* Action buttons */}
+          <div className="absolute flex gap-2 top-2 right-2">
+            <button
+              onClick={handleFavoriteClick}
+              className="p-2 transition-all rounded-full shadow-sm bg-white/90 backdrop-blur-sm hover:bg-red-50 hover:shadow-md"
+            >
+              <Heart
+                className={`w-5 h-5 transition-all ${
+                  isFavorite
+                    ? "text-red-600 fill-red-600 hover:scale-110"
+                    : "text-gray-600 hover:text-red-500 hover:scale-110"
+                }`}
+                strokeWidth={1.5}
+              />
+            </button>
+          </div>
         </div>
 
         <CardContent className="p-4 space-y-2">
-          <h3 className="text-lg font-semibold line-clamp-1">{product.name}</h3>
-          <p className="text-muted-foreground line-clamp-2">
-            {product.description}
-          </p>
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold line-clamp-1">
+              {product.name}
+            </h3>
+            <p className="text-sm text-muted-foreground line-clamp-1">
+              {product.description}
+            </p>
+          </div>
+
           <div className="flex items-center justify-between">
-            <span className="text-xl font-semibold">${product.price}</span>
-            <Badge
-              variant={
-                product.stock > 10
-                  ? "success"
-                  : product.stock > 0
-                    ? "warning"
-                    : "destructive"
-              }
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text">
+                ${product.price}
+              </span>
+              <Badge
+                variant={
+                  product.stock > 10
+                    ? "success"
+                    : product.stock > 0
+                      ? "warning"
+                      : "destructive"
+                }
+                className="shadow-sm"
+              >
+                {product.stock > 0 ? `${product.stock} left` : "Sold out"}
+              </Badge>
+            </div>
+
+            <button
+              onClick={handleCartAction}
+              disabled={product.stock <= 0}
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm transition-all rounded-lg shadow-sm ${
+                isInCart
+                  ? "bg-green-100 hover:bg-green-200 text-green-800 dark:bg-green-800/30 dark:text-green-300"
+                  : "bg-indigo-100 hover:bg-indigo-200 text-indigo-800 dark:bg-indigo-800/30 dark:text-indigo-300"
+              }`}
             >
-              {product.stock > 0 ? `${product.stock} In Stock` : " Sold Out"}
-            </Badge>
+              {isInCart ? (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>{cartItem.quantity} in Cart</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
           </div>
         </CardContent>
       </Card>
