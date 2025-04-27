@@ -23,6 +23,7 @@ import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
 import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 
 import CustomerMarketplacePage from "./pages/customer/CustomerMarketplacePage";
+import CustomerMarketplaceDetailsPage from "./pages/customer/CustomerMarketplaceDetailsPage";
 
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import FindRepairsPage from "./pages/worker/FindRepairsPage";
@@ -72,6 +73,10 @@ function App() {
             </Route>
             <Route path="/marketplace">
               <Route path="products" element={<CustomerMarketplacePage />} />
+              <Route
+                path="products/:productId"
+                element={<CustomerMarketplaceDetailsPage />}
+              />
             </Route>
           </Route>
         </Route>

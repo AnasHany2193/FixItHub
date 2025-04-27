@@ -139,7 +139,7 @@ export default function CustomerMarketplacePage() {
             <ProductCard
               key={product._id}
               product={product}
-              onClick={() => navigate(`/marketplace/${product._id}`)}
+              onClick={() => navigate(`/marketplace/products/${product._id}`)}
             />
           ))}
         </motion.div>
