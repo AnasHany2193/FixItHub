@@ -8,6 +8,9 @@ import {
 import {
   getProducts,
   getProductDetails,
+  addToFavorites,
+  removeFromFavorites,
+  getFavoriteProducts,
 } from "../controllers/marketplaceCustomerController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
@@ -27,5 +30,10 @@ router
 // Public customer routes
 router.route("/products").get(getProducts);
 router.route("/products/:id").get(getProductDetails);
+
+// Favorite routes
+router.post("/favorites", protect, addToFavorites);
+router.delete("/favorites/:productId", protect, removeFromFavorites);
+router.get("/favorites", protect, getFavoriteProducts);
 
 export default router;
