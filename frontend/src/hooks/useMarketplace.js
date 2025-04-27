@@ -59,6 +59,7 @@ export const useMyProducts = (filters) =>
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   return useMutation({
     mutationFn: updateProduct,
@@ -74,6 +75,7 @@ export const useUpdateProduct = () => {
         title: "Product Updated",
         description: data.message,
       });
+      navigate("/marketplace/my-products");
     },
     onError: (error) => {
       toast({

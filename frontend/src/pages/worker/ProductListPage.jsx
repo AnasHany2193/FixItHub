@@ -81,11 +81,12 @@ export default function ProductListPage() {
               key={status}
               variant={filters.stockStatus === status ? "default" : "outline"}
               size="sm"
+              className="w-full capitalize"
               onClick={() =>
                 setFilters((prev) => ({ ...prev, stockStatus: status }))
               }
             >
-              {status.replace("-", " ")}
+              {status.replaceAll("-", " ")}
             </Button>
           ))}
         </div>
@@ -158,7 +159,7 @@ const ProductCard = ({ product, onEdit, onDelete = () => {} }) => (
             <Package className="w-8 h-8 text-muted-foreground" />
           </div>
         )}
-        <Badge variant="secondary" className="absolute top-2 left-2">
+        <Badge variant="secondary" className="absolute capitalize top-2 left-2">
           {product.category}
         </Badge>
       </CardHeader>
@@ -171,6 +172,7 @@ const ProductCard = ({ product, onEdit, onDelete = () => {} }) => (
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold">${product.price}</span>
           <Badge
+            className="capitalize"
             variant={
               product.stock > 10
                 ? "success"

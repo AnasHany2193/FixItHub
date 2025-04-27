@@ -39,6 +39,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import UpdateProductPage from "./pages/worker/UpdateProductPage";
 
 function App() {
   return (
@@ -104,6 +105,10 @@ function App() {
             <Route
               path="/marketplace/new-product"
               element={<AddProductPage />}
+            />
+            <Route
+              path="/marketplace/edit-product/:productId"
+              element={<UpdateProductPage />}
             />
           </Route>
         </Route>
