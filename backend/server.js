@@ -11,18 +11,12 @@ import connectDB from "./config/db.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import { handleStripeWebhook } from "./controllers/paymentController.js";
 import "./jobs/auctionScheduler.js";
-import "./jobs/reservationCleanup.js";
 
 // Route Imports
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import adminRoutes from "./routes/adminRoutes.js";
 import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
-import reviewRoutes from "./routes/reviewRoutes.js";
-import reportRoutes from "./routes/reportRoutes.js";
-import paymentRoutes from "./routes/paymentRoutes.js";
-import productRoutes from "./routes/productRoutes.js";
 
 // Load environment variables and Swagger docs
 dotenv.config();
@@ -103,13 +97,8 @@ app.get("/", (_, res) => {
 const routeConfig = [
   { path: "/auth", route: authRoutes },
   { path: "/users", route: userRoutes },
-  { path: "/admin", route: adminRoutes },
   { path: "/upload", route: uploadRoutes },
-  { path: "/reviews", route: reviewRoutes },
-  { path: "/reports", route: reportRoutes },
   { path: "/repairs", route: repairRoutes },
-  { path: "/payment", route: paymentRoutes },
-  { path: "/products", route: productRoutes },
 ];
 
 // Apply rate limiting and register routes
