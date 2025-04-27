@@ -2,14 +2,19 @@ import { useToast } from "./useToast";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  addItemToCart,
   addToFavorites,
+  clearCart,
   createProduct,
   deleteProduct,
+  getCart,
   getFavorites,
   getMyProducts,
   getProductDetails,
   getProducts,
+  removeCartItem,
   removeFromFavorites,
+  updateCartItemQty,
   updateProduct,
 } from "@/api/marketplace";
 
@@ -28,6 +33,7 @@ export const useProductDetails = (productId) =>
     enabled: !!productId,
   });
 
+// Favorite
 export const useAddToFavorites = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -52,6 +58,54 @@ export const useFavorites = () => {
   return useQuery({
     queryKey: ["favorites"],
     queryFn: getFavorites,
+  });
+};
+
+// Cart
+export const useGetCart = () => {
+  return useQuery({
+    queryKey: ["cart"],
+    queryFn: getCart,
+  });
+};
+
+export const useAddToCart = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addItemToCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["cart"]);
+    },
+  });
+};
+
+export const useUpdateCartItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ productId, action }) => updateCartItemQty(productId, action),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["cart"]);
+    },
+  });
+};
+
+export const useRemoveCartItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeCartItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["cart"]);
+    },
+  });
+};
+
+export const useClearCart = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: clearCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["cart"]);
+    },
   });
 };
 

@@ -25,6 +25,7 @@ export const getProductDetails = async (productId) => {
   }
 };
 
+// Favorite
 export const addToFavorites = async (productId) => {
   try {
     const { data } = await axiosClient.post("/marketplace/favorites", {
@@ -57,6 +58,54 @@ export const getFavorites = async () => {
     throw new Error(
       error.response?.data?.message || "Failed to fetch favorites"
     );
+  }
+};
+
+// Cart
+export const getCart = async () => {
+  try {
+    const { data } = await axiosClient.get("/cart");
+    return data.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch cart");
+  }
+};
+
+export const addItemToCart = async (productId) => {
+  try {
+    const { data } = await axiosClient.post("/cart", { productId });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to add to cart");
+  }
+};
+
+export const updateCartItemQty = async (productId, action) => {
+  try {
+    const { data } = await axiosClient.put(`/cart/${productId}`, { action });
+    return data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to update quantity"
+    );
+  }
+};
+
+export const removeCartItem = async (productId) => {
+  try {
+    const { data } = await axiosClient.delete(`/cart/${productId}`);
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to remove item");
+  }
+};
+
+export const clearCart = async () => {
+  try {
+    const { data } = await axiosClient.delete("/cart");
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to clear cart");
   }
 };
 
