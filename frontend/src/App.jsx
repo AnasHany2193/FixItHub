@@ -36,6 +36,7 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import WorkerHistoryPage from "./pages/worker/WorkerHistoryPage";
+import ProductListPage from "./pages/worker/ProductListPage";
 
 function App() {
   return (
@@ -95,6 +96,10 @@ function App() {
             <Route
               path="/repairs/active/:id"
               element={<WorkerActiveRepairDetailsPage />}
+            />
+            <Route
+              path="/marketplace/my-products"
+              element={<ProductListPage />}
             />
           </Route>
         </Route>
