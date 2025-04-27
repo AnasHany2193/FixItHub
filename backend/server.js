@@ -17,6 +17,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import marketplaceRoutes from "./routes/marketplaceRoutes.js";
 
 // Load environment variables and Swagger docs
 dotenv.config();
@@ -99,6 +100,7 @@ const routeConfig = [
   { path: "/users", route: userRoutes },
   { path: "/upload", route: uploadRoutes },
   { path: "/repairs", route: repairRoutes },
+  { path: "/marketplace", route: marketplaceRoutes },
 ];
 
 // Apply rate limiting and register routes

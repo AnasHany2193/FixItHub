@@ -5,27 +5,27 @@ import {
   deleteProduct,
   getMyProducts,
 } from "../controllers/marketplaceWorkerController.js";
-import { protect } from "./../middlewares/authMiddleware.js";
 import {
   getProducts,
   getProductDetails,
 } from "../controllers/marketplaceCustomerController.js";
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 // Worker routes
 router
-  .route("/worker")
+  .route("/worker/products")
   .get(protect, roleCheck("worker"), getMyProducts)
   .post(protect, roleCheck("worker"), createProduct);
 
 router
-  .route("/worker/:id")
+  .route("/worker/products/:id")
   .put(protect, roleCheck("worker"), updateProduct)
   .delete(protect, roleCheck("worker"), deleteProduct);
 
 // Public customer routes
-router.route("/").get(getProducts);
-router.route("/:id").get(getProductDetails);
+router.route("/products").get(getProducts);
+router.route("/products/:id").get(getProductDetails);
 
 export default router;
