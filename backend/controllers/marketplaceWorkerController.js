@@ -96,9 +96,39 @@ export const deleteProduct = async (req, res, next) => {
 
 export const getMyProducts = async (req, res, next) => {
   try {
-    const products = await Product.find({ seller: req.user._id })
-      .sort("-createdAt")
-      .lean();
+    const { category, sort, stockStatus } = req.query;
+    const filter = { seller: req.user._id };
+
+    // Category filter
+    if (category && category !== "all") {
+      filter.category = category;
+    }
+
+    // Stock status filter
+    if (stockStatus && stockStatus !== "all") {
+      switch (stockStatus) {
+        case "in-stock":
+          filter.stock = { $gt: 10 };
+          break;
+        case "low-stock":
+          filter.stock = { $gt: 0, $lte: 10 };
+          break;
+        case "out-of-stock":
+          filter.stock = { $lte: 0 };
+          break;
+      }
+    }
+
+    // Sorting
+    const sortOptions = {
+      "price-asc": { price: 1 },
+      "price-desc": { price: -1 },
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+    };
+    const sortOrder = sortOptions[sort] || { createdAt: -1 };
+
+    const products = await Product.find(filter).sort(sortOrder).lean();
 
     res.status(200).json({
       success: true,

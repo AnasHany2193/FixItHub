@@ -13,13 +13,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useMyProducts } from "@/hooks/useMarketplace";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ProductListPage() {
   const navigate = useNavigate();
-  const { data: products, isLoading, deleteProduct } = useMyProducts();
+  const [filters, setFilters] = useState({
+    category: "all",
+    stockStatus: "all",
+    sort: "newest",
+  });
+
+  const { data: products, isLoading } = useMyProducts(filters);
 
   return (
     <div className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl">
+      {/* Header section */}
       <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
         <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
           <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl">
@@ -38,6 +53,59 @@ export default function ProductListPage() {
             <span className="text-sm">Add Product</span>
           </Button>
         </motion.div>
+      </div>
+
+      {/* Filter Controls */}
+      <div className="grid gap-4 mb-8 md:grid-cols-3">
+        <Select
+          value={filters.category}
+          onValueChange={(value) =>
+            setFilters((prev) => ({ ...prev, category: value }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="electronics">Electronics</SelectItem>
+            <SelectItem value="furniture">Furniture</SelectItem>
+            <SelectItem value="appliances">Appliances</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center justify-between gap-2">
+          {["all", "in-stock", "low-stock", "out-of-stock"].map((status) => (
+            <Button
+              key={status}
+              variant={filters.stockStatus === status ? "default" : "outline"}
+              size="sm"
+              onClick={() =>
+                setFilters((prev) => ({ ...prev, stockStatus: status }))
+              }
+            >
+              {status.replace("-", " ")}
+            </Button>
+          ))}
+        </div>
+
+        <Select
+          value={filters.sort}
+          onValueChange={(value) =>
+            setFilters((prev) => ({ ...prev, sort: value }))
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Sort By" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="newest">Newest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+            <SelectItem value="price-asc">Price: Low to High</SelectItem>
+            <SelectItem value="price-desc">Price: High to Low</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isLoading ? (
@@ -66,7 +134,7 @@ export default function ProductListPage() {
               onEdit={() =>
                 navigate(`/marketplace/edit-product/${product._id}`)
               }
-              onDelete={() => deleteProduct.mutate(product._id)}
+              // onDelete={() => deleteProduct.mutate(product._id)}
             />
           ))}
         </motion.div>
@@ -75,7 +143,7 @@ export default function ProductListPage() {
   );
 }
 
-const ProductCard = ({ product, onEdit, onDelete }) => (
+const ProductCard = ({ product, onEdit, onDelete = () => {} }) => (
   <motion.div whileHover={{ scale: 1.02 }}>
     <Card className="overflow-hidden">
       <CardHeader className="relative p-0 aspect-video">

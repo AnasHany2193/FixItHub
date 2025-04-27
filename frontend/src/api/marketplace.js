@@ -48,9 +48,11 @@ export const getProductDetails = async (productId) => {
   }
 };
 
-export const getMyProducts = async () => {
+export const getMyProducts = async (filters = {}) => {
   try {
-    const { data } = await axiosClient.get("/marketplace/worker/products");
+    const { data } = await axiosClient.get("/marketplace/worker/products", {
+      params: filters,
+    });
     return data.data;
   } catch (error) {
     throw new Error(

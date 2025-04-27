@@ -50,10 +50,10 @@ export const useProductDetails = (productId) =>
     enabled: !!productId,
   });
 
-export const useMyProducts = () =>
+export const useMyProducts = (filters) =>
   useQuery({
-    queryKey: ["marketplace", "my-products"],
-    queryFn: getMyProducts,
+    queryKey: ["marketplace", "my-products", filters],
+    queryFn: () => getMyProducts(filters),
   });
 
 export const useUpdateProduct = () => {
