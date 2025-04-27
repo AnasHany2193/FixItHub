@@ -1,15 +1,6 @@
 import createHttpError from "http-errors";
 import Product from "../models/Product.js";
-
-const buildProductFilters = (query) => {
-  const filters = {};
-  if (query.category) filters.category = query.category;
-  if (query.minPrice)
-    filters.price = { ...filters.price, $gte: query.minPrice };
-  if (query.maxPrice)
-    filters.price = { ...filters.price, $lte: query.maxPrice };
-  return filters;
-};
+import Favorite from "../models/Favorite.js";
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -90,6 +81,90 @@ export const getProductDetails = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addToFavorites = async (req, res, next) => {
+  try {
+    const { productId } = req.body;
+    const userId = req.user._id;
+
+    // Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) throw createHttpError(404, "Product not found");
+
+    // Check if already favored
+    const existingFavorite = await Favorite.findOne({
+      user: userId,
+      product: productId,
+    });
+    if (existingFavorite)
+      throw createHttpError(409, "Product already in favorites");
+
+    // Create favorite
+    const favorite = await Favorite.create({
+      user: userId,
+      product: productId,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Added to favorites",
+      data: favorite,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeFromFavorites = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const userId = req.user._id;
+
+    const deleted = await Favorite.findOneAndDelete({
+      user: userId,
+      product: productId,
+    });
+
+    if (!deleted) throw createHttpError(404, "Favorite not found");
+
+    res.status(200).json({
+      success: true,
+      message: "Removed from favorites",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFavoriteProducts = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const favorites = await Favorite.find({ user: userId })
+      .populate({
+        path: "product",
+        select: "name price category images stock",
+      })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    const total = await Favorite.countDocuments({ user: userId });
+
+    res.status(200).json({
+      success: true,
+      count: favorites.length,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      data: favorites.map((fav) => fav.product),
     });
   } catch (error) {
     next(error);
