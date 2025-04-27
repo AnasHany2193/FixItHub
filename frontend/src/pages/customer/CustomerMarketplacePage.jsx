@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Search, DollarSign, Zap } from "lucide-react";
+import { Search, DollarSign, Zap, Heart } from "lucide-react";
 
 import {
   Select,
@@ -14,7 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useProducts } from "@/hooks/useMarketplace";
+import {
+  useAddToFavorites,
+  useFavorites,
+  useProducts,
+  useRemoveFromFavorites,
+} from "@/hooks/useMarketplace";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 
 const categories = [
@@ -148,65 +153,95 @@ export default function CustomerMarketplacePage() {
   );
 }
 
-const ProductCard = ({ product, onClick }) => (
-  <motion.div
-    whileHover={{ scale: 1.02 }}
-    className="cursor-pointer"
-    onClick={onClick}
-  >
-    <Card className="overflow-hidden">
-      <div className="relative aspect-video">
-        {product.images?.[0]?.url ? (
-          <div className="relative h-full">
-            <img
-              src={product.images[0].url}
-              alt={product.name}
-              className="object-cover w-full h-full"
-            />
-            {product.images.length > 1 && (
-              <Badge
-                variant="secondary"
-                className="absolute px-2 py-1 text-xs bottom-2 left-2"
-              >
-                +{product.images.length - 1}
-              </Badge>
-            )}
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center justify-center w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
-              <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-            </div>
-          </div>
-        )}
-        <Badge variant="secondary" className="absolute top-2 left-2">
-          {product.category}
-        </Badge>
-      </div>
+const ProductCard = ({ product, onClick }) => {
+  const { data: favorites } = useFavorites();
+  const addFavorite = useAddToFavorites();
+  const removeFavorite = useRemoveFromFavorites();
 
-      <CardContent className="p-4 space-y-2">
-        <h3 className="text-lg font-semibold line-clamp-1">{product.name}</h3>
-        <p className="text-muted-foreground line-clamp-2">
-          {product.description}
-        </p>
-        <div className="flex items-center justify-between">
-          <span className="text-xl font-semibold">${product.price}</span>
-          <Badge
-            variant={
-              product.stock > 10
-                ? "success"
-                : product.stock > 0
-                  ? "warning"
-                  : "destructive"
-            }
-          >
-            {product.stock > 0 ? `${product.stock} In Stock` : " Sold Out"}
+  const isFavorite = favorites?.some((fav) => fav._id === product._id);
+
+  const handleFavoriteClick = async (e) => {
+    e.stopPropagation();
+    try {
+      if (isFavorite) await removeFavorite.mutateAsync(product._id);
+      else await addFavorite.mutateAsync(product._id);
+    } catch (error) {
+      console.error("Favorite error:", error);
+    }
+  };
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className="cursor-pointer"
+      onClick={onClick}
+    >
+      <Card className="overflow-hidden">
+        {/* Image section */}
+        <div className="relative aspect-video">
+          {product.images?.[0]?.url ? (
+            <div className="relative h-full">
+              <img
+                src={product.images[0].url}
+                alt={product.name}
+                className="object-cover w-full h-full"
+              />
+              {product.images.length > 1 && (
+                <Badge
+                  variant="secondary"
+                  className="absolute px-2 py-1 text-xs bottom-2 left-2"
+                >
+                  +{product.images.length - 1}
+                </Badge>
+              )}
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-center w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+                <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+              </div>
+            </div>
+          )}
+          <Badge variant="secondary" className="absolute top-2 left-2">
+            {product.category}
           </Badge>
+
+          {/* Favorite Button */}
+          <button
+            onClick={handleFavoriteClick}
+            className="absolute p-2 transition-colors rounded-full shadow-sm top-2 right-2 bg-white/90 backdrop-blur-sm hover:bg-red-50"
+          >
+            <Heart
+              className={`w-5 h-5 ${isFavorite ? "text-red-600 fill-red-600" : "text-gray-600"}`}
+              strokeWidth={1.5}
+            />
+          </button>
         </div>
-      </CardContent>
-    </Card>
-  </motion.div>
-);
+
+        <CardContent className="p-4 space-y-2">
+          <h3 className="text-lg font-semibold line-clamp-1">{product.name}</h3>
+          <p className="text-muted-foreground line-clamp-2">
+            {product.description}
+          </p>
+          <div className="flex items-center justify-between">
+            <span className="text-xl font-semibold">${product.price}</span>
+            <Badge
+              variant={
+                product.stock > 10
+                  ? "success"
+                  : product.stock > 0
+                    ? "warning"
+                    : "destructive"
+              }
+            >
+              {product.stock > 0 ? `${product.stock} In Stock` : " Sold Out"}
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
 
 const ProductSkeleton = () => (
   <Card className="overflow-hidden">

@@ -2,14 +2,60 @@ import { useToast } from "./useToast";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  addToFavorites,
   createProduct,
   deleteProduct,
+  getFavorites,
   getMyProducts,
   getProductDetails,
   getProducts,
+  removeFromFavorites,
   updateProduct,
 } from "@/api/marketplace";
 
+// Customer
+export const useProducts = (filters) =>
+  useQuery({
+    queryKey: ["marketplace", "products", filters],
+    queryFn: () => getProducts(filters),
+    staleTime: 5 * 60 * 1000,
+  });
+
+export const useProductDetails = (productId) =>
+  useQuery({
+    queryKey: ["marketplace", "products", productId],
+    queryFn: () => getProductDetails(productId),
+    enabled: !!productId,
+  });
+
+export const useAddToFavorites = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: addToFavorites,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["favorites"]);
+    },
+  });
+};
+
+export const useRemoveFromFavorites = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: removeFromFavorites,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["favorites"]);
+    },
+  });
+};
+
+export const useFavorites = () => {
+  return useQuery({
+    queryKey: ["favorites"],
+    queryFn: getFavorites,
+  });
+};
+
+// Worker
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -35,26 +81,6 @@ export const useCreateProduct = () => {
     },
   });
 };
-
-export const useProducts = (filters) =>
-  useQuery({
-    queryKey: ["marketplace", "products", filters],
-    queryFn: () => getProducts(filters),
-    staleTime: 5 * 60 * 1000,
-  });
-
-export const useProductDetails = (productId) =>
-  useQuery({
-    queryKey: ["marketplace", "products", productId],
-    queryFn: () => getProductDetails(productId),
-    enabled: !!productId,
-  });
-
-export const useMyProducts = (filters) =>
-  useQuery({
-    queryKey: ["marketplace", "my-products", filters],
-    queryFn: () => getMyProducts(filters),
-  });
 
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
@@ -86,6 +112,12 @@ export const useUpdateProduct = () => {
     },
   });
 };
+
+export const useMyProducts = (filters) =>
+  useQuery({
+    queryKey: ["marketplace", "my-products", filters],
+    queryFn: () => getMyProducts(filters),
+  });
 
 export const useDeleteProduct = () => {
   const queryClient = useQueryClient();

@@ -1,29 +1,6 @@
 import axiosClient from "./client";
 
-export const createProduct = async (productData) => {
-  try {
-    const { data } = await axiosClient.post("/marketplace/worker/products", {
-      ...productData,
-      imageUrls: productData.imageUrls,
-    });
-    return data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Product creation failed");
-  }
-};
-
-export const updateProduct = async ({ productId, updateData }) => {
-  try {
-    const { data } = await axiosClient.put(
-      `/marketplace/worker/products/${productId}`,
-      updateData
-    );
-    return data;
-  } catch (error) {
-    throw new Error(error.response?.data?.message || "Product update failed");
-  }
-};
-
+// Customer
 export const getProducts = async (params = {}) => {
   try {
     const { data } = await axiosClient.get("/marketplace/products", { params });
@@ -45,6 +22,66 @@ export const getProductDetails = async (productId) => {
     throw new Error(
       error.response?.data?.message || "Failed to fetch product details"
     );
+  }
+};
+
+export const addToFavorites = async (productId) => {
+  try {
+    const { data } = await axiosClient.post("/marketplace/favorites", {
+      productId,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to add favorite");
+  }
+};
+
+export const removeFromFavorites = async (productId) => {
+  try {
+    const { data } = await axiosClient.delete(
+      `/marketplace/favorites/${productId}`
+    );
+    return data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to remove favorite"
+    );
+  }
+};
+
+export const getFavorites = async () => {
+  try {
+    const { data } = await axiosClient.get("/marketplace/favorites");
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch favorites"
+    );
+  }
+};
+
+// Worker
+export const createProduct = async (productData) => {
+  try {
+    const { data } = await axiosClient.post("/marketplace/worker/products", {
+      ...productData,
+      imageUrls: productData.imageUrls,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Product creation failed");
+  }
+};
+
+export const updateProduct = async ({ productId, updateData }) => {
+  try {
+    const { data } = await axiosClient.put(
+      `/marketplace/worker/products/${productId}`,
+      updateData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Product update failed");
   }
 };
 
