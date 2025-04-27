@@ -5,8 +5,6 @@ import dotenv from "dotenv";
 import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-import swaggerUi from "swagger-ui-express";
-import YAML from "yamljs";
 import path from "path";
 
 import connectDB from "./config/db.js";
@@ -28,7 +26,6 @@ import productRoutes from "./routes/productRoutes.js";
 
 // Load environment variables and Swagger docs
 dotenv.config();
-const swaggerDocument = YAML.load("./docs/swagger.yaml");
 
 // Initialize Express application
 const app = express();
@@ -76,18 +73,8 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 if (process.env.NODE_ENV === "development") app.use(morgan("dev"));
 
 // ======================
-// API Documentation (Swagger)
+// Health Check & Root Route
 // ======================
-app.use(
-  "/api-docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerDocument, {
-    explorer: true,
-    customCssUrl:
-      "https://cdn.jsdelivr.net/npm/swagger-ui-themes@3.0.1/themes/3.x/theme-material.css",
-  })
-);
-
 v1Router.get("/health", async (req, res) => {
   const dbStatus =
     mongoose.connection.readyState === 1 ? "connected" : "disconnected";
@@ -99,15 +86,11 @@ v1Router.get("/health", async (req, res) => {
   });
 });
 
-// ======================
-// Health Check & Root Route
-// ======================
 app.get("/", (_, res) => {
   res.send(`
     <h1>FixItHub API Service</h1>
     <p>Hello, 𝕬𝖓𝖔𝖔𝖘 🖤! Welcome to FixItHub Backend System 🚀</p>
     <ul>
-      <li><a href="/api-docs">API Documentation</a></li>
       <li><a href="/api/v1/health">Service Health</a></li>
     </ul>
   `);
@@ -151,7 +134,6 @@ const startServer = async () => {
       console.log(`
         🚀 Server running in ${process.env.NODE_ENV || "development"} mode
         🔗 Base URL: http://localhost:${PORT}
-        📚 API Docs: http://localhost:${PORT}/api-docs
       `);
     });
 
