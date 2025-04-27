@@ -37,6 +37,7 @@ export const useCreateRepair = () => {
   return useMutation({
     mutationFn: createRepair,
     onSuccess: (data) => {
+      queryClient.invalidateQueries(["repairs", data]);
       queryClient.invalidateQueries(["repairs"]);
       toast({
         variant: "success",

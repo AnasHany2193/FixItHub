@@ -80,7 +80,7 @@ export default function WorkerRepairDetailPage({ type = "auction" }) {
   };
 
   if (isLoading) return <PageSkeleton type={type} />;
-  if (repairData)
+  if (!repairData)
     return (
       <NotFoundStatus
         icon={<AlertCircle />}
