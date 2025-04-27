@@ -1,7 +1,10 @@
 import createHttpError from "http-errors";
+
+import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Favorite from "../models/Favorite.js";
 
+// Products
 export const getProducts = async (req, res, next) => {
   try {
     const { query } = req;
@@ -87,6 +90,7 @@ export const getProductDetails = async (req, res, next) => {
   }
 };
 
+// Favorites
 export const addToFavorites = async (req, res, next) => {
   try {
     const { productId } = req.body;
@@ -165,6 +169,137 @@ export const getFavoriteProducts = async (req, res, next) => {
       page,
       pages: Math.ceil(total / limit),
       data: favorites.map((fav) => fav.product),
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Cart
+export const getCart = async (req, res, next) => {
+  try {
+    const cart = await Cart.findOne({ user: req.user._id })
+      .populate({
+        path: "items.product",
+        select: "name price images stock",
+      })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: cart || { items: [], total: 0 },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addItemToCart = async (req, res, next) => {
+  try {
+    const { productId, quantity = 1 } = req.body;
+
+    // Validate product
+    const product = await Product.findById(productId);
+    if (!product) throw createHttpError(404, "Product not found");
+    if (product.stock < quantity)
+      throw createHttpError(400, "Insufficient stock");
+
+    // Update or create cart
+    const cart = await Cart.findOneAndUpdate(
+      { user: req.user._id },
+      {
+        $addToSet: {
+          items: {
+            product: productId,
+            quantity: Math.min(quantity, product.stock),
+          },
+        },
+      },
+      { new: true, upsert: true }
+    ).populate("items.product");
+
+    res.status(200).json({
+      success: true,
+      message: "Item added to cart",
+      data: cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateCartItemQty = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const { action } = req.body;
+
+    // Validate action
+    if (!["increment", "decrement"].includes(action))
+      throw createHttpError(400, "Invalid quantity action");
+
+    // Update quantity
+    const update =
+      action === "increment"
+        ? { $inc: { "items.$.quantity": 1 } }
+        : { $inc: { "items.$.quantity": -1 } };
+
+    const cart = await Cart.findOneAndUpdate(
+      {
+        user: req.user._id,
+        "items.product": productId,
+      },
+      update,
+      { new: true }
+    ).populate("items.product");
+
+    if (!cart) throw createHttpError(404, "Cart item not found");
+
+    // Remove item if quantity <= 0
+    if (action === "decrement") {
+      const item = cart.items.find((i) => i.product.equals(productId));
+      if (item.quantity <= 0) return removeCartItem(req, res, next);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Cart updated",
+      data: cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeCartItem = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+
+    const cart = await Cart.findOneAndUpdate(
+      { user: req.user._id },
+      { $pull: { items: { product: productId } } },
+      { new: true }
+    ).populate("items.product");
+
+    res.status(200).json({
+      success: true,
+      message: "Item removed from cart",
+      data: cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const clearCart = async (req, res, next) => {
+  try {
+    await Cart.findOneAndUpdate(
+      { user: req.user._id },
+      { $set: { items: [] } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Cart cleared",
     });
   } catch (error) {
     next(error);

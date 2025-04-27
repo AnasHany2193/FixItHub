@@ -11,6 +11,11 @@ import {
   addToFavorites,
   removeFromFavorites,
   getFavoriteProducts,
+  getCart,
+  addItemToCart,
+  clearCart,
+  updateCartItemQty,
+  removeCartItem,
 } from "../controllers/marketplaceCustomerController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
@@ -35,5 +40,17 @@ router.route("/products/:id").get(getProductDetails);
 router.post("/favorites", protect, addToFavorites);
 router.delete("/favorites/:productId", protect, removeFromFavorites);
 router.get("/favorites", protect, getFavoriteProducts);
+
+// Cart Routes
+router
+  .route("/")
+  .get(protect, getCart)
+  .post(protect, addItemToCart)
+  .delete(protect, clearCart);
+
+router
+  .route("/:productId")
+  .put(protect, updateCartItemQty)
+  .delete(protect, removeCartItem);
 
 export default router;
