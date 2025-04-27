@@ -83,18 +83,18 @@ const DashboardLayout = () => {
         icon: <ShoppingCart className="w-5 h-5" />,
         items: [
           {
-            path: "/marketplace",
+            path: "/marketplace/products",
             name: "Browse Products",
             icon: <PackageSearch className="w-4 h-4" />,
           },
           {
-            path: "/cart",
+            path: "/marketplace/cart",
             name: "My Cart",
             icon: <ShoppingBasket className="w-4 h-4" />,
             badge: "cart",
           },
           {
-            path: "/orders",
+            path: "/marketplace/orders",
             name: "My Orders",
             icon: <PackageCheck className="w-4 h-4" />,
           },

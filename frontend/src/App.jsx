@@ -22,6 +22,8 @@ import RepairRequestsPage from "./pages/customer/RepairRequestsPage";
 import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
 import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
 
+import CustomerMarketplacePage from "./pages/customer/CustomerMarketplacePage";
+
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
 import FindRepairsPage from "./pages/worker/FindRepairsPage";
 import WorkerActiveRepairsPage from "./pages/worker/WorkerActiveRepairsPage";
@@ -31,6 +33,7 @@ import WorkerHistoryPage from "./pages/worker/WorkerHistoryPage";
 
 import ProductListPage from "./pages/worker/ProductListPage";
 import AddProductPage from "./pages/worker/AddProductPage";
+import UpdateProductPage from "./pages/worker/UpdateProductPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -39,7 +42,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import UpdateProductPage from "./pages/worker/UpdateProductPage";
 
 function App() {
   return (
@@ -67,6 +69,9 @@ function App() {
               <Route path="all" element={<RepairRequestsPage />} />
               <Route path=":id" element={<RepairDetailsPage />} />
               <Route path=":id/edit" element={<EditRepairPage />} />
+            </Route>
+            <Route path="/marketplace">
+              <Route path="products" element={<CustomerMarketplacePage />} />
             </Route>
           </Route>
         </Route>
@@ -98,18 +103,14 @@ function App() {
                 element={<WorkerActiveRepairDetailsPage />}
               />
             </Route>
-            <Route
-              path="/marketplace/my-products"
-              element={<ProductListPage />}
-            />
-            <Route
-              path="/marketplace/new-product"
-              element={<AddProductPage />}
-            />
-            <Route
-              path="/marketplace/edit-product/:productId"
-              element={<UpdateProductPage />}
-            />
+            <Route path="/marketplace">
+              <Route path="my-products" element={<ProductListPage />} />
+              <Route path="new-product" element={<AddProductPage />} />
+              <Route
+                path="edit-product/:productId"
+                element={<UpdateProductPage />}
+              />
+            </Route>
           </Route>
         </Route>
 
