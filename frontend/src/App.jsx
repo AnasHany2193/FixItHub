@@ -27,6 +27,10 @@ import FindRepairsPage from "./pages/worker/FindRepairsPage";
 import WorkerActiveRepairsPage from "./pages/worker/WorkerActiveRepairsPage";
 import WorkerRepairDetailPage from "./pages/worker/WorkerRepairDetailPage";
 import WorkerActiveRepairDetailsPage from "./pages/worker/WorkerActiveRepairDetailsPage";
+import WorkerHistoryPage from "./pages/worker/WorkerHistoryPage";
+
+import ProductListPage from "./pages/worker/ProductListPage";
+import AddProductPage from "./pages/worker/AddProductPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
@@ -35,8 +39,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import WorkerHistoryPage from "./pages/worker/WorkerHistoryPage";
-import ProductListPage from "./pages/worker/ProductListPage";
 
 function App() {
   return (
@@ -58,48 +60,50 @@ function App() {
         <Route element={<RoleGuard allowedRoles={["customer"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
-            <Route path="/repairs/new" element={<NewRepairPage />} />
-            <Route path="/repairs/history" element={<RepairHistoryPage />} />
-            <Route path="/repairs/all" element={<RepairRequestsPage />} />
-            <Route path="/repairs/:id" element={<RepairDetailsPage />} />
-            <Route path="/repairs/:id/edit" element={<EditRepairPage />} />
+            <Route path="/repairs">
+              <Route path="new" element={<NewRepairPage />} />
+              <Route path="history" element={<RepairHistoryPage />} />
+              <Route path="all" element={<RepairRequestsPage />} />
+              <Route path=":id" element={<RepairDetailsPage />} />
+              <Route path=":id/edit" element={<EditRepairPage />} />
+            </Route>
           </Route>
         </Route>
 
         <Route element={<RoleGuard allowedRoles={["worker"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/worker-dashboard" element={<WorkerDashboard />} />
-            <Route
-              path="/repairs/auctions"
-              element={<FindRepairsPage type="auctions" />}
-            />
-            <Route
-              path="/repairs/direct-offers"
-              element={<FindRepairsPage type="direct-offers" />}
-            />
-            <Route
-              path="/repairs/worker-history"
-              element={<WorkerHistoryPage />}
-            />
-            <Route
-              path="/repairs/auctions/:id"
-              element={<WorkerRepairDetailPage type="auction" />}
-            />
-            <Route
-              path="/repairs/direct-offers/:id"
-              element={<WorkerRepairDetailPage type="offer" />}
-            />
-            <Route
-              path="/repairs/active"
-              element={<WorkerActiveRepairsPage />}
-            />
-            <Route
-              path="/repairs/active/:id"
-              element={<WorkerActiveRepairDetailsPage />}
-            />
+            <Route path="/repairs">
+              <Route
+                path="auctions"
+                element={<FindRepairsPage type="auctions" />}
+              />
+              <Route
+                path="direct-offers"
+                element={<FindRepairsPage type="direct-offers" />}
+              />
+              <Route path="worker-history" element={<WorkerHistoryPage />} />
+              <Route
+                path="auctions/:id"
+                element={<WorkerRepairDetailPage type="auction" />}
+              />
+              <Route
+                path="direct-offers/:id"
+                element={<WorkerRepairDetailPage type="offer" />}
+              />
+              <Route path="active" element={<WorkerActiveRepairsPage />} />
+              <Route
+                path="active/:id"
+                element={<WorkerActiveRepairDetailsPage />}
+              />
+            </Route>
             <Route
               path="/marketplace/my-products"
               element={<ProductListPage />}
+            />
+            <Route
+              path="/marketplace/new-product"
+              element={<AddProductPage />}
             />
           </Route>
         </Route>

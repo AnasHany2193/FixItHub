@@ -78,7 +78,7 @@ export default function ProductListPage() {
 const ProductCard = ({ product, onEdit, onDelete }) => (
   <motion.div whileHover={{ scale: 1.02 }}>
     <Card className="overflow-hidden">
-      <CardHeader className="relative p-0 aspect-square">
+      <CardHeader className="relative p-0 aspect-video">
         {product.images?.[0]?.url ? (
           <img
             src={product.images[0].url}
@@ -90,7 +90,9 @@ const ProductCard = ({ product, onEdit, onDelete }) => (
             <Package className="w-8 h-8 text-muted-foreground" />
           </div>
         )}
-        <Badge className="absolute top-2 left-2">{product.category}</Badge>
+        <Badge variant="secondary" className="absolute top-2 left-2">
+          {product.category}
+        </Badge>
       </CardHeader>
 
       <CardContent className="p-4 space-y-2">
@@ -100,7 +102,15 @@ const ProductCard = ({ product, onEdit, onDelete }) => (
         </p>
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold">${product.price}</span>
-          <Badge variant={product.stock > 0 ? "success" : "destructive"}>
+          <Badge
+            variant={
+              product.stock > 10
+                ? "success"
+                : product.stock > 0
+                  ? "warning"
+                  : "destructive"
+            }
+          >
             {product.stock} in stock
           </Badge>
         </div>
@@ -122,7 +132,7 @@ const ProductCard = ({ product, onEdit, onDelete }) => (
 
 const ProductSkeleton = () => (
   <Card className="overflow-hidden">
-    <Skeleton className="w-full aspect-square" />
+    <Skeleton className="w-full aspect-video" />
     <CardContent className="p-4 space-y-2">
       <Skeleton className="w-3/4 h-6" />
       <Skeleton className="w-full h-4" />
