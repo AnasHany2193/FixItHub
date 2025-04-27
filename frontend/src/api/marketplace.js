@@ -64,7 +64,7 @@ export const getFavorites = async () => {
 // Cart
 export const getCart = async () => {
   try {
-    const { data } = await axiosClient.get("/cart");
+    const { data } = await axiosClient.get("/marketplace/cart");
     return data.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to fetch cart");
@@ -73,7 +73,7 @@ export const getCart = async () => {
 
 export const addItemToCart = async (productId) => {
   try {
-    const { data } = await axiosClient.post("/cart", { productId });
+    const { data } = await axiosClient.post("/marketplace/cart", { productId });
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to add to cart");
@@ -82,7 +82,9 @@ export const addItemToCart = async (productId) => {
 
 export const updateCartItemQty = async (productId, action) => {
   try {
-    const { data } = await axiosClient.put(`/cart/${productId}`, { action });
+    const { data } = await axiosClient.put(`/marketplace/cart/${productId}`, {
+      action,
+    });
     return data;
   } catch (error) {
     throw new Error(
@@ -93,7 +95,7 @@ export const updateCartItemQty = async (productId, action) => {
 
 export const removeCartItem = async (productId) => {
   try {
-    const { data } = await axiosClient.delete(`/cart/${productId}`);
+    const { data } = await axiosClient.delete(`/marketplace/cart/${productId}`);
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to remove item");
@@ -102,7 +104,7 @@ export const removeCartItem = async (productId) => {
 
 export const clearCart = async () => {
   try {
-    const { data } = await axiosClient.delete("/cart");
+    const { data } = await axiosClient.delete("/marketplace/cart");
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to clear cart");

@@ -33,24 +33,31 @@ router
   .delete(protect, roleCheck("worker"), deleteProduct);
 
 // Public customer routes
-router.route("/products").get(getProducts);
-router.route("/products/:id").get(getProductDetails);
+router.route("/products").get(protect, roleCheck("customer"), getProducts);
+router
+  .route("/products/:id")
+  .get(protect, roleCheck("customer"), getProductDetails);
 
 // Favorite routes
-router.post("/favorites", protect, addToFavorites);
-router.delete("/favorites/:productId", protect, removeFromFavorites);
-router.get("/favorites", protect, getFavoriteProducts);
+router.post("/favorites", protect, roleCheck("customer"), addToFavorites);
+router.delete(
+  "/favorites/:productId",
+  protect,
+  roleCheck("customer"),
+  removeFromFavorites
+);
+router.get("/favorites", protect, roleCheck("customer"), getFavoriteProducts);
 
 // Cart Routes
 router
-  .route("/")
-  .get(protect, getCart)
-  .post(protect, addItemToCart)
-  .delete(protect, clearCart);
+  .route("/cart")
+  .get(protect, roleCheck("customer"), getCart)
+  .post(protect, roleCheck("customer"), addItemToCart)
+  .delete(protect, roleCheck("customer"), clearCart);
 
 router
-  .route("/:productId")
-  .put(protect, updateCartItemQty)
-  .delete(protect, removeCartItem);
+  .route("/cart/:productId")
+  .put(protect, roleCheck("customer"), updateCartItemQty)
+  .delete(protect, roleCheck("customer"), removeCartItem);
 
 export default router;

@@ -197,6 +197,7 @@ export const getCart = async (req, res, next) => {
 export const addItemToCart = async (req, res, next) => {
   try {
     const { productId, quantity = 1 } = req.body;
+    console.log("productId", productId);
 
     // Validate product
     const product = await Product.findById(productId);
