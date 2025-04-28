@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -65,25 +65,6 @@ export default function CustomerMarketplaceDetailsPage() {
 
   const isFavorite = favorites?.some((fav) => fav._id === productId);
   const userReview = reviews?.find((review) => review.user._id === user._id);
-
-  const handleReviewSubmit = async () => {
-    try {
-      const payload = { rating, comment: reviewText };
-      if (editingReview) {
-        await updateReview.mutateAsync({
-          reviewId: editingReview._id,
-          updateData: payload,
-        });
-      } else {
-        await addReview.mutateAsync({ productId, reviewData: payload });
-      }
-      setReviewText("");
-      setRating(0);
-      setEditingReview(null);
-    } catch (error) {
-      toast({ variant: "error", title: "Error", description: error.message });
-    }
-  };
 
   const handleFavoriteToggle = async () => {
     try {
@@ -287,44 +268,80 @@ export default function CustomerMarketplaceDetailsPage() {
                 {!userReview ? (
                   <div className="p-6 mb-8 rounded-lg bg-muted">
                     <h3 className="mb-4 text-lg font-medium">Write a Review</h3>
-                    <Rating value={rating} onChange={setRating} />
-                    <Textarea
-                      value={reviewText}
-                      onChange={(e) => setReviewText(e.target.value)}
-                      placeholder="Share your experience..."
-                      className="h-24 mt-4"
+                    <ReviewForm
+                      onSubmit={async ({ rating, comment }) => {
+                        try {
+                          await addReview.mutateAsync({
+                            productId,
+                            reviewData: { rating, comment },
+                          });
+                          setReviewText("");
+                          setRating(0);
+                        } catch (error) {
+                          toast({
+                            variant: "error",
+                            description: error.message,
+                          });
+                        }
+                      }}
+                      isSubmitting={addReview.isPending}
                     />
-                    <Button className="mt-4" onClick={handleReviewSubmit}>
-                      Submit Review
-                    </Button>
                   </div>
                 ) : (
                   <div className="p-6 mb-8 rounded-lg bg-muted">
                     <h3 className="mb-4 text-lg font-medium">Your Review</h3>
-                    <div className="flex items-center gap-4">
-                      <Rating value={userReview.rating} readOnly />
-                      <p className="text-muted-foreground">
-                        {userReview.comment}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setEditingReview(userReview);
-                          setRating(userReview.rating);
-                          setReviewText(userReview.comment);
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteReview.mutate(userReview._id)}
-                      >
-                        Delete
-                      </Button>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-4">
+                        <Rating value={userReview.rating} readOnly />
+                        <p className="text-muted-foreground">
+                          {userReview.comment}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingReview(userReview);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteReview.mutate(userReview._id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Edit Form */}
+                    {editingReview && (
+                      <div className="pt-4 mt-4 border-t">
+                        <ReviewForm
+                          initialRating={editingReview.rating}
+                          initialComment={editingReview.comment}
+                          onSubmit={async ({ rating, comment }) => {
+                            try {
+                              await updateReview.mutateAsync({
+                                reviewId: editingReview._id,
+                                updateData: { rating, comment },
+                              });
+                              setEditingReview(null);
+                            } catch (error) {
+                              toast({
+                                variant: "error",
+                                description: error.message,
+                              });
+                            }
+                          }}
+                          onCancel={() => setEditingReview(null)}
+                          isSubmitting={updateReview.isPending}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -396,3 +413,55 @@ const ProductDetailsSkeleton = () => (
     <Skeleton className="h-32 mt-12" />
   </div>
 );
+
+const ReviewForm = ({
+  initialRating = 0,
+  initialComment = "",
+  onSubmit,
+  onCancel,
+  isSubmitting,
+}) => {
+  const [rating, setRating] = useState(initialRating);
+  const [comment, setComment] = useState(initialComment);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setRating(initialRating);
+    setComment(initialComment);
+  }, [initialRating, initialComment]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (rating < 1) {
+      toast({
+        variant: "destructive",
+        title: "Rating Required",
+        description: "Please select a star rating",
+      });
+      return;
+    }
+    onSubmit({ rating, comment });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Rating value={rating} onChange={setRating} />
+      <Textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Share your experience..."
+        className="h-32"
+      />
+      <div className="flex gap-2">
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit Review"}
+        </Button>
+        {onCancel && (
+          <Button variant="outline" onClick={onCancel} type="button">
+            Cancel
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+};

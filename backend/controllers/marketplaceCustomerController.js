@@ -435,13 +435,12 @@ export const addReview = async (req, res, next) => {
 export const updateReview = async (req, res, next) => {
   try {
     const { reviewId } = req.params;
-    const updates = req.body;
+    const { rating, comment } = req.body;
     const userId = req.user._id;
-    console.log("rating, comment", { rating, comment });
 
     const review = await Review.findOneAndUpdate(
       { _id: reviewId, user: userId },
-      updates,
+      { rating, comment },
       { new: true, runValidators: true }
     );
 
