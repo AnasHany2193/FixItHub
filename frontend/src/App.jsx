@@ -44,6 +44,7 @@ import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import CartAndFavoritesPage from "./pages/customer/CartAndFavoritesPage";
+import CustomerOrdersPage from "./pages/customer/CustomerOrdersPage";
 
 function App() {
   return (
@@ -79,6 +80,7 @@ function App() {
                 element={<CustomerMarketplaceDetailsPage />}
               />
               <Route path="collections" element={<CartAndFavoritesPage />} />
+              <Route path="orders" element={<CustomerOrdersPage />} />
             </Route>
           </Route>
         </Route>

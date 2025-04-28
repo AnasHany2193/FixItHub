@@ -222,7 +222,7 @@ export const useCreatePaymentSession = () => {
   });
 };
 
-// frontend/src/hooks/useMarketplace.js
+// Order
 export const useCustomerOrders = (filters = {}) => {
   return useQuery({
     queryKey: ["orders", filters],
