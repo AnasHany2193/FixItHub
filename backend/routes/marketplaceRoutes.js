@@ -18,6 +18,10 @@ import {
   removeCartItem,
   getCustomerOrders,
   getOrderDetails,
+  addReview,
+  getProductReviews,
+  updateReview,
+  deleteReview,
 } from "../controllers/marketplaceCustomerController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 import { createOrderPaymentSession } from "../controllers/paymentController.js";
