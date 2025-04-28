@@ -37,20 +37,48 @@ export const useProductDetails = (productId) =>
 // Favorite
 export const useAddToFavorites = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: addToFavorites,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["favorites"]);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error.message,
+      });
     },
   });
 };
 
 export const useRemoveFromFavorites = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: removeFromFavorites,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["favorites"]);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error.message,
+      });
     },
   });
 };
@@ -72,40 +100,96 @@ export const useGetCart = () => {
 
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: addItemToCart,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["cart"]);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error.message,
+      });
     },
   });
 };
 
 export const useUpdateCartItem = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: ({ productId, action }) => updateCartItemQty(productId, action),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["cart"]);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error.message,
+      });
     },
   });
 };
 
 export const useRemoveCartItem = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: removeCartItem,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["cart"]);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error.message,
+      });
     },
   });
 };
 
 export const useClearCart = () => {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: clearCart,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["cart"]);
+      toast({
+        variant: "success",
+        title: "Success",
+        description: data.message,
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Error",
+        description: error.message,
+      });
     },
   });
 };
@@ -118,11 +202,12 @@ export const useCreatePaymentSession = () => {
   return useMutation({
     mutationFn: createPaymentSession,
     onSuccess: (data) => {
+      queryClient.invalidateQueries(["cart"]);
       queryClient.invalidateQueries(["orders"]);
       toast({
         variant: "success",
-        title: "Payment Session Created",
-        description: "Redirecting to payment...",
+        title: "Success",
+        description: data.message,
       });
       window.location.href = data.url; // Redirect to Stripe checkout
     },
@@ -202,6 +287,7 @@ export const useMyProducts = (filters) =>
 
 export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   return useMutation({
@@ -214,6 +300,7 @@ export const useDeleteProduct = () => {
         title: "Product Deleted",
         description: data.message,
       });
+      navigate("/marketplace/my-products");
     },
     onError: (error) => {
       toast({

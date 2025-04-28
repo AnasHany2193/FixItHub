@@ -190,7 +190,7 @@ export const createOrderPaymentSession = async (req, res) => {
     res.status(200).json({
       success: true,
       url: session.url,
-      orderId: order._id,
+      message: "Please complete your payment in the new window",
     });
   } catch (error) {
     res.status(500).json({
@@ -251,8 +251,7 @@ export const handleStripeWebhook = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    const session = event.data.object;
-    const { type } = session.metadata;
+    const { type } = event.data.object.metadata;
 
     // Handle different payment types
     switch (type) {
