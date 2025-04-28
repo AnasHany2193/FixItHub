@@ -13,6 +13,7 @@ import {
   useFavorites,
   useRemoveFromFavorites,
   useAddToCart,
+  useCreatePaymentSession,
 } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
@@ -70,6 +71,7 @@ const CartSection = ({ cart, isLoading }) => {
   const removeItem = useRemoveCartItem();
   const updateItem = useUpdateCartItem();
   const clearCart = useClearCart();
+  const paymentSession = useCreatePaymentSession();
 
   if (isLoading) return <LoadingSpinner className="mx-auto mt-12" size="lg" />;
 
@@ -176,7 +178,10 @@ const CartSection = ({ cart, isLoading }) => {
               >
                 Clear Cart
               </Button>
-              <Button className="flex-1 gap-2">
+              <Button
+                className="flex-1 gap-2"
+                onClick={() => paymentSession.mutate()}
+              >
                 Checkout
                 <ArrowRight className="w-4 h-4" />
               </Button>

@@ -112,10 +112,11 @@ export const clearCart = async () => {
 };
 
 // Payment
-export const createPaymentSession = async () => {
+export const createPaymentSession = async (orderId) => {
   try {
     const { data } = await axiosClient.post(
-      "/marketplace/payment/create-checkout-session"
+      "/marketplace/payment/create-checkout-session",
+      orderId ? { orderId } : {}
     );
     return data;
   } catch (error) {

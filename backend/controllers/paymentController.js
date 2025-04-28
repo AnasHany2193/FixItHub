@@ -5,6 +5,7 @@ import Cart from "../models/Cart.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import RepairRequest from "../models/RepairRequest.js";
+import createHttpError from "http-errors";
 
 dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -117,73 +118,90 @@ const handleRepairWebhook = async (event) => {
 export const createOrderPaymentSession = async (req, res) => {
   try {
     const userId = req.user._id;
+    const { orderId } = req.body;
 
-    // Get user's cart with products
-    const cart = await Cart.findOne({ user: userId })
-      .populate("items.product")
-      .lean();
+    let order, lineItems;
 
-    if (!cart || cart.items.length === 0)
-      return res.status(400).json({
-        success: false,
-        message: "Cart is empty",
-      });
+    if (orderId) {
+      // Existing order flow
+      order = await Order.findOne({
+        _id: orderId,
+        user: userId,
+        status: "processing",
+      }).populate("items.product");
 
-    // Calculate total and validate stock
-    let total = 0;
-    const lineItems = [];
+      if (!order) throw createHttpError(404, "Order not found or completed");
 
-    for (const item of cart.items) {
-      const product = item.product;
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `${product.name} has insufficient stock`,
-        });
+      // Revalidate stock
+      for (const item of order.items) {
+        const product = await Product.findById(item.product._id);
+        if (product.stock < item.quantity) {
+          throw createHttpError(400, `${product.name} is out of stock`);
+        }
       }
 
-      total += product.price * item.quantity;
-
-      lineItems.push({
+      lineItems = order.items.map((item) => ({
         price_data: {
           currency: "usd",
           product_data: {
-            name: product.name,
-            description: product.category,
-            image: product.images[0].url,
+            name: item.product.name,
+            description: item.product.category,
           },
-          unit_amount: Math.round(product.price * 100),
+          unit_amount: Math.round(item.product.price * 100),
         },
         quantity: item.quantity,
-      });
-    }
+      }));
+    } else {
+      // New order from cart flow
+      const cart = await Cart.findOne({ user: userId })
+        .populate("items.product")
+        .lean();
 
-    // Create order in processing state
-    const order = await Order.create({
-      user: userId,
-      items: cart.items.map((item) => ({
-        product: item.product._id,
-        quantity: item.quantity,
-      })),
-      total,
-      paymentIntentId: "",
-      status: "processing",
-    });
+      if (!cart?.items?.length) throw createHttpError(400, "Cart is empty");
+
+      let total = 0;
+      lineItems = [];
+
+      for (const item of cart.items) {
+        const product = item.product;
+        if (product.stock < item.quantity) {
+          throw createHttpError(400, `${product.name} is out of stock`);
+        }
+        total += product.price * item.quantity;
+        lineItems.push({
+          price_data: {
+            currency: "usd",
+            product_data: { name: product.name, description: product.category },
+            unit_amount: Math.round(product.price * 100),
+          },
+          quantity: item.quantity,
+        });
+      }
+
+      order = await Order.create({
+        user: userId,
+        items: cart.items.map((item) => ({
+          product: item.product._id,
+          quantity: item.quantity,
+        })),
+        total,
+        paymentIntentId: "",
+        status: "processing",
+      });
+
+      await Cart.findOneAndUpdate({ user: userId }, { $set: { items: [] } });
+    }
 
     // Create Stripe session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
       mode: "payment",
-      metadata: {
-        type: "order",
-        orderId: order._id.toString(),
-      },
+      metadata: { type: "order", orderId: order._id.toString() },
       success_url: `${process.env.CLIENT_URL}/marketplace/orders/${order._id}?payment=success`,
-      cancel_url: `${process.env.CLIENT_URL}/marketplace/cart?payment=cancelled`,
+      cancel_url: `${process.env.CLIENT_URL}/marketplace/orders/${order._id}?payment=cancelled`,
     });
 
-    // Save payment intent to order
     order.paymentIntentId = session.id;
     await order.save();
 
@@ -193,10 +211,9 @@ export const createOrderPaymentSession = async (req, res) => {
       message: "Please complete your payment in the new window",
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(error.status || 500).json({
       success: false,
-      message: "Payment session creation failed",
-      error: error.message,
+      message: error.message || "Payment failed",
     });
   }
 };
