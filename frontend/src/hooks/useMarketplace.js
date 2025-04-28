@@ -3,22 +3,26 @@ import { useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   addItemToCart,
+  addProductReview,
   addToFavorites,
   clearCart,
   createPaymentSession,
   createProduct,
   deleteProduct,
+  deleteProductReview,
   getCart,
   getCustomerOrders,
   getFavorites,
   getMyProducts,
   getOrderDetails,
   getProductDetails,
+  getProductReviews,
   getProducts,
   removeCartItem,
   removeFromFavorites,
   updateCartItemQty,
   updateProduct,
+  updateProductReview,
 } from "@/api/marketplace";
 
 // Customer
@@ -237,6 +241,93 @@ export const useOrderDetails = (orderId) => {
     queryKey: ["orders", orderId],
     queryFn: () => getOrderDetails(orderId),
     enabled: !!orderId,
+  });
+};
+
+// Review Hooks
+export const useProductReviews = (productId, page, limit) => {
+  return useQuery({
+    queryKey: ["reviews", productId, page, limit],
+    queryFn: () => getProductReviews(productId, page, limit),
+    enabled: !!productId,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useAddProductReview = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ productId, reviewData }) =>
+      addProductReview(productId, reviewData),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries(["reviews", variables.productId]);
+      queryClient.invalidateQueries(["products", variables.productId]);
+      toast({
+        variant: "success",
+        title: "Review Added",
+        description: "Your review has been submitted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Submission Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useUpdateProductReview = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ reviewId, updateData }) =>
+      updateProductReview(reviewId, updateData),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["reviews", data.data.product]);
+      queryClient.invalidateQueries(["products", data.data.product]);
+      toast({
+        variant: "success",
+        title: "Review Updated",
+        description: "Your review has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Update Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+export const useDeleteProductReview = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: deleteProductReview,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["reviews", data.data.product]);
+      queryClient.invalidateQueries(["products", data.data.product]);
+      toast({
+        variant: "success",
+        title: "Review Deleted",
+        description: "Your review has been removed successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Deletion Failed",
+        description: error.message,
+      });
+    },
   });
 };
 

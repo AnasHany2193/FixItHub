@@ -149,6 +149,56 @@ export const getOrderDetails = async (orderId) => {
   }
 };
 
+// Review
+export const addProductReview = async (productId, reviewData) => {
+  try {
+    const { data } = await axiosClient.post(
+      `/marketplace/products/${productId}/reviews`,
+      reviewData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to submit review");
+  }
+};
+
+export const updateProductReview = async (reviewId, updateData) => {
+  try {
+    const { data } = await axiosClient.put(
+      `/marketplace/reviews/${reviewId}`,
+      updateData
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to update review");
+  }
+};
+
+export const deleteProductReview = async (reviewId) => {
+  try {
+    const { data } = await axiosClient.delete(
+      `/marketplace/reviews/${reviewId}`
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to delete review");
+  }
+};
+
+export const getProductReviews = async (productId, page = 1, limit = 5) => {
+  try {
+    const { data } = await axiosClient.get(
+      `/marketplace/products/${productId}/reviews`,
+      {
+        params: { page, limit },
+      }
+    );
+    return data.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch reviews");
+  }
+};
+
 // Worker
 export const createProduct = async (productData) => {
   try {
