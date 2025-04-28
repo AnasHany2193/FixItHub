@@ -88,8 +88,8 @@ const DashboardLayout = () => {
             icon: <PackageSearch className="w-4 h-4" />,
           },
           {
-            path: "/marketplace/cart",
-            name: "My Cart",
+            path: "/marketplace/collections",
+            name: "Collections",
             icon: <ShoppingBasket className="w-4 h-4" />,
             badge: "cart",
           },

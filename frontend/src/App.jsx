@@ -43,6 +43,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import CartAndFavoritesPage from "./pages/customer/CartAndFavoritesPage";
 
 function App() {
   return (
@@ -77,6 +78,7 @@ function App() {
                 path="products/:productId"
                 element={<CustomerMarketplaceDetailsPage />}
               />
+              <Route path="collections" element={<CartAndFavoritesPage />} />
             </Route>
           </Route>
         </Route>
