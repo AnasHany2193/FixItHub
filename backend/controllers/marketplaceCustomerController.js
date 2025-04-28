@@ -132,6 +132,7 @@ export const addToFavorites = async (req, res, next) => {
       user: userId,
       product: productId,
     });
+    await Product.findByIdAndUpdate(productId, { $inc: { favoritesCount: 1 } });
 
     res.status(201).json({
       success: true,
@@ -154,6 +155,9 @@ export const removeFromFavorites = async (req, res, next) => {
     });
 
     if (!deleted) throw createHttpError(404, "Favorite not found");
+    await Product.findByIdAndUpdate(productId, {
+      $inc: { favoritesCount: -1 },
+    });
 
     res.status(200).json({
       success: true,

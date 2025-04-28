@@ -241,11 +241,16 @@ export const handleOrderWebhook = async (event) => {
       }
 
       // Update product stock
-      for (const item of order.items) {
-        await Product.findByIdAndUpdate(item.product._id, {
-          $inc: { stock: -item.quantity },
-        });
-      }
+      await Promise.all(
+        order.items.map(async (item) => {
+          await Product.findByIdAndUpdate(item.product._id, {
+            $inc: {
+              stock: -item.quantity,
+              purchasesCount: item.quantity,
+            },
+          });
+        })
+      );
 
       // Clear user's cart
       await Cart.findOneAndUpdate(

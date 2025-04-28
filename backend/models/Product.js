@@ -67,6 +67,16 @@ const ProductSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    favoritesCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    purchasesCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { timestamps: true }
 );
