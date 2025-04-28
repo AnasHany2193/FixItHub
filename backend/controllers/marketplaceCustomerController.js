@@ -2,6 +2,7 @@ import createHttpError from "http-errors";
 
 import Cart from "../models/Cart.js";
 import Order from "../models/Order.js";
+import Review from "../models/Review.js";
 import Product from "../models/Product.js";
 import Favorite from "../models/Favorite.js";
 
@@ -86,6 +87,19 @@ export const getProductDetails = async (req, res, next) => {
       success: true,
       data: product,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductReviews = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const reviews = await Review.find({ product: productId })
+      .populate("user", "username profile.avatar")
+      .sort("-createdAt");
+
+    res.json({ success: true, data: reviews });
   } catch (error) {
     next(error);
   }
@@ -308,7 +322,7 @@ export const clearCart = async (req, res, next) => {
   }
 };
 
-// Get all customer orders
+// Order
 export const getCustomerOrders = async (req, res, next) => {
   try {
     const { status, startDate, endDate, sort } = req.query;
@@ -355,7 +369,6 @@ export const getCustomerOrders = async (req, res, next) => {
   }
 };
 
-// Get single order details
 export const getOrderDetails = async (req, res, next) => {
   try {
     const order = await Order.findOne({
@@ -378,6 +391,78 @@ export const getOrderDetails = async (req, res, next) => {
       success: true,
       data: order,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Review
+export const addReview = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user._id;
+
+    const product = await Product.findById(productId);
+    if (!product) throw createHttpError(404, "Product not found");
+
+    const review = await Review.create({
+      product: productId,
+      user: userId,
+      rating,
+      comment,
+    });
+
+    await product.updateRating();
+
+    res.status(201).json({
+      success: true,
+      data: review,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateReview = async (req, res, next) => {
+  try {
+    const { reviewId } = req.params;
+    const updates = req.body;
+    const userId = req.user._id;
+
+    const review = await Review.findOneAndUpdate(
+      { _id: reviewId, user: userId },
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    if (!review) throw createHttpError(404, "Review not found");
+
+    const product = await Product.findById(review.product);
+    await product.updateRating();
+
+    res.json({ success: true, data: review });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteReview = async (req, res, next) => {
+  try {
+    const { reviewId } = req.params;
+    const userId = req.user._id;
+
+    const review = await Review.findOneAndDelete({
+      _id: reviewId,
+      user: userId,
+    });
+
+    if (!review) throw createHttpError(404, "Review not found");
+
+    const product = await Product.findById(review.product);
+    await product.updateRating();
+
+    res.json({ success: true, data: null });
   } catch (error) {
     next(error);
   }

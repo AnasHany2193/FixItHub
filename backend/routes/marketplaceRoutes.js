@@ -63,10 +63,17 @@ router
   .put(protect, roleCheck("customer"), updateCartItemQty)
   .delete(protect, roleCheck("customer"), removeCartItem);
 
-// Add these routes under customer routes
+// Order Routes
 router.get("/orders", protect, roleCheck("customer"), getCustomerOrders);
 router.get("/orders/:id", protect, roleCheck("customer"), getOrderDetails);
 
+// Review Routes
+router.post("/products/:productId/reviews", protect, addReview);
+router.get("/products/:productId/reviews", getProductReviews);
+router.put("/reviews/:reviewId", protect, updateReview);
+router.delete("/reviews/:reviewId", protect, deleteReview);
+
+// Payment Route
 router.post(
   "/payment/create-checkout-session",
   protect,

@@ -71,4 +71,21 @@ const ProductSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+ProductSchema.virtual("reviews", {
+  ref: "Review",
+  localField: "_id",
+  foreignField: "product",
+});
+
+ProductSchema.methods.updateRating = async function () {
+  const agg = await this.model("Review").aggregate([
+    { $match: { product: this._id } },
+    { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },
+  ]);
+
+  this.avgRating = agg[0]?.avg || 2.5;
+  this.reviewsCount = agg[0]?.count || 0;
+  await this.save();
+};
+
 export default mongoose.model("Product", ProductSchema);
