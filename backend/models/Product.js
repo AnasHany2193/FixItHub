@@ -93,7 +93,7 @@ ProductSchema.methods.updateRating = async function () {
     { $group: { _id: null, avg: { $avg: "$rating" }, count: { $sum: 1 } } },
   ]);
 
-  this.avgRating = agg[0]?.avg || 2.5;
+  this.avgRating = agg[0]?.avg || 0;
   this.reviewsCount = agg[0]?.count || 0;
   await this.save();
 };

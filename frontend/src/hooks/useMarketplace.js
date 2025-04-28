@@ -313,8 +313,9 @@ export const useDeleteProductReview = () => {
   return useMutation({
     mutationFn: deleteProductReview,
     onSuccess: (data) => {
-      queryClient.invalidateQueries(["reviews", data.data.product]);
-      queryClient.invalidateQueries(["products", data.data.product]);
+      console.log(data);
+      queryClient.invalidateQueries(["reviews", data.productId]);
+      queryClient.invalidateQueries(["products", data.productId]);
       toast({
         variant: "success",
         title: "Review Deleted",

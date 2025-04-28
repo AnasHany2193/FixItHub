@@ -437,6 +437,7 @@ export const updateReview = async (req, res, next) => {
     const { reviewId } = req.params;
     const updates = req.body;
     const userId = req.user._id;
+    console.log("rating, comment", { rating, comment });
 
     const review = await Review.findOneAndUpdate(
       { _id: reviewId, user: userId },
@@ -470,7 +471,7 @@ export const deleteReview = async (req, res, next) => {
     const product = await Product.findById(review.product);
     await product.updateRating();
 
-    res.json({ success: true, data: null });
+    res.json({ success: true, data: null, productId: review.product });
   } catch (error) {
     next(error);
   }
