@@ -1,15 +1,14 @@
 import dotenv from "dotenv";
 import Stripe from "stripe";
+
+import Cart from "../models/Cart.js";
+import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 import RepairRequest from "../models/RepairRequest.js";
 
 dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-/**
- * @desc    Create Stripe payment session for repair
- * @route   POST /api/v1/payment/create-checkout-session
- * @access  Private (Customer)
- */
 export const createRepairPaymentSession = async (req, res) => {
   try {
     const { repairId } = req.body;
@@ -61,6 +60,7 @@ export const createRepairPaymentSession = async (req, res) => {
       ],
       mode: "payment",
       metadata: {
+        type: "repair",
         repairId: repairId.toString(),
         repairTitle: repair.title,
         workerName: repair.worker?.username || "",
@@ -89,55 +89,185 @@ export const createRepairPaymentSession = async (req, res) => {
   }
 };
 
-/**
- * @desc    Handle Stripe webhook events
- * @route   POST /api/v1/payment/webhook
- * @access  Public (Stripe)
- */
-export const handleStripeWebhook = async (req, res) => {
-  const sig = req.headers["stripe-signature"];
-  let event;
+const handleRepairWebhook = async (event) => {
+  const session = event.data.object;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+    const repair = await RepairRequest.findOneAndUpdate(
+      { paymentIntentId: session.id, paymentStatus: "pending" },
+      {
+        paymentStatus: "paid",
+        status: "in_progress",
+        $push: {
+          trackingUpdates: {
+            status: "payment_received",
+            timestamp: new Date(),
+          },
+        },
+      },
+      { new: true }
     );
-  } catch (err) {
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
 
-  // Handle payment success
+    if (!repair) console.warn(`Repair not found for session ID: ${session.id}`);
+  } catch (error) {
+    console.error("Repair webhook processing error:", error);
+  }
+};
+
+export const createOrderPaymentSession = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Get user's cart with products
+    const cart = await Cart.findOne({ user: userId })
+      .populate("items.product")
+      .lean();
+
+    if (!cart || cart.items.length === 0)
+      return res.status(400).json({
+        success: false,
+        message: "Cart is empty",
+      });
+
+    // Calculate total and validate stock
+    let total = 0;
+    const lineItems = [];
+
+    for (const item of cart.items) {
+      const product = item.product;
+      if (product.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `${product.name} has insufficient stock`,
+        });
+      }
+
+      total += product.price * item.quantity;
+
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: product.name,
+            description: product.category,
+            image: product.images[0].url,
+          },
+          unit_amount: Math.round(product.price * 100),
+        },
+        quantity: item.quantity,
+      });
+    }
+
+    // Create order in processing state
+    const order = await Order.create({
+      user: userId,
+      items: cart.items.map((item) => ({
+        product: item.product._id,
+        quantity: item.quantity,
+      })),
+      total,
+      paymentIntentId: "",
+      status: "processing",
+    });
+
+    // Create Stripe session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: lineItems,
+      mode: "payment",
+      metadata: {
+        type: "order",
+        orderId: order._id.toString(),
+      },
+      success_url: `${process.env.CLIENT_URL}/marketplace/orders/${order._id}?payment=success`,
+      cancel_url: `${process.env.CLIENT_URL}/marketplace/cart?payment=cancelled`,
+    });
+
+    // Save payment intent to order
+    order.paymentIntentId = session.id;
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      url: session.url,
+      orderId: order._id,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Payment session creation failed",
+      error: error.message,
+    });
+  }
+};
+
+// Handle order payment webhook
+export const handleOrderWebhook = async (event) => {
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
 
     try {
-      const repair = await RepairRequest.findOneAndUpdate(
+      // Update order status and stock
+      const order = await Order.findOneAndUpdate(
         {
           paymentIntentId: session.id,
-          paymentStatus: "pending",
+          status: "processing",
         },
-        {
-          paymentStatus: "paid",
-          status: "in_progress",
-          $push: {
-            trackingUpdates: {
-              status: "payment_received",
-              timestamp: new Date(),
-            },
-          },
-        },
+        { status: "completed" },
         { new: true }
-      );
+      ).populate("items.product");
 
-      if (!repair) {
-        console.warn(`Repair not found for session ID: ${session.id}`);
+      if (!order) {
+        console.warn(`Order not found for session ID: ${session.id}`);
+        return;
       }
+
+      // Update product stock
+      for (const item of order.items) {
+        await Product.findByIdAndUpdate(item.product._id, {
+          $inc: { stock: -item.quantity },
+        });
+      }
+
+      // Clear user's cart
+      await Cart.findOneAndUpdate(
+        { user: order.user },
+        { $set: { items: [] } }
+      );
     } catch (error) {
-      console.error("Webhook processing error:", error);
+      console.error("Order webhook processing error:", error);
     }
   }
+};
 
-  res.status(200).json({ success: true });
+// Unified webhook handler
+export const handleStripeWebhook = async (req, res) => {
+  const sig = req.headers["stripe-signature"];
+
+  try {
+    const event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+
+    const session = event.data.object;
+    const { type } = session.metadata;
+
+    // Handle different payment types
+    switch (type) {
+      case "repair":
+        await handleRepairWebhook(event);
+        break;
+      case "order":
+        await handleOrderWebhook(event);
+        break;
+      default:
+        console.warn("Unknown webhook type:", type);
+    }
+
+    res.status(200).json({ received: true });
+  } catch (err) {
+    res.status(400).send(`Webhook Error: ${err.message}`);
+  }
 };

@@ -18,6 +18,7 @@ import {
   removeCartItem,
 } from "../controllers/marketplaceCustomerController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
+import { createOrderPaymentSession } from "../controllers/paymentController.js";
 
 const router = express.Router();
 
@@ -60,4 +61,9 @@ router
   .put(protect, roleCheck("customer"), updateCartItemQty)
   .delete(protect, roleCheck("customer"), removeCartItem);
 
+router.post(
+  "/payment/create-checkout-session",
+  protect,
+  createOrderPaymentSession
+);
 export default router;

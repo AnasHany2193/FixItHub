@@ -207,7 +207,7 @@ const ProductCard = ({ product, onClick }) => {
       className="cursor-pointer group"
       onClick={onClick}
     >
-      <Card className="overflow-hidden transition-all shadow-sm hover:shadow-lg dark:hover:shadow-gray-700/30">
+      <Card className="overflow-hidden transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50">
         {/* Image section */}
         <div className="relative aspect-video">
           <div className="relative h-full overflow-hidden">
