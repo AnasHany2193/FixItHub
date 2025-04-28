@@ -45,6 +45,7 @@ import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
 import CartAndFavoritesPage from "./pages/customer/CartAndFavoritesPage";
 import CustomerOrdersPage from "./pages/customer/CustomerOrdersPage";
+import OrderDetailsPage from "./pages/customer/OrderDetailsPage";
 
 function App() {
   return (
@@ -81,6 +82,7 @@ function App() {
               />
               <Route path="collections" element={<CartAndFavoritesPage />} />
               <Route path="orders" element={<CustomerOrdersPage />} />
+              <Route path="orders/:orderId" element={<OrderDetailsPage />} />
             </Route>
           </Route>
         </Route>

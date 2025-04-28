@@ -208,6 +208,7 @@ export const createOrderPaymentSession = async (req, res) => {
     res.status(200).json({
       success: true,
       url: session.url,
+      orderId: order._id,
       message: "Please complete your payment in the new window",
     });
   } catch (error) {

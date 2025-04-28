@@ -205,6 +205,8 @@ export const useCreatePaymentSession = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries(["cart"]);
       queryClient.invalidateQueries(["orders"]);
+      queryClient.invalidateQueries(["orders", data.orderId]);
+
       toast({
         variant: "success",
         title: "Success",
@@ -215,7 +217,7 @@ export const useCreatePaymentSession = () => {
     onError: (error) => {
       toast({
         variant: "error",
-        title: "Payment Failed",
+        title: "Checkout Failed",
         description: error.message,
       });
     },
