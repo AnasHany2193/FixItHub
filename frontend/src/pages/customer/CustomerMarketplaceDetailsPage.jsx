@@ -39,11 +39,6 @@ export default function CustomerMarketplaceDetailsPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
 
-  const [rating, setRating] = useState(0);
-  const [reviewText, setReviewText] = useState("");
-  const [showReviews, setShowReviews] = useState(true);
-  const [editingReview, setEditingReview] = useState(null);
-
   // Data fetching
   const { user } = useAuth();
   const { data: favorites } = useFavorites();
@@ -51,6 +46,7 @@ export default function CustomerMarketplaceDetailsPage() {
   const {
     data: reviews,
     refetch: refetchReviews,
+    isRefetching: refetchingReviews,
     isLoading: loadingReviews,
   } = useProductReviews(productId);
 
@@ -220,168 +216,21 @@ export default function CustomerMarketplaceDetailsPage() {
           </div>
         </div>
 
-        {/* Reviews Section */}
-        <section className="mt-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="mb-6 text-2xl font-bold">Customer Reviews</h2>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => refetchReviews()}
-                disabled={loadingReviews}
-              >
-                <RefreshCw
-                  className={`w-4 h-4 mr-2 ${loadingReviews ? "animate-spin" : ""}`}
-                />
-                Refresh
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowReviews(!showReviews)}
-              >
-                {showReviews ? (
-                  <>
-                    <ChevronUp className="w-4 h-4 mr-2" />
-                    Hide Reviews
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-4 h-4 mr-2" />
-                    Show Reviews
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <AnimatePresence>
-            {showReviews && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                {/* Review Form */}
-                {!userReview ? (
-                  <div className="p-6 mb-8 rounded-lg bg-muted">
-                    <h3 className="mb-4 text-lg font-medium">Write a Review</h3>
-                    <ReviewForm
-                      onSubmit={async ({ rating, comment }) => {
-                        try {
-                          await addReview.mutateAsync({
-                            productId,
-                            reviewData: { rating, comment },
-                          });
-                          setReviewText("");
-                          setRating(0);
-                        } catch (error) {
-                          toast({
-                            variant: "error",
-                            description: error.message,
-                          });
-                        }
-                      }}
-                      isSubmitting={addReview.isPending}
-                    />
-                  </div>
-                ) : (
-                  <div className="p-6 mb-8 rounded-lg bg-muted">
-                    <h3 className="mb-4 text-lg font-medium">Your Review</h3>
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center gap-4">
-                        <Rating value={userReview.rating} readOnly />
-                        <p className="text-muted-foreground">
-                          {userReview.comment}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingReview(userReview);
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteReview.mutate(userReview._id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Edit Form */}
-                    {editingReview && (
-                      <div className="pt-4 mt-4 border-t">
-                        <ReviewForm
-                          initialRating={editingReview.rating}
-                          initialComment={editingReview.comment}
-                          onSubmit={async ({ rating, comment }) => {
-                            try {
-                              await updateReview.mutateAsync({
-                                reviewId: editingReview._id,
-                                updateData: { rating, comment },
-                              });
-                              setEditingReview(null);
-                            } catch (error) {
-                              toast({
-                                variant: "error",
-                                description: error.message,
-                              });
-                            }
-                          }}
-                          onCancel={() => setEditingReview(null)}
-                          isSubmitting={updateReview.isPending}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Reviews List */}
-                <div className="space-y-6">
-                  {reviews?.map((review) => (
-                    <div key={review._id} className="p-6 rounded-lg bg-muted">
-                      <div className="flex items-center gap-4">
-                        <Avatar className="w-12 h-12 border-2 border-indigo-100 dark:border-gray-600">
-                          <AvatarImage
-                            src={review.user.profile.avatar.url}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="text-indigo-600 capitalize bg-indigo-100 dark:bg-gray-700 dark:text-indigo-300">
-                            {review.user.username?.[0] || (
-                              <User className="w-4 h-4" />
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-
-                        <div>
-                          <h4 className="font-medium capitalize">
-                            {review.user.username.replace(/_/g, " ")}
-                          </h4>
-                          <Rating value={review.rating} readOnly />
-                        </div>
-                        <span className="ml-auto text-sm text-muted-foreground">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-muted-foreground">
-                        {review.comment}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
+        {loadingReviews ? (
+          <ProductReviewsSkeleton />
+        ) : (
+          <ProductReviews
+            productId={productId}
+            user={user}
+            reviews={reviews}
+            userReview={userReview}
+            loadingReviews={loadingReviews || refetchingReviews}
+            refetchReviews={refetchReviews}
+            addReview={addReview}
+            updateReview={updateReview}
+            deleteReview={deleteReview}
+          />
+        )}
       </div>
     </motion.div>
   );
@@ -413,6 +262,156 @@ const ProductDetailsSkeleton = () => (
     <Skeleton className="h-32 mt-12" />
   </div>
 );
+
+const ProductReviews = ({
+  productId,
+  user,
+  reviews,
+  userReview,
+  loadingReviews,
+  refetchReviews,
+  addReview,
+  updateReview,
+  deleteReview,
+}) => {
+  const [showReviews, setShowReviews] = useState(true);
+  const [editingReview, setEditingReview] = useState(null);
+
+  return (
+    <section className="mt-12">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold">Customer Reviews</h2>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => refetchReviews()}
+            disabled={loadingReviews}
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loadingReviews ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowReviews(!showReviews)}
+          >
+            {showReviews ? (
+              <>
+                <ChevronUp className="w-4 h-4 mr-2" />
+                Hide Reviews
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-2" />
+                Show Reviews
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {showReviews && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Review Form Section */}
+            <div className="mb-8 space-y-6">
+              {!userReview ? (
+                <div className="p-6 rounded-lg bg-muted/50">
+                  <h3 className="mb-4 text-lg font-medium">Write a Review</h3>
+                  <ReviewForm
+                    onSubmit={async ({ rating, comment }) => {
+                      try {
+                        await addReview.mutateAsync({
+                          productId,
+                          reviewData: { rating, comment },
+                        });
+                      } catch (error) {
+                        console.error("Review submission failed:", error);
+                      }
+                    }}
+                    isSubmitting={addReview.isPending}
+                  />
+                </div>
+              ) : (
+                <div className="p-6 rounded-lg bg-muted/50">
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium">Your Review</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingReview(userReview)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteReview.mutate(userReview._id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <Rating value={userReview.rating} readOnly />
+                      <p className="text-muted-foreground">
+                        {userReview.comment}
+                      </p>
+                    </div>
+
+                    {editingReview && (
+                      <div className="pt-4 mt-4 border-t border-muted-foreground/20">
+                        <ReviewForm
+                          initialRating={editingReview.rating}
+                          initialComment={editingReview.comment}
+                          onSubmit={async ({ rating, comment }) => {
+                            try {
+                              await updateReview.mutateAsync({
+                                reviewId: editingReview._id,
+                                updateData: { rating, comment },
+                              });
+                              setEditingReview(null);
+                            } catch (error) {
+                              console.error("Review update failed:", error);
+                            }
+                          }}
+                          onCancel={() => setEditingReview(null)}
+                          isSubmitting={updateReview.isPending}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Reviews List */}
+            <div className="space-y-4">
+              {reviews?.map((review) => (
+                <ReviewItem
+                  key={review._id}
+                  review={review}
+                  isCurrentUser={review.user._id === user?._id}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+};
 
 const ReviewForm = ({
   initialRating = 0,
@@ -465,3 +464,56 @@ const ReviewForm = ({
     </form>
   );
 };
+
+const ReviewItem = ({ review, isCurrentUser }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="p-4 border rounded-lg shadow-sm bg-background"
+  >
+    <div className="flex items-start gap-4">
+      <Avatar className="w-10 h-10 border-2 border-primary/20">
+        <AvatarImage
+          src={review.user.profile.avatar.url}
+          className="object-cover"
+        />
+        <AvatarFallback className="bg-primary/10 text-primary">
+          {review.user.username[0].toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <h4 className="font-medium capitalize">
+            {review.user.username.replace(/_/g, " ")}
+          </h4>
+          {isCurrentUser && (
+            <span className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary">
+              You
+            </span>
+          )}
+          <span className="ml-auto text-sm text-muted-foreground">
+            {new Date(review.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        </div>
+        <Rating value={review.rating} readOnly className="my-1" />
+        <p className="text-muted-foreground">{review.comment}</p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const ProductReviewsSkeleton = () => (
+  <div className="mt-12 space-y-4">
+    <Skeleton className="h-8 w-[200px]" />
+    <div className="space-y-4">
+      <Skeleton className="h-[200px] w-full" />
+      <Skeleton className="h-[100px] w-full" />
+      <Skeleton className="h-[100px] w-full" />
+    </div>
+  </div>
+);
