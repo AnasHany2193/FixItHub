@@ -311,7 +311,30 @@ export const clearCart = async (req, res, next) => {
 // Get all customer orders
 export const getCustomerOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user._id })
+    const { status, startDate, endDate, sort } = req.query;
+    const filters = { user: req.user._id };
+
+    // Status filter
+    if (status && ["processing", "completed"].includes(status))
+      filters.status = status;
+
+    // Date range filter
+    if (startDate || endDate) {
+      filters.createdAt = {};
+      if (startDate) filters.createdAt.$gte = new Date(startDate);
+      if (endDate) filters.createdAt.$lte = new Date(endDate);
+    }
+
+    // Sorting
+    const sortOptions = {
+      newest: { createdAt: -1 },
+      oldest: { createdAt: 1 },
+      "total-asc": { total: 1 },
+      "total-desc": { total: -1 },
+    };
+    const sortOrder = sortOptions[sort] || { createdAt: -1 };
+
+    const orders = await Order.find(filters)
       .populate({
         path: "items.product",
         select: "name price images seller",
@@ -320,7 +343,7 @@ export const getCustomerOrders = async (req, res, next) => {
           select: "username profile.avatar",
         },
       })
-      .sort("-createdAt")
+      .sort(sortOrder)
       .lean();
 
     res.status(200).json({

@@ -9,8 +9,10 @@ import {
   createProduct,
   deleteProduct,
   getCart,
+  getCustomerOrders,
   getFavorites,
   getMyProducts,
+  getOrderDetails,
   getProductDetails,
   getProducts,
   removeCartItem,
@@ -24,7 +26,6 @@ export const useProducts = (filters) =>
   useQuery({
     queryKey: ["marketplace", "products", filters],
     queryFn: () => getProducts(filters),
-    staleTime: 5 * 60 * 1000,
   });
 
 export const useProductDetails = (productId) =>
@@ -218,6 +219,22 @@ export const useCreatePaymentSession = () => {
         description: error.message,
       });
     },
+  });
+};
+
+// frontend/src/hooks/useMarketplace.js
+export const useCustomerOrders = (filters = {}) => {
+  return useQuery({
+    queryKey: ["orders", filters],
+    queryFn: () => getCustomerOrders(filters),
+  });
+};
+
+export const useOrderDetails = (orderId) => {
+  return useQuery({
+    queryKey: ["orders", orderId],
+    queryFn: () => getOrderDetails(orderId),
+    enabled: !!orderId,
   });
 };
 

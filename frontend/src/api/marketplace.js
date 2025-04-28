@@ -125,6 +125,29 @@ export const createPaymentSession = async () => {
   }
 };
 
+// Orders
+export const getCustomerOrders = async (filters = {}) => {
+  try {
+    const { data } = await axiosClient.get("/marketplace/orders", {
+      params: filters,
+    });
+    return data.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch orders");
+  }
+};
+
+export const getOrderDetails = async (orderId) => {
+  try {
+    const { data } = await axiosClient.get(`/marketplace/orders/${orderId}`);
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch order details"
+    );
+  }
+};
+
 // Worker
 export const createProduct = async (productData) => {
   try {
