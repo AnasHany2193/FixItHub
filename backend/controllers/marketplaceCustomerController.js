@@ -1,6 +1,7 @@
 import createHttpError from "http-errors";
 
 import Cart from "../models/Cart.js";
+import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Favorite from "../models/Favorite.js";
 
@@ -301,6 +302,58 @@ export const clearCart = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "Cart cleared",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all customer orders
+export const getCustomerOrders = async (req, res, next) => {
+  try {
+    const orders = await Order.find({ user: req.user._id })
+      .populate({
+        path: "items.product",
+        select: "name price images seller",
+        populate: {
+          path: "seller",
+          select: "username profile.avatar",
+        },
+      })
+      .sort("-createdAt")
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get single order details
+export const getOrderDetails = async (req, res, next) => {
+  try {
+    const order = await Order.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    })
+      .populate({
+        path: "items.product",
+        select: "name price images description specs seller",
+        populate: {
+          path: "seller",
+          select: "username profile.avatar email",
+        },
+      })
+      .lean();
+
+    if (!order) throw createHttpError(404, "Order not found");
+
+    res.status(200).json({
+      success: true,
+      data: order,
     });
   } catch (error) {
     next(error);

@@ -16,6 +16,8 @@ import {
   clearCart,
   updateCartItemQty,
   removeCartItem,
+  getCustomerOrders,
+  getOrderDetails,
 } from "../controllers/marketplaceCustomerController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 import { createOrderPaymentSession } from "../controllers/paymentController.js";
@@ -61,9 +63,14 @@ router
   .put(protect, roleCheck("customer"), updateCartItemQty)
   .delete(protect, roleCheck("customer"), removeCartItem);
 
+// Add these routes under customer routes
+router.get("/orders", protect, roleCheck("customer"), getCustomerOrders);
+router.get("/orders/:id", protect, roleCheck("customer"), getOrderDetails);
+
 router.post(
   "/payment/create-checkout-session",
   protect,
   createOrderPaymentSession
 );
+
 export default router;
