@@ -12,7 +12,7 @@ export const AuthGuard = () => {
 export const PublicGuard = () => {
   const { isLoading, isAuthenticated } = useAuth();
 
-  if (isLoading) return <LoadingSpinner size="lg" />;
+  if (isLoading) return <LoadingSpinner size="lg" hScreen={true} />;
   return !isAuthenticated ? <Outlet /> : <Navigate to="/" replace />;
 };
 

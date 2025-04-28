@@ -1,7 +1,12 @@
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const LoadingSpinner = ({ size = "md", variant = "primary", label }) => {
+export const LoadingSpinner = ({
+  size = "md",
+  variant = "primary",
+  label,
+  hScreen = false,
+}) => {
   const sizes = {
     sm: "w-6 h-6",
     md: "w-12 h-12",
@@ -15,7 +20,9 @@ export const LoadingSpinner = ({ size = "md", variant = "primary", label }) => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-transparent rounded-full backdrop-blur-sm">
+    <div
+      className={`flex items-center justify-center bg-transparent rounded-full backdrop-blur-sm ${hScreen && "h-screen"}`}
+    >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
