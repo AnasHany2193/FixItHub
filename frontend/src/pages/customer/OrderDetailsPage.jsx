@@ -1,5 +1,5 @@
 // frontend/src/pages/customer/OrderDetailsPage.jsx
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Clock,
@@ -17,16 +17,47 @@ import { useOrderDetails } from "@/hooks/useMarketplace";
 import { useCreatePaymentSession } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import { useToast } from "@/hooks/useToast";
+import { useEffect } from "react";
 
 export default function OrderDetailsPage() {
+  const { toast } = useToast();
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const { data: order, isLoading } = useOrderDetails(orderId);
+
   const createPaymentSession = useCreatePaymentSession();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { data: order, isLoading, refetch } = useOrderDetails(orderId);
 
   const handleCheckout = async () => {
     await createPaymentSession.mutateAsync(orderId);
   };
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+
+    if (paymentStatus === "success") {
+      refetch(); // Refresh order data
+      toast({
+        variant: "success",
+        title: "Payment Successful! 🎉",
+        description: "Your order has been successfully processed",
+      });
+      // Clean URL params
+      searchParams.delete("payment");
+      setSearchParams(searchParams, { replace: true });
+    }
+
+    if (paymentStatus === "cancelled") {
+      toast({
+        variant: "destructive",
+        title: "Payment Cancelled ❌",
+        description: "Your payment was not completed - you can try again below",
+      });
+      searchParams.delete("payment");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, toast, refetch]);
 
   return (
     <motion.div
