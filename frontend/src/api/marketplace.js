@@ -111,6 +111,20 @@ export const clearCart = async () => {
   }
 };
 
+// Payment
+export const createPaymentSession = async () => {
+  try {
+    const { data } = await axiosClient.post(
+      "/marketplace/payment/create-checkout-session"
+    );
+    return data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Payment session creation failed"
+    );
+  }
+};
+
 // Worker
 export const createProduct = async (productData) => {
   try {

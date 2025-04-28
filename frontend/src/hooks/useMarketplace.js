@@ -5,6 +5,7 @@ import {
   addItemToCart,
   addToFavorites,
   clearCart,
+  createPaymentSession,
   createProduct,
   deleteProduct,
   getCart,
@@ -105,6 +106,32 @@ export const useClearCart = () => {
     mutationFn: clearCart,
     onSuccess: () => {
       queryClient.invalidateQueries(["cart"]);
+    },
+  });
+};
+
+// Payment
+export const useCreatePaymentSession = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: createPaymentSession,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(["orders"]);
+      toast({
+        variant: "success",
+        title: "Payment Session Created",
+        description: "Redirecting to payment...",
+      });
+      window.location.href = data.url; // Redirect to Stripe checkout
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Payment Failed",
+        description: error.message,
+      });
     },
   });
 };
