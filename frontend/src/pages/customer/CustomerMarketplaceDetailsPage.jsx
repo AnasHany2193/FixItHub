@@ -15,6 +15,8 @@ import {
   Plus,
   Loader2,
   Trash,
+  Sparkle,
+  ShieldCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -79,23 +81,26 @@ export default function CustomerMarketplaceDetailsPage() {
       animate={{ opacity: 1 }}
       className="min-h-screen"
     >
-      <div className="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <Button
           variant="link"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/marketplace/products")}
           className="mb-4 -ml-2"
         >
           ← Back to Marketplace
         </Button>
 
-        <div className="grid items-center gap-8 md:grid-cols-2">
+        <div className="grid items-start gap-12 md:grid-cols-[1fr_400px] lg:grid-cols-[1fr_500px]">
           {/* Image Gallery */}
-          <div className="space-y-4">
+          <div className="md:sticky top-24">
             {product.images?.length ? (
-              <ImageCarousel images={product.images} />
+              <ImageCarousel
+                images={product.images}
+                className="border shadow-lg rounded-xl bg-background"
+              />
             ) : (
-              <div className="flex items-center justify-center aspect-video bg-muted">
-                <Package className="w-16 h-16 text-muted-foreground" />
+              <div className="flex items-center justify-center aspect-video bg-muted rounded-xl">
+                <Package className="w-20 h-20 text-muted-foreground/40" />
               </div>
             )}
           </div>
@@ -103,21 +108,23 @@ export default function CustomerMarketplaceDetailsPage() {
           <ProductDetails product={product} refetchProduct={refetch} />
         </div>
 
-        {loadingReviews ? (
-          <ProductReviewsSkeleton />
-        ) : (
-          <ProductReviews
-            productId={productId}
-            user={user}
-            reviews={reviews}
-            userReview={userReview}
-            loadingReviews={loadingReviews || refetchingReviews}
-            refetchReviews={refetchReviews}
-            addReview={addReview}
-            updateReview={updateReview}
-            deleteReview={deleteReview}
-          />
-        )}
+        <div className="pt-12 mt-16 border-t">
+          {loadingReviews ? (
+            <ProductReviewsSkeleton />
+          ) : (
+            <ProductReviews
+              productId={productId}
+              user={user}
+              reviews={reviews}
+              userReview={userReview}
+              loadingReviews={loadingReviews || refetchingReviews}
+              refetchReviews={refetchReviews}
+              addReview={addReview}
+              updateReview={updateReview}
+              deleteReview={deleteReview}
+            />
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -190,16 +197,41 @@ const ProductDetails = ({ product, refetchProduct }) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="p-6 space-y-8 border shadow-lg bg-background rounded-xl"
     >
-      {/* Product Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">{product.name}</h1>
+      {/* Product Header  */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary" className="text-sm font-medium">
+            <Sparkle className="w-4 h-4 mr-2 text-amber-500" />
+            {product.category}
+          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              1-Year Warranty
+            </Badge>
+          </div>
+        </div>
+
+        <h1 className="text-4xl font-extrabold tracking-tight">
+          {product.name}
+        </h1>
+
         <div className="flex items-center gap-4">
-          <span className="text-2xl font-bold text-primary">
-            ${product.price}
-          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-primary">
+              ${product.price}
+            </span>
+            <span className="line-through text-muted-foreground">
+              ${product.price * 1.2}
+            </span>
+          </div>
+          <Badge variant="premium" className="px-5">
+            20% OFF
+          </Badge>
           <Badge
+            className="px-5"
             variant={
               product.stock > 10
                 ? "success"
@@ -211,6 +243,7 @@ const ProductDetails = ({ product, refetchProduct }) => {
             {product.stock > 0 ? "In Stock" : "Out of Stock"}
           </Badge>
         </div>
+
         <div className="flex gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <BarChart className="w-4 h-4" />
@@ -230,7 +263,7 @@ const ProductDetails = ({ product, refetchProduct }) => {
       </div>
 
       {/* Seller Info */}
-      <div className="p-4 rounded-lg bg-muted">
+      <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
         <div className="flex items-center gap-4">
           <Avatar className="w-12 h-12 border-2 border-primary/20">
             <AvatarImage
@@ -254,35 +287,43 @@ const ProductDetails = ({ product, refetchProduct }) => {
         </div>
       </div>
 
-      {/* Specs & Description */}
+      {/*  Specs Grid */}
       <div className="space-y-6">
-        <div className="p-4 rounded-lg bg-muted">
-          <h2 className="mb-2 text-lg font-semibold">Specifications</h2>
-          <div className="grid gap-2 sm:grid-cols-2">
+        <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
+          <h2 className="mb-4 text-2xl font-semibold">
+            Product Specifications
+          </h2>
+          <div className="grid gap-4 md:grid-cols-2">
             {product.specs?.map((spec, index) => (
-              <div key={index} className="flex gap-2">
-                <span className="font-medium">{spec.name}:</span>
-                <span className="text-muted-foreground">{spec.value}</span>
+              <div
+                key={index}
+                className="flex items-center justify-between px-3 py-2 border rounded-lg bg-background"
+              >
+                <span className="font-medium text-muted-foreground">
+                  {spec.name}
+                </span>
+                <span className="font-semibold">{spec.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Description</h2>
+        {/* Description */}
+        <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
+          <h2 className="mb-4 text-2xl font-semibold">Product Details</h2>
           <p className="text-muted-foreground">{product.description}</p>
         </div>
       </div>
 
-      {/* Enhanced Cart Actions */}
-      <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
+      {/*  Cart Actions */}
+      <div className="sticky bottom-0 z-20 flex flex-col gap-4 py-4 border-t shadow-lg sm:flex-row sm:items-center bg-background">
         <div className="flex flex-1 gap-2">
           {isInCart ? (
             <div className="flex items-center justify-between w-full gap-2">
               <div className="flex items-center flex-1 gap-2 rounded-lg">
                 <Button
                   variant="outline"
-                  className="px-10 rounded-r-none"
+                  className="px-5 rounded-r-none"
                   disabled={currentQuantity < 1 || updateCartItem.isPending}
                   onClick={() => handleCartAction("decrement")}
                 >
@@ -301,7 +342,7 @@ const ProductDetails = ({ product, refetchProduct }) => {
 
                 <Button
                   variant="outline"
-                  className="px-10 rounded-l-none"
+                  className="px-5 rounded-l-none"
                   disabled={
                     currentQuantity >= product.stock || updateCartItem.isPending
                   }
@@ -410,7 +451,12 @@ const ProductReviews = ({
   return (
     <section className="mt-12">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Customer Reviews</h2>
+        <h2 className="sticky top-0 z-10 pb-6 text-2xl font-bold backdrop-blur">
+          Customer Reviews
+          <span className="ml-2 font-normal text-muted-foreground">
+            ({reviews.length || 0})
+          </span>
+        </h2>{" "}
         <div className="flex gap-2">
           <Button
             variant="ghost"
