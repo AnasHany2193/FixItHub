@@ -11,6 +11,8 @@ import {
   ChevronDown,
   RefreshCw,
   User,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -22,6 +24,10 @@ import {
   useUpdateProductReview,
   useDeleteProductReview,
   useProductReviews,
+  useGetCart,
+  useAddToCart,
+  useUpdateCartItem,
+  useRemoveCartItem,
 } from "@/hooks/useMarketplace";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,13 +41,11 @@ import { Rating } from "@/components/common/Rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function CustomerMarketplaceDetailsPage() {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const { productId } = useParams();
 
   // Data fetching
   const { user } = useAuth();
-  const { data: favorites } = useFavorites();
   const { data: product, isLoading, refetch } = useProductDetails(productId);
   const {
     data: reviews,
@@ -55,25 +59,7 @@ export default function CustomerMarketplaceDetailsPage() {
   const updateReview = useUpdateProductReview();
   const deleteReview = useDeleteProductReview();
 
-  // Favorite mutations
-  const addFavorite = useAddToFavorites();
-  const removeFavorite = useRemoveFromFavorites();
-
-  const isFavorite = favorites?.some((fav) => fav._id === productId);
   const userReview = reviews?.find((review) => review.user._id === user._id);
-
-  const handleFavoriteToggle = async () => {
-    try {
-      if (isFavorite) {
-        await removeFavorite.mutateAsync(productId);
-      } else {
-        await addFavorite.mutateAsync(productId);
-      }
-      refetch();
-    } catch (error) {
-      toast({ variant: "error", title: "Error", description: error.message });
-    }
-  };
 
   if (isLoading) return <ProductDetailsSkeleton />;
   if (!product)
@@ -112,108 +98,7 @@ export default function CustomerMarketplaceDetailsPage() {
             )}
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold">{product.name}</h1>
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-primary">
-                  ${product.price}
-                </span>
-                <Badge
-                  variant={
-                    product.stock > 10
-                      ? "success"
-                      : product.stock > 0
-                        ? "warning"
-                        : "destructive"
-                  }
-                >
-                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
-                </Badge>
-              </div>
-              <div className="flex gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <BarChart className="w-4 h-4" />
-                  <span>{product.purchasesCount || 0} purchases</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  <span>{product.favoritesCount || 0} favorites</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Star className="w-4 h-4" />
-                  <span>
-                    {product.avgRating.toFixed(1)} ({product.reviewsCount}{" "}
-                    reviews)
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Seller Info */}
-            <div className="p-4 rounded-lg bg-muted">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-12 h-12 border-2 border-indigo-100 dark:border-gray-600">
-                  <AvatarImage
-                    src={product.seller.profile.avatar.url}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="text-indigo-600 capitalize bg-indigo-100 dark:bg-gray-700 dark:text-indigo-300">
-                    {product.seller.username?.[0] || (
-                      <User className="w-4 h-4" />
-                    )}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-medium capitalize">
-                    Sold by {product.seller.username.replace(/_/g, " ")}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Member since {formatDistanceToNow(product.seller.createdAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Specs & Description */}
-            <div className="p-4 rounded-lg bg-muted">
-              <h2 className="mb-2 text-lg font-semibold">Specifications</h2>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {product.specs?.map((spec, index) => (
-                  <div key={index} className="flex gap-2">
-                    <span className="font-medium">{spec.name}:</span>
-                    <span className="text-muted-foreground">{spec.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <h2 className="text-lg font-semibold">Description</h2>
-              <p className="text-muted-foreground">{product.description}</p>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-4 pt-4">
-              <Button
-                size="lg"
-                className="flex-1 gap-2"
-                disabled={product.stock <= 0}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                Add to Cart
-              </Button>
-              <Button
-                variant={isFavorite ? "destructive" : "outline"}
-                size="lg"
-                onClick={handleFavoriteToggle}
-              >
-                <Heart className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
+          <ProductDetails product={product} refetchProduct={refetch} />
         </div>
 
         {loadingReviews ? (
@@ -236,32 +121,233 @@ export default function CustomerMarketplaceDetailsPage() {
   );
 }
 
-const ProductDetailsSkeleton = () => (
-  <div className="max-w-6xl px-4 mx-auto sm:px-6 lg:px-8">
-    <Skeleton className="w-24 h-8 mb-4" />
-    <div className="grid gap-8 md:grid-cols-2">
-      <div className="space-y-4">
-        <Skeleton className="aspect-video" />
-      </div>
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Skeleton className="w-3/4 h-8" />
-          <Skeleton className="w-1/4 h-6" />
-          <div className="flex gap-4">
-            <Skeleton className="w-1/4 h-4" />
-            <Skeleton className="w-1/4 h-4" />
+// -------------------------- Details --------------------------
+
+const ProductDetails = ({ product, refetchProduct }) => {
+  const { toast } = useToast();
+  const { data: cart } = useGetCart();
+  const addToCart = useAddToCart();
+
+  // Favorite mutations
+  const addFavorite = useAddToFavorites();
+  const { data: favorites } = useFavorites();
+  const removeFavorite = useRemoveFromFavorites();
+
+  const updateCartItem = useUpdateCartItem();
+  const removeCartItem = useRemoveCartItem();
+
+  const isFavorite = favorites?.some((fav) => fav._id === product._id);
+  const cartItem = cart?.items?.find(
+    (item) => item.product._id === product._id
+  );
+  const isInCart = Boolean(cartItem);
+  const currentQuantity = cartItem?.quantity || 0;
+
+  const handleCartAction = async (action) => {
+    try {
+      if (action === "add") {
+        await addToCart.mutateAsync(product._id);
+      } else if (action === "increment") {
+        await updateCartItem.mutateAsync({
+          productId: product._id,
+          action: "increment",
+        });
+      } else if (action === "decrement") {
+        if (currentQuantity <= 1) {
+          await removeCartItem.mutateAsync(product._id);
+        } else {
+          await updateCartItem.mutateAsync({
+            productId: product._id,
+            action: "decrement",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        variant: "error",
+        title: "Cart Error",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleFavoriteToggle = async () => {
+    try {
+      if (isFavorite) {
+        await removeFavorite.mutateAsync(product._id);
+      } else {
+        await addFavorite.mutateAsync(product._id);
+      }
+      refetchProduct();
+    } catch (error) {
+      toast({ variant: "error", title: "Error", description: error.message });
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+    >
+      {/* Product Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold">{product.name}</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-2xl font-bold text-primary">
+            ${product.price}
+          </span>
+          <Badge
+            variant={
+              product.stock > 10
+                ? "success"
+                : product.stock > 0
+                  ? "warning"
+                  : "destructive"
+            }
+          >
+            {product.stock > 0 ? "In Stock" : "Out of Stock"}
+          </Badge>
+        </div>
+        <div className="flex gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <BarChart className="w-4 h-4" />
+            <span>{product.purchasesCount || 0} purchases</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Heart className="w-4 h-4" />
+            <span>{product.favoritesCount || 0} favorites</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Star className="w-4 h-4" />
+            <span>
+              {product.avgRating.toFixed(1)} ({product.reviewsCount} reviews)
+            </span>
           </div>
         </div>
-        <Skeleton className="h-32" />
-        <div className="flex gap-4">
-          <Skeleton className="w-3/4 h-10" />
-          <Skeleton className="w-10 h-10" />
+      </div>
+
+      {/* Seller Info */}
+      <div className="p-4 rounded-lg bg-muted">
+        <div className="flex items-center gap-4">
+          <Avatar className="w-12 h-12 border-2 border-primary/20">
+            <AvatarImage
+              src={product.seller.profile.avatar.url}
+              className="object-cover"
+            />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {product.seller.username?.[0]?.toUpperCase() || (
+                <User className="w-4 h-4" />
+              )}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-medium capitalize">
+              Sold by {product.seller.username.replace(/_/g, " ")}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Member since {formatDistanceToNow(product.seller.createdAt)}
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* Specs & Description */}
+      <div className="space-y-6">
+        <div className="p-4 rounded-lg bg-muted">
+          <h2 className="mb-2 text-lg font-semibold">Specifications</h2>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {product.specs?.map((spec, index) => (
+              <div key={index} className="flex gap-2">
+                <span className="font-medium">{spec.name}:</span>
+                <span className="text-muted-foreground">{spec.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Description</h2>
+          <p className="text-muted-foreground">{product.description}</p>
+        </div>
+      </div>
+
+      {/* Cart Actions */}
+      <div className="flex gap-4 pt-4">
+        {isInCart ? (
+          <div className="flex items-center flex-1 gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              disabled={currentQuantity <= 1 || updateCartItem.isPending}
+              onClick={() => handleCartAction("decrement")}
+            >
+              <Minus />
+            </Button>
+            <span className="flex items-center justify-center flex-1 text-lg font-medium">
+              {currentQuantity} in Cart
+            </span>
+            <Button
+              variant="outline"
+              size="lg"
+              className="flex-1 gap-2"
+              disabled={
+                currentQuantity >= product.stock || updateCartItem.isPending
+              }
+              onClick={() => handleCartAction("increment")}
+            >
+              <Plus />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            className="flex-1 gap-2"
+            disabled={product.stock <= 0 || addToCart.isPending}
+            onClick={() => handleCartAction("add")}
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {addToCart.isPending ? "Adding..." : "Add to Cart"}
+          </Button>
+        )}
+        <Button
+          variant={isFavorite ? "destructive" : "outline"}
+          onClick={handleFavoriteToggle}
+        >
+          <Heart className="w-5 h-5" />
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+
+const ProductDetailsSkeleton = () => (
+  <div className="space-y-6">
+    <div className="space-y-2">
+      <Skeleton className="w-3/4 h-8" />
+      <div className="flex gap-4">
+        <Skeleton className="w-1/4 h-6" />
+        <Skeleton className="w-1/4 h-6" />
+      </div>
+      <div className="flex gap-4">
+        <Skeleton className="w-1/4 h-4" />
+        <Skeleton className="w-1/4 h-4" />
+        <Skeleton className="w-1/4 h-4" />
+      </div>
     </div>
-    <Skeleton className="h-32 mt-12" />
+    <Skeleton className="h-32" />
+    <div className="space-y-4">
+      <Skeleton className="w-1/3 h-4" />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Skeleton className="h-4" />
+        <Skeleton className="h-4" />
+      </div>
+    </div>
+    <Skeleton className="h-24" />
+    <Skeleton className="h-12" />
   </div>
 );
+
+// -------------------------- Review ---------------------------
 
 const ProductReviews = ({
   productId,
