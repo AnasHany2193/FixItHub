@@ -1,4 +1,7 @@
 import createHttpError from "http-errors";
+
+import Order from "../models/Order.js";
+import Review from "../models/Review.js";
 import Product from "../models/Product.js";
 
 export const createProduct = async (req, res, next) => {
@@ -134,6 +137,91 @@ export const getMyProducts = async (req, res, next) => {
       success: true,
       count: products.length,
       data: products,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWorkerProductDetails = async (req, res, next) => {
+  try {
+    const product = await Product.findOne({
+      _id: req.params.id,
+      seller: req.user._id,
+    })
+      .populate({
+        path: "reviews",
+        populate: {
+          path: "user",
+          select: "username profile.avatar",
+        },
+      })
+      .lean();
+
+    if (!product) throw createHttpError(404, "Product not found");
+
+    // Add calculated stats
+    const stats = await Order.aggregate([
+      { $match: { "items.product": product._id, status: "completed" } },
+      { $unwind: "$items" },
+      { $match: { "items.product": product._id } },
+      {
+        $group: {
+          _id: null,
+          totalSales: { $sum: "$items.quantity" },
+          totalRevenue: {
+            $sum: { $multiply: ["$items.quantity", "$items.price"] },
+          },
+        },
+      },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        ...product,
+        totalSales: stats[0]?.totalSales || 0,
+        totalRevenue: stats[0]?.totalRevenue?.toFixed(2) || 0,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getProductReviewsForSeller = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, rating } = req.query;
+    const skip = (page - 1) * limit;
+
+    const product = await Product.findOne({
+      _id: req.params.productId,
+      seller: req.user._id,
+    });
+
+    if (!product) throw createHttpError(404, "Product not found");
+
+    const filters = { product: product._id };
+    if (rating) filters.rating = parseInt(rating);
+
+    const reviews = await Review.find(filters)
+      .populate("user", "username profile.avatar")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    const total = await Review.countDocuments(filters);
+
+    res.json({
+      success: true,
+      data: reviews,
+      meta: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
     });
   } catch (error) {
     next(error);

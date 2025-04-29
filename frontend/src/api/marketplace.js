@@ -247,3 +247,30 @@ export const deleteProduct = async (productId) => {
     throw new Error(error.response?.data?.message || "Product deletion failed");
   }
 };
+
+// Worker product details
+export const getWorkerProductDetails = async (productId) => {
+  try {
+    const { data } = await axiosClient.get(
+      `/marketplace/worker/products/${productId}`
+    );
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch product details"
+    );
+  }
+};
+
+// Worker product reviews
+export const getWorkerProductReviews = async (productId, params = {}) => {
+  try {
+    const { data } = await axiosClient.get(
+      `/marketplace/worker/products/${productId}/reviews`,
+      { params }
+    );
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch reviews");
+  }
+};

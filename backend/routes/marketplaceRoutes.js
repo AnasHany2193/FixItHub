@@ -4,6 +4,8 @@ import {
   updateProduct,
   deleteProduct,
   getMyProducts,
+  getWorkerProductDetails,
+  getProductReviewsForSeller,
 } from "../controllers/marketplaceWorkerController.js";
 import {
   getProducts,
@@ -36,8 +38,16 @@ router
 
 router
   .route("/worker/products/:id")
+  .get(protect, roleCheck("worker"), getWorkerProductDetails)
   .put(protect, roleCheck("worker"), updateProduct)
   .delete(protect, roleCheck("worker"), deleteProduct);
+
+router.get(
+  "/worker/products/:productId/reviews",
+  protect,
+  roleCheck("worker"),
+  getProductReviewsForSeller
+);
 
 // Public customer routes
 router.route("/products").get(protect, roleCheck("customer"), getProducts);

@@ -18,6 +18,8 @@ import {
   getProductDetails,
   getProductReviews,
   getProducts,
+  getWorkerProductDetails,
+  getWorkerProductReviews,
   removeCartItem,
   removeFromFavorites,
   updateCartItemQty,
@@ -419,5 +421,21 @@ export const useDeleteProduct = () => {
         description: error.message,
       });
     },
+  });
+};
+
+export const useWorkerProductDetails = (productId) => {
+  return useQuery({
+    queryKey: ["worker-products", productId],
+    queryFn: () => getWorkerProductDetails(productId),
+    enabled: !!productId,
+  });
+};
+
+export const useWorkerProductReviews = (productId, params) => {
+  return useQuery({
+    queryKey: ["worker-reviews", productId, params],
+    queryFn: () => getWorkerProductReviews(productId, params),
+    enabled: !!productId,
   });
 };
