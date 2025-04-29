@@ -166,10 +166,10 @@ export default function CustomerMarketplacePage() {
 const ProductCard = ({ product, onClick }) => {
   const { data: favorites } = useFavorites();
   const { data: cart } = useGetCart();
-  const addFavorite = useAddToFavorites();
-  const removeFavorite = useRemoveFromFavorites();
-  const addToCart = useAddToCart();
-  const updateCartItem = useUpdateCartItem();
+  const { mutateAsync: addFavorite } = useAddToFavorites();
+  const { mutateAsync: removeFavorite } = useRemoveFromFavorites();
+  const { mutateAsync: addToCart } = useAddToCart();
+  const { mutateAsync: updateCartItem } = useUpdateCartItem();
 
   const isFavorite = favorites?.some((fav) => fav._id === product._id);
   const cartItem = cart?.items?.find(
@@ -177,28 +177,17 @@ const ProductCard = ({ product, onClick }) => {
   );
   const isInCart = Boolean(cartItem);
 
-  const handleCartAction = async (e) => {
+  const handleCartAction = (e) => {
     e.stopPropagation();
-    try {
-      if (isInCart)
-        await updateCartItem.mutateAsync({
-          productId: product._id,
-          action: "increment",
-        });
-      else await addToCart.mutateAsync(product._id);
-    } catch (error) {
-      console.error("Cart error:", error);
-    }
+    if (isInCart)
+      updateCartItem({ productId: product._id, action: "increment" });
+    else addToCart(product._id);
   };
 
-  const handleFavoriteClick = async (e) => {
+  const handleFavoriteClick = (e) => {
     e.stopPropagation();
-    try {
-      if (isFavorite) await removeFavorite.mutateAsync(product._id);
-      else await addFavorite.mutateAsync(product._id);
-    } catch (error) {
-      console.error("Favorite error:", error);
-    }
+    if (isFavorite) removeFavorite(product._id);
+    else addFavorite(product._id);
   };
 
   return (
@@ -212,14 +201,11 @@ const ProductCard = ({ product, onClick }) => {
         <div className="relative aspect-video">
           <div className="relative h-full overflow-hidden">
             {product.images?.[0]?.url ? (
-              <>
-                <img
-                  src={product.images[0].url}
-                  alt={product.name}
-                  className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-900/30 via-transparent to-transparent" />
-              </>
+              <img
+                src={product.images[0].url}
+                alt={product.name}
+                className="object-cover w-full h-full"
+              />
             ) : (
               <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
                 <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />

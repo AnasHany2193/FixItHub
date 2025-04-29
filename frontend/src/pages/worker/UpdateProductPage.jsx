@@ -2,13 +2,18 @@ import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductForm from "@/components/marketplace/ProductForm";
-import { useProductDetails } from "@/hooks/useMarketplace";
+import { useWorkerProductDetails } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { Button } from "@/components/ui/button";
 
 export default function UpdateProductPage() {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { data: product, isLoading, isError } = useProductDetails(productId);
+  const {
+    data: product,
+    isLoading,
+    isError,
+  } = useWorkerProductDetails(productId);
 
   useEffect(() => {
     if (isError) {
@@ -32,6 +37,14 @@ export default function UpdateProductPage() {
       className="min-h-screen"
     >
       <div className="max-w-5xl px-4 mx-auto sm:px-6 lg:px-8">
+        <Button
+          variant="link"
+          onClick={() => navigate("/marketplace/my-products")}
+          className="mb-4 -ml-2"
+        >
+          ← Back to Marketplace
+        </Button>
+
         <div className="py-8 space-y-2">
           <motion.h1
             initial={{ y: -10 }}

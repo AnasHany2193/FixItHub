@@ -1,17 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Edit, Trash, Package, PlusCircle } from "lucide-react";
+import { Edit, Trash, Package, PlusCircle, RefreshCw, Zap } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { useMyProducts } from "@/hooks/useMarketplace";
+import { useDeleteProduct, useMyProducts } from "@/hooks/useMarketplace";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 import { useState } from "react";
 import {
@@ -31,6 +26,7 @@ export default function ProductListPage() {
   });
 
   const { data: products, isLoading } = useMyProducts(filters);
+  const { mutate: deleteProduct, isPending: deleting } = useDeleteProduct();
 
   return (
     <div className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl">
@@ -132,10 +128,16 @@ export default function ProductListPage() {
             <ProductCard
               key={product._id}
               product={product}
-              onEdit={() =>
-                navigate(`/marketplace/edit-product/${product._id}`)
-              }
-              // onDelete={() => deleteProduct.mutate(product._id)}
+              onEdit={(e) => {
+                e.stopPropagation();
+                navigate(`/marketplace/edit-product/${product._id}`);
+              }}
+              onClick={() => navigate(`/marketplace/products/${product._id}`)}
+              onDelete={(e) => {
+                e.stopPropagation();
+                deleteProduct(product._id);
+              }}
+              deleting={deleting}
             />
           ))}
         </motion.div>
@@ -144,10 +146,14 @@ export default function ProductListPage() {
   );
 }
 
-const ProductCard = ({ product, onEdit, onDelete = () => {} }) => (
-  <motion.div whileHover={{ scale: 1.02 }}>
-    <Card className="overflow-hidden">
-      <CardHeader className="relative p-0 aspect-video">
+const ProductCard = ({ product, onEdit, onClick, onDelete, deleting }) => (
+  <motion.div
+    whileHover={{ scale: 1.02 }}
+    className="cursor-pointer group"
+    onClick={onClick}
+  >
+    <Card className="overflow-hidden transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50">
+      <div className="relative aspect-video">
         {product.images?.[0]?.url ? (
           <img
             src={product.images[0].url}
@@ -155,47 +161,61 @@ const ProductCard = ({ product, onEdit, onDelete = () => {} }) => (
             className="object-cover w-full h-full"
           />
         ) : (
-          <div className="flex items-center justify-center w-full h-full bg-muted">
-            <Package className="w-8 h-8 text-muted-foreground" />
+          <div className="flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+            <Zap className="w-8 h-8 text-gray-400 dark:text-gray-500" />
           </div>
         )}
         <Badge variant="secondary" className="absolute capitalize top-2 left-2">
           {product.category}
         </Badge>
-      </CardHeader>
+      </div>
 
       <CardContent className="p-4 space-y-2">
-        <h3 className="text-lg font-semibold">{product.name}</h3>
-        <p className="text-muted-foreground line-clamp-2">
-          {product.description}
-        </p>
+        <div className="space-y-1">
+          <h3 className="text-lg font-semibold line-clamp-1">{product.name}</h3>
+          <p className="text-sm text-muted-foreground line-clamp-1">
+            {product.description}
+          </p>
+        </div>
+
         <div className="flex items-center justify-between">
-          <span className="text-xl font-bold">${product.price}</span>
-          <Badge
-            className="capitalize"
-            variant={
-              product.stock > 10
-                ? "success"
-                : product.stock > 0
-                  ? "warning"
-                  : "destructive"
-            }
-          >
-            {product.stock} in stock
-          </Badge>
+          <div className="flex items-center gap-2">
+            <span className="text-xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text">
+              ${product.price}
+            </span>
+            <Badge
+              variant={
+                product.stock > 10
+                  ? "success"
+                  : product.stock > 0
+                    ? "warning"
+                    : "destructive"
+              }
+              className="shadow-sm"
+            >
+              {product.stock > 0 ? `${product.stock} left` : "Sold out"}
+            </Badge>
+          </div>
+
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onEdit}>
+              <Edit className="w-4 h-4" />
+              Edit
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={onDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
       </CardContent>
-
-      <CardFooter className="flex gap-2 p-4 pt-0">
-        <Button variant="outline" className="w-full" onClick={onEdit}>
-          <Edit className="w-4 h-4 mr-2" />
-          Edit
-        </Button>
-        <Button variant="destructive" className="w-full" onClick={onDelete}>
-          <Trash className="w-4 h-4 mr-2" />
-          Delete
-        </Button>
-      </CardFooter>
     </Card>
   </motion.div>
 );
