@@ -13,6 +13,8 @@ import {
   User,
   Minus,
   Plus,
+  Loader2,
+  Trash,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -272,48 +274,90 @@ const ProductDetails = ({ product, refetchProduct }) => {
         </div>
       </div>
 
-      {/* Cart Actions */}
-      <div className="flex gap-4 pt-4">
-        {isInCart ? (
-          <div className="flex items-center flex-1 gap-2">
+      {/* Enhanced Cart Actions */}
+      <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:items-center">
+        <div className="flex flex-1 gap-2">
+          {isInCart ? (
+            <div className="flex items-center justify-between w-full gap-2">
+              <div className="flex items-center flex-1 gap-2 rounded-lg">
+                <Button
+                  variant="outline"
+                  className="px-10 rounded-r-none"
+                  disabled={currentQuantity < 1 || updateCartItem.isPending}
+                  onClick={() => handleCartAction("decrement")}
+                >
+                  {currentQuantity === 1 ? (
+                    <Trash className="w-5 h-5 text-destructive" />
+                  ) : (
+                    <Minus className="w-5 h-5" />
+                  )}
+                </Button>
+
+                <div className="flex items-center justify-center flex-1">
+                  <span className="font-medium text-primary">
+                    {currentQuantity} in Cart
+                  </span>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="px-10 rounded-l-none"
+                  disabled={
+                    currentQuantity >= product.stock || updateCartItem.isPending
+                  }
+                  onClick={() => handleCartAction("increment")}
+                >
+                  <Plus className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <Button
+                variant="destructive"
+                className="px-5"
+                onClick={() => removeCartItem.mutateAsync(product._id)}
+                disabled={removeCartItem.isPending}
+              >
+                {removeCartItem.isPending ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <Trash className="w-5 h-5" />
+                )}
+              </Button>
+            </div>
+          ) : (
             <Button
-              variant="outline"
               className="flex-1 gap-2"
-              disabled={currentQuantity <= 1 || updateCartItem.isPending}
-              onClick={() => handleCartAction("decrement")}
+              disabled={product.stock <= 0 || addToCart.isPending}
+              onClick={() => handleCartAction("add")}
             >
-              <Minus />
+              {addToCart.isPending ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  Add to Cart
+                </>
+              )}
             </Button>
-            <span className="flex items-center justify-center flex-1 text-lg font-medium">
-              {currentQuantity} in Cart
-            </span>
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex-1 gap-2"
-              disabled={
-                currentQuantity >= product.stock || updateCartItem.isPending
-              }
-              onClick={() => handleCartAction("increment")}
-            >
-              <Plus />
-            </Button>
-          </div>
-        ) : (
-          <Button
-            className="flex-1 gap-2"
-            disabled={product.stock <= 0 || addToCart.isPending}
-            onClick={() => handleCartAction("add")}
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {addToCart.isPending ? "Adding..." : "Add to Cart"}
-          </Button>
-        )}
+          )}
+        </div>
+
         <Button
-          variant={isFavorite ? "destructive" : "outline"}
+          variant={isFavorite ? "destructive" : "default"}
+          className="gap-2"
           onClick={handleFavoriteToggle}
+          disabled={addFavorite.isPending || removeFavorite.isPending}
         >
-          <Heart className="w-5 h-5" />
+          {addFavorite.isPending || removeFavorite.isPending ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <>
+              <Heart
+                className={`w-5 h-5 ${isFavorite ? "fill-current" : ""}`}
+              />
+              {isFavorite ? "Favored" : "Favorite"}
+            </>
+          )}
         </Button>
       </div>
     </motion.div>
