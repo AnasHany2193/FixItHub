@@ -48,8 +48,8 @@ const DashboardLayout = () => {
             icon: <PlusCircle className="w-4 h-4" />,
           },
           {
-            name: "Active Bids",
-            path: "/repairs/all",
+            name: "Active Products",
+            path: "/marketplace/products",
             icon: <Activity className="w-4 h-4" />,
           },
         ],
