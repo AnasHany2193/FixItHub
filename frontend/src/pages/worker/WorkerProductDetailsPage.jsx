@@ -8,6 +8,8 @@ import {
   Star,
   Trash,
   Zap,
+  Edit,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -32,8 +34,12 @@ export default function WorkerProductDetailsPage() {
 
   // Data fetching
   const { data: product, isLoading } = useWorkerProductDetails(productId);
-  const { data: reviews, isLoading: loadingReviews } =
-    useWorkerProductReviews(productId);
+  const {
+    data: reviews,
+    isLoading: loadingReviews,
+    refetch: refetchReviews,
+    isRefetching: refetchingReviews,
+  } = useWorkerProductReviews(productId);
   const deleteProduct = useDeleteProduct();
 
   const handleDelete = async () => {
@@ -80,6 +86,15 @@ export default function WorkerProductDetailsPage() {
             ← Back to Products
           </Button>
           <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              onClick={() =>
+                navigate(`/marketplace/edit-product/${product._id}`)
+              }
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Product
+            </Button>
             <Button variant="destructive" onClick={handleDelete}>
               <Trash className="w-4 h-4 mr-2" />
               Delete Product
@@ -206,6 +221,8 @@ export default function WorkerProductDetailsPage() {
         <WorkerProductReviews
           reviews={reviews?.data}
           loading={loadingReviews}
+          refresh={refetchReviews}
+          refreshing={refetchingReviews}
         />
       </div>
     </motion.div>
@@ -265,15 +282,29 @@ const ProductDetailsSkeleton = () => (
 );
 
 // -------------------- Reviews --------------------
-export const WorkerProductReviews = ({ reviews, loading }) => {
+export const WorkerProductReviews = ({
+  reviews,
+  loading,
+  refresh,
+  refreshing,
+}) => {
   return (
     <section>
-      <h2 className="mb-8 text-3xl font-bold">
-        Customer Feedback
-        <span className="ml-3 text-muted-foreground">
-          ({loading ? "..." : reviews?.length})
-        </span>
-      </h2>
+      <div className="flex items-center justify-between mb-8">
+        <h2 className="text-3xl font-bold">
+          Customer Feedback
+          <span className="ml-3 text-muted-foreground">
+            ({loading ? "..." : reviews?.length})
+          </span>
+        </h2>
+
+        <Button variant="outline" onClick={refresh} disabled={refreshing}>
+          <RefreshCw
+            className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+          />
+          Refresh Reviews
+        </Button>
+      </div>
 
       {loading ? (
         <WorkerReviewsSkeleton />
