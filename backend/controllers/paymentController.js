@@ -253,7 +253,7 @@ export const handleOrderWebhook = async (event) => {
       );
 
       // Clear user's cart
-      await Cart.findOneAndUpdate(
+      const cart = await Cart.findOneAndUpdate(
         { user: order.user },
         { $set: { items: [] } }
       );

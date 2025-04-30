@@ -77,7 +77,7 @@ export default function ProductListPage() {
               key={status}
               variant={filters.stockStatus === status ? "default" : "outline"}
               size="sm"
-              className="w-full capitalize"
+              className="w-full py-2 capitalize"
               onClick={() =>
                 setFilters((prev) => ({ ...prev, stockStatus: status }))
               }

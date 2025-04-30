@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, X, ArrowRight } from "lucide-react";
+import { ShoppingCart, Heart, X, ArrowRight, RefreshCw } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -175,15 +175,24 @@ const CartSection = ({ cart, isLoading }) => {
                 variant="destructive"
                 onClick={() => clearCart.mutate()}
                 className="flex-1"
+                disabled={clearCart.isPending}
               >
+                {clearCart.isPending && (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                )}
                 Clear Cart
               </Button>
               <Button
                 className="flex-1 gap-2"
                 onClick={() => paymentSession.mutate()}
+                disabled={paymentSession.isPending}
               >
                 Checkout
-                <ArrowRight className="w-4 h-4" />
+                {paymentSession.isPending ? (
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <ArrowRight className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </div>

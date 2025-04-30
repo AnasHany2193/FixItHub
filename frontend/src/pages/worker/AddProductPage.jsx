@@ -1,7 +1,12 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router";
+
+import { Button } from "@/components/ui/button";
 import ProductForm from "@/components/marketplace/ProductForm";
 
 export default function AddProductPage() {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -10,6 +15,14 @@ export default function AddProductPage() {
       className="min-h-screen"
     >
       <div className="max-w-5xl px-4 mx-auto sm:px-6 lg:px-8">
+        <Button
+          variant="link"
+          onClick={() => navigate("/marketplace/my-products")}
+          className="-ml-2"
+        >
+          ← Back to Marketplace
+        </Button>
+
         <div className="py-8 space-y-2">
           <motion.h1
             initial={{ y: -10 }}

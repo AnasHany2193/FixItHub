@@ -220,7 +220,6 @@ export const getCart = async (req, res, next) => {
 export const addItemToCart = async (req, res, next) => {
   try {
     const { productId, quantity = 1 } = req.body;
-    console.log("productId", productId);
 
     // Validate product
     const product = await Product.findById(productId);
@@ -337,7 +336,11 @@ export const getCustomerOrders = async (req, res, next) => {
     const filters = { user: req.user._id };
 
     // Status filter
-    if (status && ["processing", "completed"].includes(status))
+    if (
+      status &&
+      status !== "all" &&
+      ["processing", "completed"].includes(status)
+    )
       filters.status = status;
 
     // Date range filter

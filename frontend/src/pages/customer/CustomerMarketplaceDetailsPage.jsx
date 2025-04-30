@@ -400,29 +400,97 @@ const ProductDetails = ({ product, refetchProduct }) => {
 };
 
 const ProductDetailsSkeleton = () => (
-  <div className="space-y-6">
-    <div className="space-y-2">
-      <Skeleton className="w-3/4 h-8" />
-      <div className="flex gap-4">
-        <Skeleton className="w-1/4 h-6" />
-        <Skeleton className="w-1/4 h-6" />
+  <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+    {/* Header Skeleton */}
+    <div className="flex items-center justify-between mb-6">
+      <Skeleton className="w-32 h-8" />
+    </div>
+
+    <div className="grid items-start gap-12 md:grid-cols-[1fr_400px] lg:grid-cols-[1fr_500px]">
+      {/* Image Gallery Skeleton */}
+      <div className="md:sticky top-24">
+        <Skeleton className="aspect-video rounded-xl" />
       </div>
-      <div className="flex gap-4">
-        <Skeleton className="w-1/4 h-4" />
-        <Skeleton className="w-1/4 h-4" />
-        <Skeleton className="w-1/4 h-4" />
+
+      {/* Product Stats Skeleton */}
+      <div className="p-8 space-y-8 border-2 shadow-xl bg-background rounded-2xl">
+        {/* Title Skeleton */}
+        <div className="space-y-6">
+          <Skeleton className="w-3/4 h-12 rounded-full" />
+
+          {/* Stats Grid Skeleton */}
+          <div className="grid grid-cols-2 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-muted/50"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-10 h-10 rounded-full" />
+                  <div className="space-y-2">
+                    <Skeleton className="w-24 h-4" />
+                    <Skeleton className="w-16 h-6" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Seller Info */}
+        <div className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-muted/50">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="w-32 h-4" />
+              <Skeleton className="w-48 h-4" />
+            </div>
+          </div>
+        </div>
+
+        {/* Product Info Skeleton */}
+        <div className="space-y-6">
+          {/* Overview Skeleton */}
+          <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
+            <Skeleton className="w-48 h-6 mb-4" />
+            <div className="grid gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-2">
+                  <Skeleton className="w-24 h-4" />
+                  <Skeleton className="w-32 h-5" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Specifications Skeleton */}
+          <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
+            <Skeleton className="w-64 h-6 mb-4" />
+            <div className="grid gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="flex justify-between p-3 rounded-lg bg-background"
+                >
+                  <Skeleton className="w-32 h-4" />
+                  <Skeleton className="w-48 h-5" />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Description Skeleton */}
+          <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
+            <Skeleton className="w-56 h-6 mb-4" />
+            <div className="space-y-2">
+              <Skeleton className="w-full h-4" />
+              <Skeleton className="w-4/5 h-4" />
+              <Skeleton className="w-3/4 h-4" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <Skeleton className="h-32" />
-    <div className="space-y-4">
-      <Skeleton className="w-1/3 h-4" />
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Skeleton className="h-4" />
-        <Skeleton className="h-4" />
-      </div>
-    </div>
-    <Skeleton className="h-24" />
-    <Skeleton className="h-12" />
   </div>
 );
 

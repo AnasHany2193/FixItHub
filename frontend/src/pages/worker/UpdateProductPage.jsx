@@ -40,7 +40,7 @@ export default function UpdateProductPage() {
         <Button
           variant="link"
           onClick={() => navigate("/marketplace/my-products")}
-          className="mb-4 -ml-2"
+          className="-ml-2"
         >
           ← Back to Marketplace
         </Button>

@@ -404,9 +404,9 @@ export const useDeleteProduct = () => {
 
   return useMutation({
     mutationFn: deleteProduct,
-    onSuccess: (data, productId) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries(["marketplace", "my-products"]);
-      queryClient.removeQueries(["marketplace", "products", productId]);
+      queryClient.invalidateQueries(["marketplace", "products"]);
       toast({
         variant: "success",
         title: "Product Deleted",
