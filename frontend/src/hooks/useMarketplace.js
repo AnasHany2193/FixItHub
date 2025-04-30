@@ -342,6 +342,7 @@ export const useCreateProduct = () => {
   return useMutation({
     mutationFn: createProduct,
     onSuccess: (data) => {
+      queryClient.refetchQueries(["marketplace", "my-products"]);
       queryClient.invalidateQueries(["marketplace", "my-products"]);
       toast({
         variant: "success",

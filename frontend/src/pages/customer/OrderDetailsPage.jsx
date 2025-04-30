@@ -13,7 +13,7 @@ import format from "date-fns/format";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useOrderDetails } from "@/hooks/useMarketplace";
+import { useClearCart, useOrderDetails } from "@/hooks/useMarketplace";
 import { useCreatePaymentSession } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
@@ -28,6 +28,7 @@ export default function OrderDetailsPage() {
   const createPaymentSession = useCreatePaymentSession();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data: order, isLoading, refetch } = useOrderDetails(orderId);
+  const { mutate: clearCart } = useClearCart();
 
   const handleCheckout = async () => {
     await createPaymentSession.mutateAsync(orderId);
@@ -38,6 +39,7 @@ export default function OrderDetailsPage() {
 
     if (paymentStatus === "success") {
       refetch(); // Refresh order data
+      clearCart();
       toast({
         variant: "success",
         title: "Payment Successful! 🎉",
@@ -49,6 +51,7 @@ export default function OrderDetailsPage() {
     }
 
     if (paymentStatus === "cancelled") {
+      clearCart();
       toast({
         variant: "destructive",
         title: "Payment Cancelled ❌",
@@ -57,7 +60,7 @@ export default function OrderDetailsPage() {
       searchParams.delete("payment");
       setSearchParams(searchParams, { replace: true });
     }
-  }, [searchParams, setSearchParams, toast, refetch]);
+  }, [searchParams, setSearchParams, toast, refetch, clearCart]);
 
   return (
     <motion.div
