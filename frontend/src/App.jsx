@@ -13,40 +13,45 @@ import ResendOtpPage from "./pages/auth/ResendOtpPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ForgetPasswordPage from "./pages/auth/ForgetPasswordPage";
 
+// Main Layout
 import DashboardLayout from "./components/layout/DashboardLayout";
 
+// Customer
 import CustomerDashboard from "./pages/customer/CustomerDashboard";
-import NewRepairPage from "./pages/customer/NewRepairPage";
-import EditRepairPage from "./pages/customer/EditRepairPage";
-import RepairRequestsPage from "./pages/customer/RepairRequestsPage";
-import RepairDetailsPage from "./pages/customer/RepairDetailsPage";
-import RepairHistoryPage from "./pages/customer/RepairHistoryPage";
+import NewRepairPage from "./pages/customer/repairs/NewRepairPage";
+import EditRepairPage from "./pages/customer/repairs/EditRepairPage";
+import RepairDetailsPage from "./pages/customer/repairs/RepairDetailsPage";
+import RepairHistoryPage from "./pages/customer/repairs/RepairHistoryPage";
+import RepairRequestsPage from "./pages/customer/repairs/RepairRequestsPage";
 
-import CustomerMarketplacePage from "./pages/customer/CustomerMarketplacePage";
-import CustomerMarketplaceDetailsPage from "./pages/customer/CustomerMarketplaceDetailsPage";
+import OrderDetailsPage from "./pages/customer/products/OrderDetailsPage";
+import CustomerOrdersPage from "./pages/customer/products/CustomerOrdersPage";
+import CartAndFavoritesPage from "./pages/customer/products/CartAndFavoritesPage";
+import CustomerMarketplacePage from "./pages/customer/products/CustomerMarketplacePage";
+import CustomerMarketplaceDetailsPage from "./pages/customer/products/CustomerMarketplaceDetailsPage";
 
+// Worker
 import WorkerDashboard from "./pages/worker/WorkerDashboard";
-import FindRepairsPage from "./pages/worker/FindRepairsPage";
-import WorkerActiveRepairsPage from "./pages/worker/WorkerActiveRepairsPage";
-import WorkerRepairDetailPage from "./pages/worker/WorkerRepairDetailPage";
-import WorkerActiveRepairDetailsPage from "./pages/worker/WorkerActiveRepairDetailsPage";
-import WorkerHistoryPage from "./pages/worker/WorkerHistoryPage";
+import FindRepairsPage from "./pages/worker/repairs/FindRepairsPage";
+import WorkerHistoryPage from "./pages/worker/repairs/WorkerHistoryPage";
+import WorkerRepairDetailPage from "./pages/worker/repairs/WorkerRepairDetailPage";
+import WorkerActiveRepairsPage from "./pages/worker/repairs/WorkerActiveRepairsPage";
+import WorkerActiveRepairDetailsPage from "./pages/worker/repairs/WorkerActiveRepairDetailsPage";
 
-import ProductListPage from "./pages/worker/ProductListPage";
-import AddProductPage from "./pages/worker/AddProductPage";
-import UpdateProductPage from "./pages/worker/UpdateProductPage";
+import AddProductPage from "./pages/worker/products/AddProductPage";
+import ProductListPage from "./pages/worker/products/ProductListPage";
+import UpdateProductPage from "./pages/worker/products/UpdateProductPage";
+import WorkerProductDetailsPage from "./pages/worker/products/WorkerProductDetailsPage";
 
+// Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
 
+// Public
 import Layout from "./components/layout/Layout";
 import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import CartAndFavoritesPage from "./pages/customer/CartAndFavoritesPage";
-import CustomerOrdersPage from "./pages/customer/CustomerOrdersPage";
-import OrderDetailsPage from "./pages/customer/OrderDetailsPage";
-import WorkerProductDetailsPage from "./pages/worker/WorkerProductDetailsPage";
 
 function App() {
   return (
