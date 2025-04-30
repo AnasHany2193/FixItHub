@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import HeaderPages from "@/components/common/HeaderPages";
 
 export default function ProductListPage() {
   const navigate = useNavigate();
@@ -29,17 +30,14 @@ export default function ProductListPage() {
   const { mutate: deleteProduct, isPending: deleting } = useDeleteProduct();
 
   return (
-    <div className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl">
+    <>
       {/* Header section */}
       <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-        <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
-          <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl">
-            My Products
-          </h1>
-          <p className="mt-1.5 text-gray-600 dark:text-gray-300">
-            Manage your active Products
-          </p>
-        </motion.div>
+        <HeaderPages
+          title="My Products"
+          subtitle="Manage your active Products"
+        />
+
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
             className="gap-2 shadow-lg bg-gradient-to-r dark:text-gray-200 from-indigo-600 to-purple-600 hover:shadow-indigo-500/30"
@@ -144,13 +142,14 @@ export default function ProductListPage() {
           ))}
         </motion.div>
       )}
-    </div>
+    </>
   );
 }
 
 const ProductCard = ({ product, onEdit, onClick, onDelete, deleting }) => (
   <motion.div
     whileHover={{ scale: 1.02 }}
+    transition={{ duration: 0.2 }}
     className="cursor-pointer group"
     onClick={onClick}
   >

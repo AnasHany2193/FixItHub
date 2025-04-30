@@ -31,6 +31,7 @@ import {
   useUpdateCartItem,
 } from "@/hooks/useMarketplace";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import HeaderPages from "@/components/common/HeaderPages";
 
 const categories = [
   { value: "all", label: "All Categories" },
@@ -59,17 +60,13 @@ export default function CustomerMarketplacePage() {
   const { data: products, isLoading } = useProducts(filters);
 
   return (
-    <div className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl">
+    <>
       {/* Filter Header */}
       <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-        <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
-          <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl">
-            Marketplace
-          </h1>
-          <p className="mt-1.5 text-gray-600 dark:text-gray-300">
-            Find quality computer parts and accessories
-          </p>
-        </motion.div>
+        <HeaderPages
+          title="Marketplace"
+          subtitle="Find quality computer parts and accessories"
+        />
 
         <Input
           placeholder="Search products..."
@@ -159,7 +156,7 @@ export default function CustomerMarketplacePage() {
           ))}
         </motion.div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -193,6 +190,11 @@ const ProductCard = ({ product, onClick }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
+      transition={{
+        type: "spring",
+        stiffness: 300,
+        duration: 0.2,
+      }}
       className="cursor-pointer group"
       onClick={onClick}
     >

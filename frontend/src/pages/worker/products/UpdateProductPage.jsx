@@ -5,6 +5,7 @@ import ProductForm from "@/components/marketplace/ProductForm";
 import { useWorkerProductDetails } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/button";
+import HeaderPages from "@/components/common/HeaderPages";
 
 export default function UpdateProductPage() {
   const { productId } = useParams();
@@ -34,34 +35,21 @@ export default function UpdateProductPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen"
     >
-      <div className="max-w-5xl px-4 mx-auto sm:px-6 lg:px-8">
-        <Button
-          variant="link"
-          onClick={() => navigate("/marketplace/my-products")}
-          className="-ml-2"
-        >
-          ← Back to Marketplace
-        </Button>
+      <Button
+        variant="link"
+        onClick={() => navigate("/marketplace/my-products")}
+        className="-ml-2"
+      >
+        ← Back to Marketplace
+      </Button>
 
-        <div className="py-8 space-y-2">
-          <motion.h1
-            initial={{ y: -10 }}
-            animate={{ y: 0 }}
-            className="text-3xl font-bold text-gray-900 dark:text-white"
-          >
-            Update Product
-          </motion.h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Modify your existing product listing
-          </p>
-        </div>
+      <HeaderPages
+        title="Update Product"
+        subtitle="Modify your existing product listing"
+      />
 
-        <div className="pb-12">
-          <ProductForm product={product} isEdit={true} />
-        </div>
-      </div>
+      <ProductForm product={product} isEdit={true} />
     </motion.div>
   );
 }

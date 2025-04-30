@@ -225,8 +225,8 @@ export const SidebarHeader = ({ user, isCollapsed, toggleCollapse }) => (
         className="relative p-2 transition-all group"
         aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
-        <div className="absolute inset-0 transition-opacity rounded-full bg-gradient-to-br from-indigo-400 to-indigo-600 dark:from-gray-600 dark:to-gray-800 opacity-10 group-hover:opacity-20" />
-        <div className="relative z-10 p-1.5 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="absolute inset-0 top-0 transition-opacity rounded-full right-3 -left-3 bg-gradient-to-br from-indigo-400 to-indigo-600 dark:from-gray-600 dark:to-gray-800 opacity-10 group-hover:opacity-20" />
+        <div className="relative z-10 p-1.5 -left-3 right-3 border border-gray-200 rounded-full shadow-sm bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm dark:border-gray-700">
           <motion.div
             key={String(isCollapsed)}
             initial={{ rotate: isCollapsed ? -180 : 0 }}

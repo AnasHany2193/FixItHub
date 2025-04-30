@@ -21,15 +21,20 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useNavigate } from "react-router";
 import { formatDistanceToNow } from "date-fns";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import HeaderPages from "@/components/common/HeaderPages";
 
 export default function WorkerActiveRepairsPage() {
   const [selectedStatus, setSelectedStatus] = useState("");
   const { data: repairs, isLoading } = useWorkerRepairs(selectedStatus);
 
   return (
-    <div className="px-4 py-8 mx-auto max-w-7xl">
+    <>
       <div className="flex flex-col justify-between gap-4 mb-8 sm:flex-row sm:items-center">
-        <Header />
+        <HeaderPages
+          title="Active Repair Jobs"
+          subtitle=" Manage your current repair assignments and track progress"
+        />
+
         <StatusFilter
           selectedStatus={selectedStatus}
           setSelectedStatus={setSelectedStatus}
@@ -62,20 +67,9 @@ export default function WorkerActiveRepairsPage() {
           message="You currently don't have any active repair jobs"
         />
       )}
-    </div>
+    </>
   );
 }
-
-const Header = () => (
-  <div className="space-y-2">
-    <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl">
-      Active Repair Jobs
-    </h1>
-    <p className="text-gray-600 dark:text-gray-400">
-      Manage your current repair assignments and track progress
-    </p>
-  </div>
-);
 
 const StatusFilter = ({ selectedStatus, setSelectedStatus }) => {
   const filters = [
@@ -93,7 +87,7 @@ const StatusFilter = ({ selectedStatus, setSelectedStatus }) => {
   ];
 
   return (
-    <div className="flex gap-2 p-2 rounded-lg bg-muted dark:bg-gray-800">
+    <div className="flex justify-between p-2 rounded-lg md:gap-3 bg-muted dark:bg-gray-800">
       {filters.map((filter) => (
         <Button
           key={filter.value}

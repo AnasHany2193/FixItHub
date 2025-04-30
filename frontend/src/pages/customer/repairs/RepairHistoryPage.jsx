@@ -19,25 +19,27 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useCustomerHistory } from "@/hooks/useRepair";
 import { useState } from "react";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import HeaderPages from "@/components/common/HeaderPages";
 
 const statusConfig = {
   completed: {
     label: "Completed",
     icon: <CheckCircle className="w-4 h-4 text-emerald-600" />,
     color: "bg-emerald-100 dark:bg-emerald-900/20",
-    border: "border-emerald-200 dark:border-emerald-800",
+    border:
+      "border-emerald-200 dark:border-emerald-800 hover:shadow-emerald-700/50",
   },
   cancelled: {
     label: "Cancelled",
     icon: <X className="w-4 h-4 text-rose-600" />,
     color: "bg-rose-100 dark:bg-rose-900/20",
-    border: "border-rose-200 dark:border-rose-800",
+    border: "border-rose-200 dark:border-rose-800 hover:shadow-rose-700/50",
   },
   returning_to_customer: {
     label: "Returned",
     icon: <RotateCw className="w-4 h-4 text-amber-600" />,
     color: "bg-amber-100 dark:bg-amber-900/20",
-    border: "border-amber-200 dark:border-amber-800",
+    border: "border-amber-200 dark:border-amber-800 hover:shadow-amber-700/50",
   },
 };
 
@@ -80,18 +82,13 @@ export default function RepairHistoryPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl"
     >
       {/* Header Section */}
-      <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-        <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
-          <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text md:text-3xl">
-            Repair History
-          </h1>
-          <p className="mt-1.5 text-gray-600 dark:text-gray-300">
-            Timeline of your completed and past repair services
-          </p>
-        </motion.div>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <HeaderPages
+          title="Repair History"
+          subtitle="Timeline of your completed and past repair services"
+        />
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
@@ -198,13 +195,17 @@ export default function RepairHistoryPage() {
                   <motion.div
                     key={repair._id}
                     layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ type: "spring", stiffness: 300 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
+                      duration: 0.2,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    className="cursor-pointer group"
+                    onClick={() => navigate(`/repairs/${repair._id}`)}
                   >
                     <Card
-                      className={`border-l-4 ${status.border} shadow-sm hover:shadow-md transition-shadow`}
+                      className={`border-l-4 ${status.border} shadow-sm  overflow-hidden transition-all hover:shadow-lg`}
                     >
                       <CardContent className="p-4 space-y-4">
                         <div className="flex items-center justify-between">
@@ -234,14 +235,6 @@ export default function RepairHistoryPage() {
                             {format(new Date(repair.createdAt), "MMM dd, yyyy")}
                           </span>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-                          onClick={() => navigate(`/repairs/${repair._id}`)}
-                        >
-                          View Details
-                        </Button>
                       </CardFooter>
                     </Card>
                   </motion.div>

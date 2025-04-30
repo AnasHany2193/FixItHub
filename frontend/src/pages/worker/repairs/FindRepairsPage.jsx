@@ -18,6 +18,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import HeaderPages from "@/components/common/HeaderPages";
 
 const categories = [
   { value: "all", label: "All Categories" },
@@ -38,7 +39,7 @@ export default function FindRepairsPage({ type }) {
   const { data: repairs, isLoading } = useRepairList(type, filters);
 
   return (
-    <div className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl">
+    <>
       {/* Header */}
       <RepairListHeader type={type} filters={filters} setFilters={setFilters} />
 
@@ -69,7 +70,6 @@ export default function FindRepairsPage({ type }) {
           className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
         >
           {repairs?.map((repair) => (
             <RepairCard
@@ -81,7 +81,7 @@ export default function FindRepairsPage({ type }) {
           ))}
         </motion.div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -111,19 +111,10 @@ const RepairListHeader = ({ type, filters, setFilters }) => {
 
   return (
     <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-      <motion.div
-        initial={{ y: -10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl font-JosefinSans">
-          {title}
-        </h1>
-        <p className="mt-1.5 text-gray-600 dark:text-gray-300">{subtitle}</p>
-      </motion.div>
+      <HeaderPages title={title} subtitle={subtitle} />
 
       <motion.div
-        className={`grid items-center gap-4 mb-6 ${type === "auctions" ? "md:grid-cols-3" : "md:grid-cols-2"}`}
+        className={`grid items-center gap-4 mb-6 ${type === "auctions" ? "lg:grid-cols-3" : "md:grid-cols-2"}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
@@ -207,11 +198,11 @@ const RepairCard = ({ repair, onClick, type }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2 }}
       className="cursor-pointer"
       onClick={onClick}
     >
-      <Card className="h-full overflow-hidden transition-shadow border shadow-sm dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-md">
+      <Card className="h-full overflow-hidden transition-all border shadow-sm dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-lg hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50 ">
         <CardContent className="p-0">
           <div className="relative aspect-video group">
             {/* Image Gallery */}

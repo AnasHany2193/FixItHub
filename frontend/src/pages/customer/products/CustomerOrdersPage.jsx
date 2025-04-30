@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Calendar, Filter, ArrowRight, Package } from "lucide-react";
+import { Calendar, Filter, Package } from "lucide-react";
 import format from "date-fns/format";
 
 import {
@@ -12,11 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useCustomerOrders } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import HeaderPages from "@/components/common/HeaderPages";
 
 const statusOptions = [
   { value: "all", label: "All Statuses" },
@@ -51,18 +51,12 @@ export default function CustomerOrdersPage() {
   };
 
   return (
-    <div className="px-4 py-8 mx-auto max-w-7xl">
+    <div>
       {/* Header */}
-      <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-primary to-purple-600 bg-clip-text">
-            Order History
-          </h1>
-          <p className="text-muted-foreground">
-            View and manage your purchase history
-          </p>
-        </div>
-      </div>
+      <HeaderPages
+        title="Order History"
+        subtitle="View and manage your purchase history"
+      />
 
       {/* Filters */}
       <div className="grid gap-4 mb-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -143,11 +137,12 @@ export default function CustomerOrdersPage() {
           {orders?.map((order) => (
             <motion.div
               key={order._id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="overflow-hidden transition-all border rounded-lg hover:shadow-lg bg-background"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => navigate(`/marketplace/orders/${order._id}`)}
+              className="cursor-pointer"
             >
-              <div className="p-4">
+              <div className="p-4 overflow-hidden transition-all border rounded-lg shadow-sm cursor-pointer hover:shadow-lg bg-background hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50">
                 <div className="flex items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -202,17 +197,6 @@ export default function CustomerOrdersPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-
-              <div className="p-4 bg-muted/20">
-                <Button
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={() => navigate(`/marketplace/orders/${order._id}`)}
-                >
-                  View Order Details
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
               </div>
             </motion.div>
           ))}

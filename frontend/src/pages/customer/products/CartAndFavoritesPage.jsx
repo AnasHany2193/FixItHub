@@ -16,8 +16,7 @@ import {
   useCreatePaymentSession,
 } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-
-const MotionDiv = motion.div;
+import HeaderPages from "@/components/common/HeaderPages";
 
 export default function CartAndFavoritesPage() {
   const [activeTab, setActiveTab] = useState("cart");
@@ -25,12 +24,13 @@ export default function CartAndFavoritesPage() {
   const { data: favorites, isLoading: favLoading } = useFavorites();
 
   return (
-    <div className="px-4 py-8 mx-auto max-w-7xl">
+    <div>
       {/* Header with Tabs */}
-      <div className="mb-8 space-y-4">
-        <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-primary to-purple-600 bg-clip-text">
-          Your Collections
-        </h1>
+      <div className="flex flex-col justify-between gap-5 mb-5 space-y-4 md:items-center md:flex-row">
+        <HeaderPages
+          title="Your Collections"
+          subtitle="Manage your Cart and Favorites"
+        />
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full max-w-xs grid-cols-2">
@@ -48,7 +48,7 @@ export default function CartAndFavoritesPage() {
 
       {/* Content Sections */}
       <AnimatePresence mode="wait">
-        <MotionDiv
+        <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -60,7 +60,7 @@ export default function CartAndFavoritesPage() {
           ) : (
             <FavoritesSection favorites={favorites} isLoading={favLoading} />
           )}
-        </MotionDiv>
+        </motion.div>
       </AnimatePresence>
     </div>
   );
@@ -82,13 +82,16 @@ const CartSection = ({ cart, isLoading }) => {
         <>
           <div className="space-y-4">
             {cart.items.map((item) => (
-              <MotionDiv
+              <motion.div
                 key={item.product._id}
                 layout
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex gap-4 p-4 rounded-lg bg-muted/30"
+                whileHover={{ scale: 1.02 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  duration: 0.2,
+                }}
+                className="flex gap-4 p-4 overflow-hidden transition-all rounded-lg shadow-sm cursor-pointer bg-gray-300/50 dark:bg-muted/40 hover:shadow-lg hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50"
               >
                 <img
                   src={
@@ -145,7 +148,7 @@ const CartSection = ({ cart, isLoading }) => {
                     </span>
                   </div>
                 </div>
-              </MotionDiv>
+              </motion.div>
             ))}
           </div>
 
@@ -219,13 +222,16 @@ const FavoritesSection = ({ favorites, isLoading }) => {
     <div className="space-y-4">
       {favorites?.length > 0 ? (
         favorites.map((product) => (
-          <MotionDiv
+          <motion.div
             key={product._id}
             layout
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex gap-4 p-4 rounded-lg bg-muted/30"
+            whileHover={{ scale: 1.02 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              duration: 0.2,
+            }}
+            className="flex gap-4 p-4 overflow-hidden transition-all rounded-lg shadow-sm cursor-pointer bg-gray-300/50 dark:bg-muted/40 hover:shadow-lg hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50"
           >
             <img
               src={product.images?.[0]?.url || "/placeholder-product.jpg"}
@@ -233,7 +239,7 @@ const FavoritesSection = ({ favorites, isLoading }) => {
               className="object-cover w-24 h-24 rounded-md"
             />
 
-            <div className="flex-1">
+            <div className="flex flex-col flex-1 justify-evenly">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium">{product.name}</h3>
                 <div className="flex gap-2">
@@ -279,7 +285,7 @@ const FavoritesSection = ({ favorites, isLoading }) => {
                 </p>
               </div>
             </div>
-          </MotionDiv>
+          </motion.div>
         ))
       ) : (
         <EmptyState

@@ -21,6 +21,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
 import { useCancelRepair, useRepairRequests } from "@/hooks/useRepair";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import HeaderPages from "@/components/common/HeaderPages";
 
 export const statusStages = {
   awaiting_assignment: {
@@ -60,7 +61,7 @@ export default function RepairRequestsPage() {
   const { mutate: cancelRepair } = useCancelRepair();
 
   return (
-    <div className="px-4 py-6 mx-auto md:px-6 lg:px-8 max-w-7xl">
+    <>
       {/* Header Section */}
       <Header navigate={navigate} />
 
@@ -90,20 +91,16 @@ export default function RepairRequestsPage() {
           <RepairGrid data={data} cancelRepair={cancelRepair} />
         )}
       </div>
-    </div>
+    </>
   );
 }
 
 const Header = ({ navigate }) => (
-  <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
-    <motion.div initial={{ y: -10 }} animate={{ y: 0 }}>
-      <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl">
-        Repair Hub
-      </h1>
-      <p className="mt-1.5 text-gray-600 dark:text-gray-300">
-        Manage your active repair services
-      </p>
-    </motion.div>
+  <div className="flex flex-col gap-4 mb-8 md:mb-1 md:flex-row md:items-center md:justify-between">
+    <HeaderPages
+      title="Repair Hub"
+      subtitle="Manage your active repair services"
+    />
 
     <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
       <Button
@@ -190,9 +187,10 @@ const RepairCard = ({ repair, cancelRepair }) => {
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ type: "spring", stiffness: 300 }}
+      transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
+      className="cursor-pointer group"
     >
-      <Card className="flex flex-col justify-between h-full overflow-hidden transition-all border shadow-lg hover:shadow-xl dark:border-gray-700 group backdrop-blur-sm bg-white/50 dark:bg-gray-800/50">
+      <Card className="flex flex-col justify-between h-full overflow-hidden transition-all border shadow-lg hover:shadow-lg dark:border-gray-700 group backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-indigo-700/50 dark:hover:shadow-gray-700/50">
         {/* Status Header */}
         <div className="relative p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-gray-800 dark:to-gray-900">
           <div className="flex items-center justify-between">

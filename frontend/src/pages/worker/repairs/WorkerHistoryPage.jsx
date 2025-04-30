@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import HeaderPages from "@/components/common/HeaderPages";
 
 const statusOptions = [
   { value: "all", label: "All Statuses" },
@@ -41,17 +42,13 @@ export default function WorkerHistoryPage() {
   const loadMore = () => setOffset((prev) => prev + 20);
 
   return (
-    <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
+    <>
       {/* Header Section */}
       <header className="flex flex-col justify-between gap-4 mb-8 sm:flex-row sm:items-center">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text md:text-3xl">
-            Repair History
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Your completed and returned repair jobs
-          </p>
-        </div>
+        <HeaderPages
+          title="Repair History"
+          subtitle="Your completed and returned repair jobs"
+        />
 
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
           <SelectTrigger className="w-[200px]">
@@ -114,7 +111,7 @@ export default function WorkerHistoryPage() {
           </Button>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -122,31 +119,36 @@ const HistoryCard = ({ repair }) => {
   const statusConfig = {
     completed: {
       label: "Completed",
-      border: "border-emerald-200 dark:border-emerald-800",
+      border:
+        "border-emerald-200 dark:border-emerald-800 hover:shadow-emerald-700/50",
       color:
-        "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400",
+        "bg-emerald-100 text-emerald-800 dark:bg-emerald-400/20 dark:text-emerald-400",
       icon: (
         <BadgeCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
       ),
     },
     returning_to_customer: {
       label: "Returned",
-      border: "border-amber-200 dark:border-amber-800",
+      border:
+        "border-amber-200 dark:border-amber-800 hover:shadow-amber-700/50",
       color:
         "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400",
       icon: <Undo2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />,
     },
   }[repair.status];
 
+  console.log("repair", repair);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
       <Card
-        className={`border-l-4 ${statusConfig.border} shadow-sm hover:shadow-md transition-shadow`}
+        className={`border-l-4 ${statusConfig.border} shadow-sm  overflow-hidden transition-all hover:shadow-lg`}
       >
         <CardContent className="p-4 space-y-4">
           <div className="flex items-center justify-between">

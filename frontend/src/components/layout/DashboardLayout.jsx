@@ -206,10 +206,8 @@ const DashboardLayout = () => {
         logout={logout}
       />
 
-      <main className="flex-1 p-6 md:p-8">
-        <div className="max-w-6xl mx-auto">
-          <Outlet />
-        </div>
+      <main className="flex-1 max-w-6xl min-h-screen p-6 mx-auto md:p-8">
+        <Outlet />
       </main>
     </div>
   );
