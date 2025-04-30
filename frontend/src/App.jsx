@@ -46,6 +46,7 @@ import NotFoundPage from "./pages/public/NotFoundPage";
 import CartAndFavoritesPage from "./pages/customer/CartAndFavoritesPage";
 import CustomerOrdersPage from "./pages/customer/CustomerOrdersPage";
 import OrderDetailsPage from "./pages/customer/OrderDetailsPage";
+import WorkerProductDetailsPage from "./pages/worker/WorkerProductDetailsPage";
 
 function App() {
   return (
@@ -116,6 +117,10 @@ function App() {
             </Route>
             <Route path="/marketplace">
               <Route path="my-products" element={<ProductListPage />} />
+              <Route
+                path="my-products/:productId"
+                element={<WorkerProductDetailsPage />}
+              />
               <Route path="new-product" element={<AddProductPage />} />
               <Route
                 path="edit-product/:productId"

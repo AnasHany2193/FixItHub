@@ -132,7 +132,9 @@ export default function ProductListPage() {
                 e.stopPropagation();
                 navigate(`/marketplace/edit-product/${product._id}`);
               }}
-              onClick={() => navigate(`/marketplace/products/${product._id}`)}
+              onClick={() =>
+                navigate(`/marketplace/my-products/${product._id}`)
+              }
               onDelete={(e) => {
                 e.stopPropagation();
                 deleteProduct(product._id);

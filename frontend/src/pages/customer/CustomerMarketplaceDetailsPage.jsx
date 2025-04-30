@@ -15,9 +15,9 @@ import {
   Plus,
   Loader2,
   Trash,
-  Sparkle,
-  ShieldCheck,
   Edit,
+  Zap,
+  Users,
 } from "lucide-react";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -101,7 +101,7 @@ export default function CustomerMarketplaceDetailsPage() {
               />
             ) : (
               <div className="flex items-center justify-center aspect-video bg-muted rounded-xl">
-                <Package className="w-20 h-20 text-muted-foreground/40" />
+                <Zap className="w-20 h-20 text-muted-foreground/40" />
               </div>
             )}
           </div>
@@ -202,64 +202,26 @@ const ProductDetails = ({ product, refetchProduct }) => {
     >
       {/* Product Header  */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Badge variant="secondary" className="text-sm font-medium">
-            <Sparkle className="w-4 h-4 mr-2 text-amber-500" />
-            {product.category}
-          </Badge>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              1-Year Warranty
-            </Badge>
-          </div>
-        </div>
-
-        <h1 className="text-4xl font-extrabold tracking-tight">
+        <h1 className="text-4xl font-bold tracking-tight text-transparent bg-gradient-to-r from-primary to-primary/70 bg-clip-text">
           {product.name}
         </h1>
 
-        <div className="flex items-center gap-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-primary">
-              ${product.price}
-            </span>
-            <span className="line-through text-muted-foreground">
-              ${product.price * 1.2}
-            </span>
-          </div>
-          <Badge variant="premium" className="px-5">
-            20% OFF
-          </Badge>
-          <Badge
-            className="px-5"
-            variant={
-              product.stock > 10
-                ? "success"
-                : product.stock > 0
-                  ? "warning"
-                  : "destructive"
-            }
-          >
-            {product.stock > 0 ? "In Stock" : "Out of Stock"}
-          </Badge>
-        </div>
-
-        <div className="flex gap-4 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1">
-            <BarChart className="w-4 h-4" />
-            <span>{product.purchasesCount || 0} purchases</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Heart className="w-4 h-4" />
-            <span>{product.favoritesCount || 0} favorites</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Star className="w-4 h-4" />
-            <span>
-              {product.avgRating.toFixed(1)} ({product.reviewsCount} reviews)
-            </span>
-          </div>
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard
+            icon={<BarChart className="w-6 h-6 text-emerald-600" />}
+            title="Purchases"
+            value={product.purchasesCount || 0}
+          />
+          <StatCard
+            icon={<Users className="w-6 h-6 text-pink-600" />}
+            title="Favorites"
+            value={product.favoritesCount || 0}
+          />
+          <StatCard
+            icon={<Star className="w-6 h-6 text-amber-500" />}
+            title="Avg Rating"
+            value={product.avgRating.toFixed(1)}
+          />
         </div>
       </div>
 
@@ -288,26 +250,57 @@ const ProductDetails = ({ product, refetchProduct }) => {
         </div>
       </div>
 
-      {/*  Specs Grid */}
+      {/*  Product Info */}
       <div className="space-y-6">
         <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
+          <h2 className="mb-4 text-2xl font-semibold">Product Overview</h2>
+          <div className="grid gap-4">
+            <DetailItem label="Price" value={`$${product.price}`} />
+            <DetailItem
+              label="Stock"
+              value={
+                <span
+                  className={`font-semibold ${
+                    product.stock > 10
+                      ? "text-emerald-600"
+                      : product.stock > 0
+                        ? "text-amber-600"
+                        : "text-destructive"
+                  }`}
+                >
+                  {product.stock} units
+                </span>
+              }
+            />
+            <DetailItem
+              label="Category"
+              value={<Badge variant="outline">{product.category}</Badge>}
+            />
+          </div>
+        </div>
+
+        {/* Specifications */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50"
+        >
           <h2 className="mb-4 text-2xl font-semibold">
-            Product Specifications
+            Technical Specifications
           </h2>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3">
             {product.specs?.map((spec, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between px-3 py-2 border rounded-lg bg-background"
+                className="flex justify-between p-3 transition-colors rounded-lg bg-background hover:bg-muted/50"
               >
-                <span className="font-medium text-muted-foreground">
-                  {spec.name}
-                </span>
-                <span className="font-semibold">{spec.value}</span>
+                <span className="text-muted-foreground">{spec.name}</span>
+                <span className="font-medium">{spec.value}</span>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
 
         {/* Description */}
         <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
@@ -433,6 +426,24 @@ const ProductDetailsSkeleton = () => (
   </div>
 );
 
+const DetailItem = ({ label, value }) => (
+  <div className="flex items-center justify-between py-2 border-b">
+    <span className="text-muted-foreground">{label}</span>
+    <span className="font-medium">{value}</span>
+  </div>
+);
+
+const StatCard = ({ icon, title, value }) => (
+  <div className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-muted/50">
+    <div className="flex items-center gap-3">
+      <div className="p-2 rounded-full bg-primary/10">{icon}</div>
+      <div>
+        <h3 className="text-lg font-medium">{title}</h3>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
+    </div>
+  </div>
+);
 // -------------------------- Review ---------------------------
 
 const ProductReviews = ({
