@@ -7,7 +7,7 @@ import {
   MarketplaceActivityController,
   UserController,
 } from "../controllers/dashboardController.js";
-import { protect, roleCheck } from "../middleware/authMiddleware.js";
+import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

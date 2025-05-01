@@ -17,6 +17,7 @@ import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import dashboardRoutes from "./routes/dashboardRoutes.js";
 import marketplaceRoutes from "./routes/marketplaceRoutes.js";
 
 // Load environment variables and Swagger docs
@@ -101,6 +102,7 @@ const routeConfig = [
   { path: "/upload", route: uploadRoutes },
   { path: "/repairs", route: repairRoutes },
   { path: "/marketplace", route: marketplaceRoutes },
+  { path: "/dashboard", route: dashboardRoutes },
 ];
 
 // Apply rate limiting and register routes
