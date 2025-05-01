@@ -112,7 +112,7 @@ export const resendOTP = async (req, res, next) => {
 
     // Generate new OTP
     const otpCode = crypto.randomInt(100000, 999999).toString(); // Secure 6-digit OTP
-    await OTP.create({ userId: existingUser._id, code: otpCode });
+    await OTP.create({ userId: user._id, code: otpCode });
     console.log(">|< resendOTP --> ", otpCode);
 
     // ReSend OTP verification email

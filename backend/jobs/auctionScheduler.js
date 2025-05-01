@@ -5,8 +5,9 @@ import { sendEmail } from "../services/emailService.js";
 import { auctionExpiredEmailTemplate } from "../utils/emailTemplates.js";
 
 // Simplified Cron Job
-cron.schedule("*/5 * * * *", async () => {
+cron.schedule("* * * * */5", async () => {
   try {
+    console.log("Simplified Cron Closing Auction Job");
     const expiredAuctions = await Auction.find({
       status: "open",
       expiresAt: { $lte: new Date() },
@@ -15,6 +16,8 @@ cron.schedule("*/5 * * * *", async () => {
     for (const auction of expiredAuctions) {
       auction.status = "closed";
       await auction.save();
+
+      console.log("Closing Auction");
 
       if (!auction.bids.length) {
         await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
@@ -27,6 +30,7 @@ cron.schedule("*/5 * * * *", async () => {
       }
     }
   } catch (error) {
+    console.log("Error Auctions");
     console.error("Auction closure error:", error.message);
   }
 });
