@@ -49,7 +49,7 @@ router.get(
   getProductReviewsForSeller
 );
 
-// Public customer routes
+// customer routes
 router.route("/products").get(protect, roleCheck("customer"), getProducts);
 router
   .route("/products/:id")
