@@ -2,6 +2,8 @@ import createHttpError from "http-errors";
 
 import User from "../models/User.js";
 import Order from "../models/Order.js";
+import Review from "../models/Review.js";
+import Product from "../models/Product.js";
 import RepairRequest from "../models/RepairRequest.js";
 
 export const CustomerDashboardController = {
@@ -114,7 +116,6 @@ export const UserController = {
   },
 };
 
-// controllers/dashboardController.js
 export const WorkerDashboardController = {
   getWorkerDashboard: async (req, res, next) => {
     try {
@@ -132,16 +133,19 @@ export const WorkerDashboardController = {
               },
             },
             {
+              $addFields: {
+                firstStep: { $arrayElemAt: ["$trackingUpdates", 0] },
+                lastStep: { $arrayElemAt: ["$trackingUpdates", -1] },
+              },
+            },
+            {
               $group: {
                 _id: null,
                 totalCompleted: { $sum: 1 },
                 totalEarnings: { $sum: "$paymentAmount" },
                 avgRepairTime: {
                   $avg: {
-                    $subtract: [
-                      "$trackingUpdates.$[finalStep].timestamp",
-                      "$trackingUpdates.$[firstStep].timestamp",
-                    ],
+                    $subtract: ["$lastStep.timestamp", "$firstStep.timestamp"],
                   },
                 },
               },
@@ -151,12 +155,11 @@ export const WorkerDashboardController = {
                 _id: 0,
                 totalCompleted: 1,
                 totalEarnings: 1,
-                avgRepairTime: { $divide: ["$avgRepairTime", 1000 * 60 * 60] }, // Convert ms to hours
+                avgRepairTime: {
+                  $divide: ["$avgRepairTime", 1000 * 60 * 60], // Convert ms to hours
+                },
               },
             },
-          ]).arrayFilters([
-            { "finalStep.status": "shipped" },
-            { "firstStep.status": "received" },
           ]),
 
           // Product Analytics
@@ -240,6 +243,7 @@ export const WorkerDashboardController = {
         },
       });
     } catch (error) {
+      console.log("error", error);
       next(createHttpError(500, "Failed to load worker dashboard data"));
     }
   },
