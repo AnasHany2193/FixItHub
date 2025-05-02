@@ -113,3 +113,134 @@ export const UserController = {
     }
   },
 };
+
+// controllers/dashboardController.js
+export const WorkerDashboardController = {
+  getWorkerDashboard: async (req, res, next) => {
+    try {
+      const workerId = req.user._id;
+
+      const [repairStats, productStats, reviewStats, recentActivity] =
+        await Promise.all([
+          // Repair Analytics
+          RepairRequest.aggregate([
+            {
+              $match: {
+                worker: workerId,
+                status: "completed",
+                paymentStatus: "paid",
+              },
+            },
+            {
+              $group: {
+                _id: null,
+                totalCompleted: { $sum: 1 },
+                totalEarnings: { $sum: "$paymentAmount" },
+                avgRepairTime: {
+                  $avg: {
+                    $subtract: [
+                      "$trackingUpdates.$[finalStep].timestamp",
+                      "$trackingUpdates.$[firstStep].timestamp",
+                    ],
+                  },
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                totalCompleted: 1,
+                totalEarnings: 1,
+                avgRepairTime: { $divide: ["$avgRepairTime", 1000 * 60 * 60] }, // Convert ms to hours
+              },
+            },
+          ]).arrayFilters([
+            { "finalStep.status": "shipped" },
+            { "firstStep.status": "received" },
+          ]),
+
+          // Product Analytics
+          Product.aggregate([
+            { $match: { seller: workerId } },
+            {
+              $group: {
+                _id: null,
+                totalProducts: { $sum: 1 },
+                totalSold: { $sum: "$purchasesCount" },
+                totalRevenue: {
+                  $sum: { $multiply: ["$price", "$purchasesCount"] },
+                },
+                avgRating: { $avg: "$avgRating" },
+              },
+            },
+          ]),
+
+          // Review Analytics
+          Review.aggregate([
+            {
+              $lookup: {
+                from: "products",
+                localField: "product",
+                foreignField: "_id",
+                as: "product",
+              },
+            },
+            { $unwind: "$product" },
+            { $match: { "product.seller": workerId } },
+            {
+              $group: {
+                _id: null,
+                avgRating: { $avg: "$rating" },
+                totalReviews: { $sum: 1 },
+              },
+            },
+          ]),
+
+          // Recent Activity
+          RepairRequest.find({ worker: workerId })
+            .sort("-createdAt")
+            .limit(5)
+            .select("title status createdAt")
+            .lean(),
+        ]);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          stats: {
+            repairs: repairStats[0] || {
+              totalCompleted: 0,
+              totalEarnings: 0,
+              avgRepairTime: 0,
+            },
+            products: productStats[0] || {
+              totalProducts: 0,
+              totalSold: 0,
+              totalRevenue: 0,
+              avgRating: 0,
+            },
+            reviews: reviewStats[0] || {
+              avgRating: 0,
+              totalReviews: 0,
+            },
+          },
+          recentActivity,
+          currentStatus: {
+            activeRepairs: await RepairRequest.countDocuments({
+              worker: workerId,
+              status: { $in: ["in_progress", "awaiting_payment"] },
+            }),
+            pendingOrders: await Order.countDocuments({
+              "items.product": {
+                $in: await Product.find({ seller: workerId }).distinct("_id"),
+              },
+              status: "processing",
+            }),
+          },
+        },
+      });
+    } catch (error) {
+      next(createHttpError(500, "Failed to load worker dashboard data"));
+    }
+  },
+};

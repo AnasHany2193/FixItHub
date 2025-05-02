@@ -2,6 +2,7 @@ import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
 import {
   getDashboardSummary,
   getProfile,
+  getWorkerDashboard,
   updateProfile,
 } from "../api/dashboard";
 
@@ -10,6 +11,13 @@ export const useDashboardSummary = () =>
   useQuery({
     queryKey: ["dashboard", "summary"],
     queryFn: getDashboardSummary,
+  });
+
+// hooks/useDashboard.js
+export const useWorkerDashboard = () =>
+  useQuery({
+    queryKey: ["dashboard", "worker"],
+    queryFn: getWorkerDashboard,
   });
 
 // User Profile

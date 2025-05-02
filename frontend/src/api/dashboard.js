@@ -12,6 +12,18 @@ export const getDashboardSummary = async () => {
   }
 };
 
+// api/dashboardApi.js
+export const getWorkerDashboard = async () => {
+  try {
+    const { data } = await axiosClient.get("/dashboard/worker");
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to load worker dashboard"
+    );
+  }
+};
+
 // User Profile
 export const getProfile = async () => {
   try {
