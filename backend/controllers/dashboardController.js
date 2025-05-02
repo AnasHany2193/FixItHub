@@ -71,52 +71,6 @@ export const CustomerDashboardController = {
   },
 };
 
-export const RepairHistoryController = {
-  getRepairHistory: async (req, res, next) => {
-    try {
-      const { page = 1, limit = 10 } = req.query;
-      const repairs = await RepairRequest.find({
-        customer: req.user._id,
-        status: { $in: ["completed", "cancelled"] },
-      })
-        .sort("-createdAt")
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .populate("worker", "username profile.avatar")
-        .lean();
-
-      res.status(200).json({
-        success: true,
-        count: repairs.length,
-        data: repairs,
-      });
-    } catch (error) {
-      next(createHttpError(500, "Failed to fetch repair history"));
-    }
-  },
-};
-
-export const MarketplaceActivityController = {
-  getMarketplaceActivity: async (req, res, next) => {
-    try {
-      const { page = 1, limit = 5 } = req.query;
-      const activity = await Order.find({ user: req.user._id })
-        .sort("-createdAt")
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .populate("items.product", "name price images")
-        .lean();
-
-      res.status(200).json({
-        success: true,
-        data: activity,
-      });
-    } catch (error) {
-      next(createHttpError(500, "Failed to fetch marketplace activity"));
-    }
-  },
-};
-
 export const UserController = {
   getProfile: async (req, res, next) => {
     try {

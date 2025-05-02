@@ -12,34 +12,6 @@ export const getDashboardSummary = async () => {
   }
 };
 
-// Repair History
-export const getRepairHistory = async (page = 1, limit = 10) => {
-  try {
-    const { data } = await axiosClient.get("/dashboard/repairs/history", {
-      params: { page, limit },
-    });
-    return data.data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch repair history"
-    );
-  }
-};
-
-// Marketplace Activity
-export const getMarketplaceActivity = async (page = 1, limit = 5) => {
-  try {
-    const { data } = await axiosClient.get("/dashboard/marketplace/activity", {
-      params: { page, limit },
-    });
-    return data.data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch marketplace activity"
-    );
-  }
-};
-
 // User Profile
 export const getProfile = async () => {
   try {
