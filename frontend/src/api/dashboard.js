@@ -26,18 +26,6 @@ export const getRepairHistory = async (page = 1, limit = 10) => {
   }
 };
 
-// Active Repairs
-export const getActiveRepairs = async () => {
-  try {
-    const { data } = await axiosClient.get("/dashboard/repairs/active");
-    return data.data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch active repairs"
-    );
-  }
-};
-
 // Marketplace Activity
 export const getMarketplaceActivity = async (page = 1, limit = 5) => {
   try {
@@ -48,18 +36,6 @@ export const getMarketplaceActivity = async (page = 1, limit = 5) => {
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch marketplace activity"
-    );
-  }
-};
-
-// Favorite Products
-export const getFavoriteProducts = async () => {
-  try {
-    const { data } = await axiosClient.get("/dashboard/marketplace/favorites");
-    return data.data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || "Failed to fetch favorite products"
     );
   }
 };

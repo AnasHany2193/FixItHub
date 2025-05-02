@@ -2,7 +2,6 @@ import createHttpError from "http-errors";
 
 import User from "../models/User.js";
 import Order from "../models/Order.js";
-import Product from "../models/Product.js";
 import RepairRequest from "../models/RepairRequest.js";
 
 export const CustomerDashboardController = {
@@ -10,69 +9,59 @@ export const CustomerDashboardController = {
     try {
       const userId = req.user._id;
 
-      const [repairs, orders, favorites] = await Promise.all([
+      const [repairStats, marketplaceStats] = await Promise.all([
+        // Repair Analytics
         RepairRequest.aggregate([
           {
             $match: {
               customer: userId,
-              status: { $nin: ["completed", "cancelled"] },
+              status: "completed",
+              paymentStatus: "paid",
             },
           },
-          { $sort: { createdAt: -1 } },
-          { $limit: 3 },
           {
-            $project: {
-              _id: 1,
-              title: 1,
-              status: 1,
-              createdAt: 1,
-              auction: 1,
-              worker: 1,
+            $group: {
+              _id: null,
+              totalCompleted: { $sum: 1 },
+              totalSpent: { $sum: "$paymentAmount" },
+              avgRepairCost: { $avg: "$paymentAmount" },
             },
           },
         ]),
 
+        // Marketplace Analytics
         Order.aggregate([
-          { $match: { user: userId } },
-          { $sort: { createdAt: -1 } },
-          { $limit: 3 },
           {
-            $project: {
-              _id: 1,
-              total: 1,
-              status: 1,
-              createdAt: 1,
-              items: { $slice: ["$items", 2] },
+            $match: {
+              user: userId,
+              status: "completed",
             },
           },
-        ]),
-
-        Product.aggregate([
-          { $match: { favoritesCount: { $gt: 0 } } },
-          { $sample: { size: 4 } },
           {
-            $project: {
-              name: 1,
-              price: 1,
-              images: { $slice: ["$images", 1] },
+            $group: {
+              _id: null,
+              totalOrders: { $sum: 1 },
+              totalSpent: { $sum: "$total" },
+              avgOrderValue: { $avg: "$total" },
             },
           },
         ]),
       ]);
 
-      const stats = await User.findById(userId)
-        .select("stats completedRepairs completedSales")
-        .lean();
-
       res.status(200).json({
         success: true,
         data: {
-          activeRepairs: repairs,
-          recentOrders: orders,
-          suggestedProducts: favorites,
-          repairStats: {
-            totalCompleted: stats.completedRepairs,
-            totalSpent: stats.completedSales,
+          stats: {
+            repairs: repairStats[0] || {
+              totalCompleted: 0,
+              totalSpent: 0,
+              avgRepairCost: 0,
+            },
+            marketplace: marketplaceStats[0] || {
+              totalOrders: 0,
+              totalSpent: 0,
+              avgOrderValue: 0,
+            },
           },
         },
       });
@@ -107,33 +96,6 @@ export const RepairHistoryController = {
   },
 };
 
-export const ActiveRepairsController = {
-  getActiveRepairs: async (req, res, next) => {
-    try {
-      const activeRepairs = await RepairRequest.find({
-        customer: req.user._id,
-        status: { $in: ["in_progress", "awaiting_payment", "auction_open"] },
-      })
-        .populate({
-          path: "auction",
-          select: "currentLowestBid expiresAt bids",
-          populate: {
-            path: "currentLowestBid",
-            select: "bidPrice",
-          },
-        })
-        .lean();
-
-      res.status(200).json({
-        success: true,
-        data: activeRepairs,
-      });
-    } catch (error) {
-      next(createHttpError(500, "Failed to fetch active repairs"));
-    }
-  },
-};
-
 export const MarketplaceActivityController = {
   getMarketplaceActivity: async (req, res, next) => {
     try {
@@ -151,22 +113,6 @@ export const MarketplaceActivityController = {
       });
     } catch (error) {
       next(createHttpError(500, "Failed to fetch marketplace activity"));
-    }
-  },
-
-  getFavoriteProducts: async (req, res, next) => {
-    try {
-      const favorites = await Favorite.find({ user: req.user._id })
-        .populate("product", "name price images category")
-        .sort("-createdAt")
-        .lean();
-
-      res.status(200).json({
-        success: true,
-        data: favorites.map((f) => f.product),
-      });
-    } catch (error) {
-      next(createHttpError(500, "Failed to fetch favorite products"));
     }
   },
 };

@@ -2,12 +2,10 @@ import { useQuery, useMutation, QueryClient } from "@tanstack/react-query";
 import {
   getDashboardSummary,
   getRepairHistory,
-  getActiveRepairs,
   getMarketplaceActivity,
-  getFavoriteProducts,
   getProfile,
   updateProfile,
-} from "../api/dashboardApi";
+} from "../api/dashboard";
 
 // Dashboard Summary
 export const useDashboardSummary = () =>
@@ -24,25 +22,11 @@ export const useRepairHistory = (page, limit) =>
     keepPreviousData: true,
   });
 
-// Active Repairs
-export const useActiveRepairs = () =>
-  useQuery({
-    queryKey: ["dashboard", "repairs", "active"],
-    queryFn: getActiveRepairs,
-  });
-
 // Marketplace Activity
 export const useMarketplaceActivity = (page, limit) =>
   useQuery({
     queryKey: ["dashboard", "marketplace", "activity", page, limit],
     queryFn: () => getMarketplaceActivity(page, limit),
-  });
-
-// Favorite Products
-export const useFavoriteProducts = () =>
-  useQuery({
-    queryKey: ["dashboard", "marketplace", "favorites"],
-    queryFn: getFavoriteProducts,
   });
 
 // User Profile
