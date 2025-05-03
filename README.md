@@ -1,123 +1,97 @@
-# 🚀 **FixItHub** Project
+# 🔧 FixItHub - Repair & Marketplace Platform
 
-Welcome to **FixItHub**, a platform where you can **buy, sell, repair**, and **request services** for used products! 🛠️💡
+**Bridging the gap between repair needs and skilled professionals**  
+_Where repairs meet convenience, and quality meets affordability_
 
-This project allows users to browse products, request repairs, and interact with service providers. Service providers can bid on repair requests, sell spare parts, and more!
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/Version-1.7.0-important)](https://github.com/AnasHany2193/FixItHub/releases)
+[![MERN Stack](https://img.shields.io/badge/Stack-MERN-61DAFB?logo=react&logoColor=white)](https://mern.js.org/)
 
-## 🌟 **Project Architecture**
+## 🌟 Key Features
 
-### **Monorepo Structure**:
+### **Repair Management**
 
-The project is organized in a **monorepo** containing both the **front-end** and **back-end**:
+- 🛠️ Request repairs with detailed descriptions
+- ⚡ Real-time repair status tracking
+- 🔄 Bid-based and direct offer systems
+- 📈 Repair cost vs replacement comparisons
 
-```
-/fixithub
-  /backend               # Backend (Node.js + MongoDB)
-  /frontend              # Frontend (React + Vite + ShadCN)
-  package.json           # Root package.json
-  .gitignore             # Git ignore file
-  README.md              # Project documentation
-```
+### **Marketplace Integration**
 
-### **Backend** (Node.js + MongoDB):
+- 🛒 Seamless product browsing/purchasing
+- ❤️ Wishlist and favorites system
+- 📦 Order tracking and history
+- ⭐ Product reviews and ratings
 
-- **Express** for API server.
-- **MongoDB** for storing data (users, products, repair requests, etc.).
-- **Mongoose** for easy MongoDB interaction.
+### **Dual Role System**
 
-### **Frontend** (React + Vite + ShadCN):
+- 👤 **Customers**: Repair requests + marketplace access
+- 👷 **Workers**: Bid/Offer on jobs + sell products
+- 📊 Performance analytics for workers
+- 🏆 Skill-based worker matching
 
-- **React** for the user interface.
-- **Vite** for fast build and development.
-- **ShadCN** for UI components and styles.
-- **React Query** for data fetching and state management.
+## 🛠 Tech Stack
 
-## 🛠️ **How to Set Up the Project**
+**Core Stack**  
+![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?logo=mongodb&logoColor=white)
+![Express](https://img.shields.io/badge/-Express-000000?logo=express&logoColor=white)
+![React](https://img.shields.io/badge/-React-61DAFB?logo=react&logoColor=white)
+![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
 
-### Prerequisites:
+**Frontend**  
+![Redux](https://img.shields.io/badge/-React--Router--dom-CA4245?&logo=react-router&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/-Tailwind_CSS-06B6D4?logo=tailwind-css&logoColor=white)
+![React Query](https://img.shields.io/badge/-React_Query-FF4154?logo=react-query&logoColor=white)
 
-- **Node.js** (v16 or later)
-- **npm** (v8 or later)
+**Mobile**  
+![Flutter](https://img.shields.io/badge/-Flutter-02569B?logo=flutter&logoColor=white)
 
-### 1. **Clone the Repository**:
+**Services**  
+![Stripe](https://img.shields.io/badge/-Stripe-008CDD?logo=stripe&logoColor=white)
+![JWT](https://img.shields.io/badge/-JWT-000000?logo=json-web-tokens&logoColor=white)
+
+## 🚀 Installation & Setup
+
+1. **Clone Repository**
 
 ```bash
-git clone https://github.com/your-username/FixItHub.git
-cd FixItHub
+git clone https://github.com/AnasHany2193/FixItHub.git
+cd fixithub
 ```
 
-### 2. **Install Dependencies**:
-
-Run the following command to install dependencies for both front-end and back-end:
+2. **Backend Setup**
 
 ```bash
+cd backend
 npm install
+cp .env.example .env
+# Update .env with your credentials
 ```
 
-This will install dependencies in both `/frontend` and `/backend` directories.
-
-### 3. **Set Up Environment Variables**:
-
-Create a `.env` file in the `backend` folder and add your MongoDB URI and other configuration values:
-
-```
-MONGO_URI=your-mongodb-connection-string
-PORT=5000
-```
-
-### 4. **Run the Project**:
-
-#### For **Development**:
-
-Start both front-end and back-end using the following command:
+3. **Frontend Setup**
 
 ```bash
-npm start
+cd ../frontend
+npm install
+cp .env.example .env
 ```
 
-This will run the front-end on `http://localhost:3000/` and the back-end on `http://localhost:5000/`.
-
-#### For **Backend Only**:
-
-If you want to run the back-end separately:
+4. **Run Development Servers**
 
 ```bash
-npm run start:backend
+npm run dev  # Runs both frontend and backend concurrently
 ```
 
-#### For **Frontend Only**:
+## 👥 Development Team
 
-If you want to run the front-end separately:
+| Role              | Team Member                                          | Focus Area              |
+| ----------------- | ---------------------------------------------------- | ----------------------- |
+| 🎨 UI/UX Designer | [Mariam Zaki](https://github.com/maryem-zaky)        | User Experience Design  |
+| 💻 Frontend Dev   | [Afnan Raafat](https://github.com/afnan-raafat)      | React Implementation    |
+| 📱 Mobile Dev     | [Islam Sobhi](https://github.com/Islam-Sobhy-Yousof) | Flutter Applications    |
+| 🌐 Full Stack Dev | [Anas Hany](https://github.com/AnasHany2193)         | MERN Stack Architecture |
 
-```bash
-npm run start:frontend
-```
+---
 
-## 📝 **Features**:
-
-- **For Users**: Register, browse products, create repair requests, track progress, chat with service providers, rate services, and more!
-- **For Service Providers**: Register, display services, sell spare parts, bid for repairs, and manage requests.
-
-## 🚧 **To-Do**:
-
-- Implement product browsing and repair request APIs.
-- Integrate React Query for data fetching.
-- Build UI with ShadCN components.
-
-## 📂 **Contributing**:
-
-1. Fork the repo.
-2. Create a feature branch: `git checkout -b feature/your-feature`.
-3. Commit your changes: `git commit -m 'Add feature'`.
-4. Push to the branch: `git push origin feature/your-feature`.
-5. Open a pull request!
-
-## 👥 **Team Members**:
-
-- **Mariam Zaki** - UI/UX Designer
-- **Ahmed Matter** - Back-End Developer
-- **Afnan Raafat** - Front-End Developer
-- **Islam Sobhi** - Mobile Developer (Flutter)
-- **Anas Hany** - Full Stack Developer (MERN)
-
-## 🎉 **Happy Coding!** 🚀
+**Made with ♥ by Team FixItHub**  
+_Empowering repairs, connecting communities_
