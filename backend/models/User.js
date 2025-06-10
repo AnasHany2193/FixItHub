@@ -104,6 +104,11 @@ const userSchema = new mongoose.Schema(
     },
     // Worker-specific
     workerApplication: {
+      status: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+      },
       skills: {
         type: [String],
         validate: {

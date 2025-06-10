@@ -15,6 +15,7 @@ import "./jobs/auctionScheduler.js";
 // Route Imports
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import repairRoutes from "./routes/repairRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
@@ -99,6 +100,7 @@ app.get("/", (_, res) => {
 const routeConfig = [
   { path: "/auth", route: authRoutes },
   { path: "/users", route: userRoutes },
+  { path: "/admin", route: adminRoutes },
   { path: "/upload", route: uploadRoutes },
   { path: "/repairs", route: repairRoutes },
   { path: "/marketplace", route: marketplaceRoutes },

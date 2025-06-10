@@ -5,6 +5,8 @@ import {
   Briefcase,
   Clock,
   Cog,
+  FileSearch,
+  FileText,
   Gavel,
   Handshake,
   History,
@@ -17,7 +19,7 @@ import {
   PlusCircle,
   PocketKnife,
   Search,
-  Settings,
+  ShieldCheck,
   ShoppingBasket,
   ShoppingCart,
   Users,
@@ -181,15 +183,39 @@ const DashboardLayout = () => {
     ],
     admin: [
       {
+        type: "dashboard",
         path: "/admin-dashboard",
-        name: "Analytics",
+        name: "Admin Dashboard",
         icon: <LayoutDashboard className="w-5 h-5" />,
+        quickActions: [
+          {
+            name: "User Management",
+            path: "/admin/users",
+            icon: <Users className="w-4 h-4" />,
+          },
+          {
+            name: "Admin Logs",
+            path: "/admin/logs",
+            icon: <FileText className="w-4 h-4" />,
+          },
+        ],
       },
-      { path: "/users", name: "Users", icon: <Users className="w-5 h-5" /> },
       {
-        path: "/settings",
-        name: "Settings",
-        icon: <Settings className="w-5 h-5" />,
+        type: "group",
+        name: "User Management",
+        icon: <ShieldCheck className="w-5 h-5" />,
+        items: [
+          {
+            path: "/admin/users",
+            name: "Manage Users",
+            icon: <Users className="w-5 h-5" />,
+          },
+          {
+            path: "/admin/logs",
+            name: "Admin Logs",
+            icon: <FileSearch className="w-5 h-5" />,
+          },
+        ],
       },
     ],
   };
