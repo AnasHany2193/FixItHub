@@ -1,37 +1,47 @@
 import cron from "node-cron";
 import Auction from "../models/Auction.js";
-import RepairRequest from "../models/RepairRequest.js";
+import Bid from "../models/Bid.js";
+import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
 import { sendEmail } from "../services/emailService.js";
 import { auctionExpiredEmailTemplate } from "../utils/emailTemplates.js";
 
 // Simplified Cron Job
 cron.schedule("* * * * */5", async () => {
   try {
-    console.log("Simplified Cron Closing Auction Job");
+    console.log("🔧 Running auction cleanup job...");
+
     const expiredAuctions = await Auction.find({
       status: "open",
       expiresAt: { $lte: new Date() },
-    }).populate("repairRequest", "customer status");
+    }).populate({
+      path: "repairRequest",
+      select: "customer status itemType",
+      populate: { path: "customer", select: "email" },
+    });
 
     for (const auction of expiredAuctions) {
       auction.status = "closed";
       await auction.save();
 
-      console.log("Closing Auction");
+      // Delete associated bids
+      await Bid.deleteMany({ auction: auction._id });
 
-      if (!auction.bids.length) {
-        await RepairRequest.findByIdAndUpdate(auction.repairRequest._id, {
-          status: "cancelled",
-        });
-      }
+      // Update the related repair request
+      const repair = await RepairRequest.findById(auction.repairRequest._id);
 
-      if (auction.repairRequest.customer?.email) {
-        await sendAuctionExpiryEmail(auction);
-      }
+      repair.auction = null;
+      repair.offers = [];
+      repair.status = RepairStatus.AWAITING_ASSIGNMENT;
+      await repair.save();
+
+      console.log(`✅ Closed auction for repair request: ${repair._id}`);
+
+      // Send email to the customer if email exists
+      const email = auction.repairRequest.customer?.email;
+      if (email) await sendAuctionExpiryEmail(auction);
     }
   } catch (error) {
-    console.log("Error Auctions");
-    console.error("Auction closure error:", error.message);
+    console.error("❌ Auction closure error:", error.message);
   }
 });
 
@@ -44,6 +54,6 @@ const sendAuctionExpiryEmail = async (auction) => {
       html: auctionExpiredEmailTemplate(repairRequest, auction),
     });
   } catch (error) {
-    console.error("Email failed:", error.message);
+    console.error("❌ Email sending failed:", error.message);
   }
 };
