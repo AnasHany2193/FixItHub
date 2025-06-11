@@ -45,6 +45,13 @@ export const updateUserStatus = async (req, res, next) => {
     if (status === "banned") user.bannedAt = new Date();
     else user.bannedAt = null;
 
+    // Log the admin action
+    user.adminLogs.push({
+      action: "Update Status",
+      targetUser: user._id,
+      details: { status },
+    });
+
     await user.save();
 
     res.json({ success: true, message: `User ${status}` });
@@ -65,6 +72,14 @@ export const approveOrRejectWorker = async (req, res, next) => {
       return next(createHttpError(404, "Worker not found"));
 
     user.workerApplication.status = status;
+
+    // Log the admin action
+    user.adminLogs.push({
+      action: "Worker Approval",
+      targetUser: user._id,
+      details: { newStatus: status },
+    });
+
     await user.save();
 
     res.json({ success: true, message: `Worker ${status}` });

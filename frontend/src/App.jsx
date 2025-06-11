@@ -45,6 +45,8 @@ import WorkerProductDetailsPage from "./pages/worker/products/WorkerProductDetai
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminLogsPage from "./pages/admin/AdminLogsPage";
 
 // Public
 import Layout from "./components/layout/Layout";
@@ -52,7 +54,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
 
 function App() {
   return (
@@ -141,7 +142,7 @@ function App() {
             <Route path="/admin-dashboard" element={<AdminDashboard />} />
             <Route path="/admin">
               <Route path="users" element={<AdminUsersPage />} />
-              {/* <Route path="logs" element={<AdminLogsPage />} /> */}
+              <Route path="logs" element={<AdminLogsPage />} />
             </Route>
           </Route>
         </Route>
