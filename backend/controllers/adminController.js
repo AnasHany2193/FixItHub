@@ -168,18 +168,35 @@ const logAdminAction = async (adminId, action, targetUserId, details) => {
 // [GET] /admin/repairs?auction=true|false
 export const getAllRepairs = async (req, res, next) => {
   try {
-    const { auction } = req.query;
+    const { auction, status, page = 1, limit = 10 } = req.query;
 
     const filter = {};
     if (auction === "true") filter.auction = { $ne: null };
     if (auction === "false") filter.auction = null;
+    if (status && status !== "all") filter.status = status;
 
-    const repairs = await RepairRequest.find(filter)
-      .populate("customer", "username email")
-      .populate("worker", "username")
-      .sort({ createdAt: -1 });
+    const skip = (page - 1) * limit;
 
-    res.json({ success: true, data: repairs });
+    const [repairs, total] = await Promise.all([
+      RepairRequest.find(filter)
+        .populate("customer", "username email")
+        .populate("worker", "username")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      RepairRequest.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: repairs,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
   } catch (err) {
     next(err);
   }

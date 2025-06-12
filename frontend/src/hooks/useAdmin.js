@@ -92,10 +92,10 @@ export const useAdminLogs = (params) =>
   });
 
 // List all repairs
-export const useAdminRepairs = () =>
+export const useAdminRepairs = ({ auction, status, page, limit }) =>
   useQuery({
-    queryKey: ["admin-repairs"],
-    queryFn: getAllRepairs,
+    queryKey: ["admin-repairs", auction, status, page, limit],
+    queryFn: () => getAllRepairs({ auction, status, page, limit }),
     staleTime: 5 * 60 * 1000,
   });
 

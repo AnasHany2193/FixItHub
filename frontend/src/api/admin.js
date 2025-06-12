@@ -57,10 +57,18 @@ export const getAdminLogs = async (params = {}) => {
   }
 };
 
-export const getAllRepairs = async () => {
+export const getAllRepairs = async ({
+  auction,
+  status,
+  page = 1,
+  limit = 10,
+}) => {
   try {
-    const { data } = await axiosClient.get("/admin/repairs");
-    return data.data;
+    const params = { page, limit };
+    if (auction && auction !== "all") params.auction = auction;
+    if (status && status !== "all") params.status = status;
+    const { data } = await axiosClient.get("/admin/repairs", { params });
+    return { repairs: data.data, pagination: data.pagination };
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch repairs."
