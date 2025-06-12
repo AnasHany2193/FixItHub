@@ -7,6 +7,12 @@ import {
   updateUserStatus,
   updateWorkerApproval,
   getAdminLogs,
+  getAllRepairs,
+  getRepairDetails,
+  resetAuction,
+  deleteRepair,
+  cancelRepair,
+  closeAuction,
 } from "@/api/admin";
 
 // Users by role (customer/worker)
@@ -84,3 +90,119 @@ export const useAdminLogs = () =>
     queryFn: getAdminLogs,
     staleTime: 5 * 60 * 1000,
   });
+
+// List all repairs
+export const useAdminRepairs = () =>
+  useQuery({
+    queryKey: ["admin-repairs"],
+    queryFn: getAllRepairs,
+    staleTime: 5 * 60 * 1000,
+  });
+
+// Repair details
+export const useRepairDetails = (id) =>
+  useQuery({
+    queryKey: ["admin-repair", id],
+    queryFn: () => getRepairDetails(id),
+    enabled: !!id,
+  });
+
+// Reset auction
+export const useResetAuction = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: resetAuction,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Auction Reset",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-repairs"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Reset Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+// Delete repair
+export const useDeleteRepair = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: deleteRepair,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Repair Deleted",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-repairs"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Delete Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+// Cancel repair
+export const useCancelRepair = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: cancelRepair,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Repair Canceled",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-repairs"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Cancel Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+// Close auction
+export const useCloseAuction = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: closeAuction,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Auction Closed",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-repairs"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Close Failed",
+        description: error.message,
+      });
+    },
+  });
+};

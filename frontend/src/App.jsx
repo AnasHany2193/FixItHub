@@ -54,6 +54,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import AdminRepairsPage from "./pages/admin/AdminRepairsPage";
 
 function App() {
   return (
@@ -143,6 +144,8 @@ function App() {
             <Route path="/admin">
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="logs" element={<AdminLogsPage />} />
+              <Route path="repairs" element={<AdminRepairsPage />} />
+              {/*<Route path="repairs/:id" element={<AdminRepairDetailsPage />} /> */}
             </Route>
           </Route>
         </Route>

@@ -217,6 +217,18 @@ const DashboardLayout = () => {
           },
         ],
       },
+      {
+        type: "group",
+        name: "Repair Management",
+        icon: <Wrench className="w-5 h-5" />,
+        items: [
+          {
+            path: "/admin/repairs",
+            name: "Manage Repairs",
+            icon: <Wrench className="w-5 h-5" />,
+          },
+        ],
+      },
     ],
   };
 

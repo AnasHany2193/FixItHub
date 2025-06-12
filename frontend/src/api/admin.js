@@ -56,3 +56,73 @@ export const getAdminLogs = async () => {
     throw new Error(error.response?.data?.message || "Failed to fetch logs");
   }
 };
+
+export const getAllRepairs = async () => {
+  try {
+    const { data } = await axiosClient.get("/admin/repairs");
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch repairs."
+    );
+  }
+};
+
+export const getRepairDetails = async (id) => {
+  try {
+    const { data } = await axiosClient.get(`/admin/repairs/${id}`);
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch repair details."
+    );
+  }
+};
+
+export const resetAuction = async (id) => {
+  try {
+    const { data } = await axiosClient.patch(
+      `/admin/repairs/${id}/reset-auction`
+    );
+    return data.message;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to reset auction."
+    );
+  }
+};
+
+export const deleteRepair = async (id) => {
+  try {
+    const { data } = await axiosClient.delete(`/admin/repairs/${id}`);
+    return data.message;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to delete repair."
+    );
+  }
+};
+
+export const cancelRepair = async (id) => {
+  try {
+    const { data } = await axiosClient.patch(`/admin/repairs/${id}/cancel`);
+    return data.message;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to cancel repair."
+    );
+  }
+};
+
+export const closeAuction = async (id) => {
+  try {
+    const { data } = await axiosClient.patch(
+      `/admin/repairs/${id}/close-auction`
+    );
+    return data.message;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to close auction."
+    );
+  }
+};
