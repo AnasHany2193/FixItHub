@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  RefreshCw,
   Shield,
   User,
   Ban,
@@ -9,18 +8,45 @@ import {
   Hammer,
   XCircle,
   AlertCircle,
-  History,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import HeaderPages from "@/components/common/HeaderPages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useAdminLogs } from "@/hooks/useAdmin";
+import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const actionTypes = [
+  "Update Status",
+  "Worker Approval",
+  "Viewed User Details",
+  "Banned User",
+  "Activated User",
+  "Rejected Worker",
+  "Approved Worker",
+];
 
 const AdminLogsPage = () => {
-  const { data: logs, isLoading, refetch, isRefetching } = useAdminLogs();
+  const [filters, setFilters] = useState({
+    page: 1,
+    limit: 5,
+    action: "",
+    startDate: null,
+    endDate: null,
+  });
+
+  const { data, isLoading } = useAdminLogs(filters);
 
   const actionIcons = {
     "Update Status": <User className="w-4 h-4" />,
@@ -51,39 +77,61 @@ const AdminLogsPage = () => {
     default: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
   };
 
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  };
+
+  const handlePageChange = (newPage) => {
+    setFilters((prev) => ({ ...prev, page: newPage }));
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <HeaderPages
           title="Admin Activity Logs"
           subtitle="Track all administrative actions and changes"
-          icon={
-            <History className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-          }
         />
-        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-          <Button
-            variant="outline"
-            onClick={refetch}
-            disabled={isRefetching}
-            className="border-indigo-400 hover:bg-indigo-50 dark:border-gray-600 dark:hover:bg-indigo-900/20"
-          >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${isRefetching ? "animate-spin" : ""}`}
-            />
-            Refresh Logs
-          </Button>
-        </motion.div>
+
+        <div className="flex items-center w-1/3 gap-3">
+          <Select onValueChange={(v) => handleFilterChange("action", v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="All Actions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Actions</SelectItem>
+              {actionTypes.map((action) => (
+                <SelectItem key={action} value={action}>
+                  {action}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
+      {/* Log Count */}
+      {!isLoading && data?.data?.length > 0 && (
+        <div className="text-sm text-muted-foreground">
+          Showing {data.data.length} of {data.pagination.total} logs
+        </div>
+      )}
+
+      {/* Content */}
       {isLoading ? (
-        <LoadingState />
-      ) : logs?.length ? (
-        <LogsList
-          logs={logs}
-          actionIcons={actionIcons}
-          actionColors={actionColors}
-        />
+        <LoadingState limit={filters.limit} />
+      ) : data?.data?.length ? (
+        <>
+          <LogsList
+            logs={data.data}
+            actionIcons={actionIcons}
+            actionColors={actionColors}
+          />
+          <Pagination
+            pagination={data.pagination}
+            onPageChange={handlePageChange}
+          />
+        </>
       ) : (
         <NotFoundState />
       )}
@@ -91,9 +139,9 @@ const AdminLogsPage = () => {
   );
 };
 
-const LoadingState = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-    {[1, 2, 3, 4, 5, 6].map((i) => (
+const LoadingState = ({ limit }) => (
+  <div className="grid grid-cols-1 gap-4">
+    {Array.from({ length: limit }).map((_, i) => (
       <motion.div
         key={i}
         initial={{ opacity: 0 }}
@@ -168,21 +216,35 @@ const LogCard = ({ log, actionIcons, actionColors }) => {
             <h3 className="font-medium">{log.action}</h3>
           </div>
           <Badge variant="secondary" className="capitalize">
-            {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}
+            {format(new Date(log.timestamp), "MMM dd, yyyy")}
           </Badge>
         </div>
 
         <CardContent className="p-4 space-y-3">
-          <div className="text-sm">
-            <p className="font-medium text-gray-600 dark:text-gray-300">
-              Target User
-            </p>
-            <p className="font-mono text-sm text-gray-900 dark:text-white">
-              {log.targetUser}
-            </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="text-sm">
+              <p className="font-medium text-gray-600 dark:text-gray-300">
+                Admin User
+              </p>
+              <p className="font-medium text-gray-900 capitalize dark:text-white">
+                {log.adminUser?.username.replace(/_/g, " ") || "System"}
+                <span className="block font-mono text-xs text-muted-foreground">
+                  {log.adminUser?._id || ""}
+                </span>
+              </p>
+            </div>
+
+            <div className="text-sm">
+              <p className="font-medium text-gray-600 dark:text-gray-300">
+                Target User
+              </p>
+              <p className="font-mono text-sm text-gray-900 dark:text-white">
+                {log.targetUser || "N/A"}
+              </p>
+            </div>
           </div>
 
-          {log.details && (
+          {log.details && Object.keys(log.details).length > 0 && (
             <div className="text-sm">
               <p className="font-medium text-gray-600 dark:text-gray-300">
                 Details
@@ -203,9 +265,43 @@ const LogCard = ({ log, actionIcons, actionColors }) => {
               </div>
             </div>
           )}
+
+          <div className="pt-2 mt-2 text-xs border-t border-gray-200 dark:border-gray-700 text-muted-foreground">
+            {format(new Date(log.timestamp), "hh:mm:ss a")}
+          </div>
         </CardContent>
       </Card>
     </motion.div>
+  );
+};
+
+const Pagination = ({ pagination, onPageChange }) => {
+  const { page, pages } = pagination;
+
+  return (
+    <div className="flex items-center justify-between mt-6">
+      <Button
+        variant="outline"
+        disabled={page <= 1}
+        onClick={() => onPageChange(page - 1)}
+      >
+        <ChevronLeft className="w-4 h-4 mr-2" />
+        Previous
+      </Button>
+
+      <div className="text-sm text-muted-foreground">
+        Page {page} of {pages}
+      </div>
+
+      <Button
+        variant="outline"
+        disabled={page >= pages}
+        onClick={() => onPageChange(page + 1)}
+      >
+        Next
+        <ChevronRight className="w-4 h-4 ml-2" />
+      </Button>
+    </div>
   );
 };
 

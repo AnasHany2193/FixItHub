@@ -84,10 +84,10 @@ export const useUpdateWorkerApproval = () => {
 };
 
 // Admin logs
-export const useAdminLogs = () =>
+export const useAdminLogs = (params) =>
   useQuery({
-    queryKey: ["admin-logs"],
-    queryFn: getAdminLogs,
+    queryKey: ["admin-logs", params],
+    queryFn: () => getAdminLogs(params),
     staleTime: 5 * 60 * 1000,
   });
 

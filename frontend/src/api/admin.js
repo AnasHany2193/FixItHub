@@ -48,10 +48,10 @@ export const updateWorkerApproval = async ({ userId, status }) => {
 };
 
 // [GET] /admin/logs
-export const getAdminLogs = async () => {
+export const getAdminLogs = async (params = {}) => {
   try {
-    const { data } = await axiosClient.get("/admin/logs");
-    return data.data;
+    const { data } = await axiosClient.get("/admin/logs", { params });
+    return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to fetch logs");
   }

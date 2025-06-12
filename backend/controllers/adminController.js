@@ -96,21 +96,61 @@ export const approveOrRejectWorker = async (req, res, next) => {
 // [GET] /admin/logs
 export const getAdminLogs = async (req, res, next) => {
   try {
-    const logs = await User.aggregate([
+    const { page = 1, limit = 5, action, startDate, endDate } = req.query;
+    const skip = (page - 1) * limit;
+
+    const matchStage = {};
+    if (action && action !== "all") matchStage["adminLogs.action"] = action;
+    if (startDate || endDate) {
+      matchStage["adminLogs.timestamp"] = {};
+      if (startDate)
+        matchStage["adminLogs.timestamp"].$gte = new Date(startDate);
+      if (endDate) matchStage["adminLogs.timestamp"].$lte = new Date(endDate);
+    }
+    const pipeline = [
+      { $match: { "adminLogs.0": { $exists: true } } },
       { $unwind: "$adminLogs" },
+      { $match: matchStage },
+      { $sort: { "adminLogs.timestamp": -1 } },
       {
-        $project: {
-          _id: 0,
-          action: "$adminLogs.action",
-          targetUser: "$adminLogs.targetUser",
-          details: "$adminLogs.details",
-          timestamp: "$adminLogs.timestamp",
+        $facet: {
+          logs: [
+            { $skip: skip },
+            { $limit: Number(limit) },
+            {
+              $project: {
+                _id: 0,
+                id: "$adminLogs._id",
+                action: "$adminLogs.action",
+                adminUser: {
+                  _id: "$_id",
+                  username: "$username",
+                },
+                targetUser: "$adminLogs.targetUser",
+                details: "$adminLogs.details",
+                timestamp: "$adminLogs.timestamp",
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
         },
       },
-      { $sort: { timestamp: -1 } },
-    ]);
+    ];
 
-    res.json({ success: true, data: logs });
+    const result = await User.aggregate(pipeline);
+    const logs = result[0].logs;
+    const totalCount = result[0].totalCount[0]?.count || 0;
+
+    res.json({
+      success: true,
+      data: logs,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit),
+      },
+    });
   } catch (err) {
     next(err);
   }
