@@ -1,15 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Shield,
   User,
-  Ban,
-  CheckCircle,
   FileText,
   Hammer,
   XCircle,
   AlertCircle,
   ChevronRight,
   ChevronLeft,
+  Clock,
+  X,
+  Gavel,
 } from "lucide-react";
 import { format } from "date-fns";
 import HeaderPages from "@/components/common/HeaderPages";
@@ -30,11 +30,10 @@ import {
 const actionTypes = [
   "Update Status",
   "Worker Approval",
-  "Viewed User Details",
-  "Banned User",
-  "Activated User",
-  "Rejected Worker",
-  "Approved Worker",
+  "Reset Auction",
+  "Deleted Repair",
+  "Cancelled Repair",
+  "Closed Auction",
 ];
 
 const AdminLogsPage = () => {
@@ -51,11 +50,10 @@ const AdminLogsPage = () => {
   const actionIcons = {
     "Update Status": <User className="w-4 h-4" />,
     "Worker Approval": <Hammer className="w-4 h-4" />,
-    "Viewed User Details": <Shield className="w-4 h-4" />,
-    "Banned User": <Ban className="w-4 h-4" />,
-    "Activated User": <CheckCircle className="w-4 h-4" />,
-    "Rejected Worker": <XCircle className="w-4 h-4" />,
-    "Approved Worker": <CheckCircle className="w-4 h-4" />,
+    "Reset Auction": <Clock className="w-4 h-4" />,
+    "Deleted Repair": <X className="w-4 h-4" />,
+    "Cancelled Repair": <XCircle className="w-4 h-4" />,
+    "Closed Auction": <Gavel className="w-4 h-4" />,
     default: <FileText className="w-4 h-4" />,
   };
 
@@ -64,16 +62,14 @@ const AdminLogsPage = () => {
       "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
     "Worker Approval":
       "bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400",
-    "Viewed User Details":
-      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400",
-    "Banned User":
+    "Reset Auction":
+      "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
+    "Deleted Repair":
       "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
-    "Activated User":
-      "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-    "Rejected Worker":
+    "Cancelled Repair":
       "bg-rose-100 text-rose-800 dark:bg-rose-900/20 dark:text-rose-400",
-    "Approved Worker":
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400",
+    "Closed Auction":
+      "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400",
     default: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
   };
 
@@ -180,7 +176,7 @@ const NotFoundState = () => (
 );
 
 const LogsList = ({ logs, actionIcons, actionColors }) => (
-  <div className="space-y-4">
+  <div className="gap-5 space-y-4">
     <AnimatePresence>
       {logs.map((log, index) => (
         <LogCard
@@ -228,9 +224,6 @@ const LogCard = ({ log, actionIcons, actionColors }) => {
               </p>
               <p className="font-medium text-gray-900 capitalize dark:text-white">
                 {log.adminUser?.username.replace(/_/g, " ") || "System"}
-                <span className="block font-mono text-xs text-muted-foreground">
-                  {log.adminUser?._id || ""}
-                </span>
               </p>
             </div>
 
@@ -255,7 +248,7 @@ const LogCard = ({ log, actionIcons, actionColors }) => {
                     <span className="w-32 font-medium text-gray-700 capitalize dark:text-gray-300">
                       {key.replace(/([A-Z])/g, " $1").trim()}:
                     </span>
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-gray-900 capitalize dark:text-white">
                       {typeof value === "object"
                         ? JSON.stringify(value)
                         : value}
