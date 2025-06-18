@@ -5,17 +5,13 @@ import {
   Truck,
   Clock,
   CheckCircle,
-  XCircle,
   Trash2,
-  ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  Search,
   Filter,
   List,
   BarChart2,
   User,
-  DollarSign,
 } from "lucide-react";
 import {
   Select,
@@ -33,7 +29,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 import HeaderPages from "@/components/common/HeaderPages";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 import { useAllOrders, useDeleteOrder } from "@/hooks/useAdmin";
 
 const statusOptions = [
