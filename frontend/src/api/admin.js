@@ -173,7 +173,7 @@ export const deleteProduct = async (id) => {
 export const getAllOrders = async (params = {}) => {
   try {
     const { data } = await axiosClient.get("/admin/orders", { params });
-    return data.data;
+    return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Failed to fetch orders.");
   }

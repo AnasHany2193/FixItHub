@@ -394,9 +394,10 @@ export const getAllOrders = async (req, res, next) => {
     const { page = 1, limit = 10, status } = req.query;
     const filter = {};
 
-    if (status) filter.status = status;
+    if (status && status !== "all") filter.status = status;
 
     const orders = await Order.find(filter)
+      .populate("user items.product")
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .sort({ createdAt: -1 });

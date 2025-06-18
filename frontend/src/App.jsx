@@ -50,14 +50,14 @@ import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminRepairsPage from "./pages/admin/AdminRepairsPage";
 import AdminRepairDetailsPage from "./pages/admin/AdminRepairDetailsPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
-
+import AdminProductDetailsPage from "./pages/admin/AdminProductDetailsPage";
+import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 // Public
 import Layout from "./components/layout/Layout";
 import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import AdminProductDetailsPage from "./pages/admin/AdminProductDetailsPage";
 
 function App() {
   return (
@@ -156,8 +156,8 @@ function App() {
                 path="products/:id"
                 element={<AdminProductDetailsPage />}
               />
-              {/*<Route path="orders" element={<AdminOrdersPage />} />
-              <Route path="reviews" element={<AdminReviewsPage />} /> */}
+              <Route path="orders" element={<AdminOrdersPage />} />
+              {/*<Route path="reviews" element={<AdminReviewsPage />} /> */}
             </Route>
           </Route>
         </Route>
