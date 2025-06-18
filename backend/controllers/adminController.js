@@ -340,10 +340,11 @@ export const getAllProducts = async (req, res, next) => {
     const { page = 1, limit = 10, category, search } = req.query;
     const filter = {};
 
-    if (category) filter.category = category;
+    if (category && category !== "all") filter.category = category;
     if (search) filter.name = { $regex: search, $options: "i" };
 
     const products = await Product.find(filter)
+      .populate("seller")
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .sort({ createdAt: -1 });

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import {
   Activity,
+  Boxes,
   Briefcase,
   Clock,
   Cog,
@@ -12,6 +13,7 @@ import {
   History,
   LayoutDashboard,
   List,
+  MessageSquare,
   Package,
   PackageCheck,
   PackageSearch,
@@ -226,6 +228,28 @@ const DashboardLayout = () => {
             path: "/admin/repairs",
             name: "Manage Repairs",
             icon: <Wrench className="w-5 h-5" />,
+          },
+        ],
+      },
+      {
+        type: "group",
+        name: "Product Management",
+        icon: <ShoppingCart className="w-5 h-5" />,
+        items: [
+          {
+            path: "/admin/products",
+            name: "Manage Products",
+            icon: <Boxes className="w-5 h-5" />,
+          },
+          {
+            path: "/admin/orders",
+            name: "Manage Orders",
+            icon: <Package className="w-5 h-5" />,
+          },
+          {
+            path: "/admin/reviews",
+            name: "Manage Reviews",
+            icon: <MessageSquare className="w-5 h-5" />,
           },
         ],
       },

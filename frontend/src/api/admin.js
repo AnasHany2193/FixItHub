@@ -139,7 +139,7 @@ export const closeAuction = async (id) => {
 export const getAllProducts = async (params = {}) => {
   try {
     const { data } = await axiosClient.get("/admin/products", { params });
-    return data.data;
+    return data;
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch products."

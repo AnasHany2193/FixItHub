@@ -49,6 +49,7 @@ import AdminLogsPage from "./pages/admin/AdminLogsPage";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminRepairsPage from "./pages/admin/AdminRepairsPage";
 import AdminRepairDetailsPage from "./pages/admin/AdminRepairDetailsPage";
+import AdminProductsPage from "./pages/admin/AdminProductsPage";
 
 // Public
 import Layout from "./components/layout/Layout";
@@ -147,6 +148,15 @@ function App() {
               <Route path="logs" element={<AdminLogsPage />} />
               <Route path="repairs" element={<AdminRepairsPage />} />
               <Route path="repairs/:id" element={<AdminRepairDetailsPage />} />
+
+              {/* Product Routes */}
+              <Route path="products" element={<AdminProductsPage />} />
+              {/*<Route
+                path="products/:id"
+                element={<AdminProductDetailsPage />}
+              />
+              <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="reviews" element={<AdminReviewsPage />} /> */}
             </Route>
           </Route>
         </Route>
