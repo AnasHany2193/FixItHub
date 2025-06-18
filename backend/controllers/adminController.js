@@ -433,17 +433,55 @@ export const deleteOrder = async (req, res, next) => {
 
 export const getAllReviews = async (req, res, next) => {
   try {
-    const { product } = req.query;
+    const { product, category, page = 1, limit = 10 } = req.query;
     const filter = {};
 
-    if (product) filter.product = product;
+    // Apply filters
+    if (product && product !== "all") filter.product = product;
+    if (category && category !== "all") filter["product.category"] = category;
 
+    // Get paginated reviews
     const reviews = await Review.find(filter)
-      .populate("user", "username")
-      .populate("product", "name")
-      .sort({ createdAt: -1 });
+      .populate({
+        path: "user",
+        select: "username profile",
+      })
+      .populate({
+        path: "product",
+        select: "name category",
+      })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
 
-    res.json({ success: true, data: reviews });
+    // Get total count for pagination
+    const total = await Review.countDocuments(filter);
+
+    // Calculate stats
+    const allRatings = await Review.find(filter).select("rating");
+    const totalRatings = allRatings.length;
+    const ratingSum = allRatings.reduce((sum, r) => sum + r.rating, 0);
+    const avgRating = totalRatings > 0 ? ratingSum / totalRatings : 0;
+
+    const positiveReviews = allRatings.filter((r) => r.rating >= 4).length;
+    const criticalReviews = allRatings.filter((r) => r.rating <= 2).length;
+
+    res.json({
+      success: true,
+      data: reviews,
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      avgRating,
+      positivePercentage:
+        totalRatings > 0
+          ? Math.round((positiveReviews / totalRatings) * 100)
+          : 0,
+      criticalPercentage:
+        totalRatings > 0
+          ? Math.round((criticalReviews / totalRatings) * 100)
+          : 0,
+    });
   } catch (err) {
     next(err);
   }
