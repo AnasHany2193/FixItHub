@@ -134,3 +134,79 @@ export const closeAuction = async (id) => {
     );
   }
 };
+
+// Products
+export const getAllProducts = async (params = {}) => {
+  try {
+    const { data } = await axiosClient.get("/admin/products", { params });
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch products."
+    );
+  }
+};
+
+export const getProductDetails = async (id) => {
+  try {
+    const { data } = await axiosClient.get(`/admin/products/${id}`);
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch product."
+    );
+  }
+};
+
+export const deleteProduct = async (id) => {
+  try {
+    const { data } = await axiosClient.delete(`/admin/products/${id}`);
+    return data.message;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to delete product."
+    );
+  }
+};
+
+// Orders
+export const getAllOrders = async (params = {}) => {
+  try {
+    const { data } = await axiosClient.get("/admin/orders", { params });
+    return data.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to fetch orders.");
+  }
+};
+
+export const deleteOrder = async (id) => {
+  try {
+    const { data } = await axiosClient.delete(`/admin/orders/${id}`);
+    return data.message;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to delete order.");
+  }
+};
+
+// Reviews
+export const getAllReviews = async () => {
+  try {
+    const { data } = await axiosClient.get("/admin/reviews");
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch reviews."
+    );
+  }
+};
+
+export const deleteReview = async (id) => {
+  try {
+    const { data } = await axiosClient.delete(`/admin/reviews/${id}`);
+    return data.message;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to delete review."
+    );
+  }
+};

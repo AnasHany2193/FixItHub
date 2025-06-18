@@ -13,6 +13,13 @@ import {
   deleteRepair,
   cancelRepair,
   closeAuction,
+  deleteReview,
+  getAllProducts,
+  getProductDetails,
+  deleteProduct,
+  getAllOrders,
+  getAllReviews,
+  deleteOrder,
 } from "@/api/admin";
 
 // Users by role (customer/worker)
@@ -201,6 +208,106 @@ export const useCloseAuction = () => {
       toast({
         variant: "error",
         title: "Close Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+// Products
+export const useAllProducts = (filters) =>
+  useQuery({
+    queryKey: ["admin-products", filters],
+    queryFn: () => getAllProducts(filters),
+  });
+
+export const useProductDetails = (id) =>
+  useQuery({
+    queryKey: ["admin-product", id],
+    queryFn: () => getProductDetails(id),
+    enabled: !!id,
+  });
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Product Deleted",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-products"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Delete Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+// Orders
+export const useAllOrders = (filters) =>
+  useQuery({
+    queryKey: ["admin-orders", filters],
+    queryFn: () => getAllOrders(filters),
+  });
+
+export const useDeleteOrder = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: deleteOrder,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Order Deleted",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-orders"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Delete Failed",
+        description: error.message,
+      });
+    },
+  });
+};
+
+// Reviews
+export const useAllReviews = () =>
+  useQuery({
+    queryKey: ["admin-reviews"],
+    queryFn: getAllReviews,
+  });
+
+export const useDeleteReview = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: deleteReview,
+    onSuccess: (message) => {
+      toast({
+        variant: "success",
+        title: "Review Deleted",
+        description: message,
+      });
+      queryClient.invalidateQueries(["admin-reviews"]);
+    },
+    onError: (error) => {
+      toast({
+        variant: "error",
+        title: "Delete Failed",
         description: error.message,
       });
     },
