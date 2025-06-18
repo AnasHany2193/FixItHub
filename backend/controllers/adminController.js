@@ -1,10 +1,15 @@
 import createHttpError from "http-errors";
 
-import Bid from "../models/Bid.js";
 import User from "../models/User.js";
+
+import Bid from "../models/Bid.js";
 import Offer from "../models/Offer.js";
 import Auction from "../models/Auction.js";
 import RepairRequest, { RepairStatus } from "../models/RepairRequest.js";
+
+import Order from "../models/Order.js";
+import Review from "../models/Review.js";
+import Product from "../models/Product.js";
 
 // [GET] /admin/users?role=worker
 export const getUsersByRole = async (req, res, next) => {
@@ -325,6 +330,143 @@ export const closeAuction = async (req, res, next) => {
     });
 
     res.json({ success: true, message: "Auction closed and status updated" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllProducts = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, category, search } = req.query;
+    const filter = {};
+
+    if (category) filter.category = category;
+    if (search) filter.name = { $regex: search, $options: "i" };
+
+    const products = await Product.find(filter)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Product.countDocuments(filter);
+
+    res.json({ success: true, data: products, total });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getProductDetails = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return next(createHttpError(404, "Product not found"));
+
+    res.json({ success: true, data: product });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return next(createHttpError(404, "Product not found"));
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: {
+        adminLogs: {
+          action: "Delete Product",
+          targetUser: product.seller,
+          details: { productId: product._id, name: product.name },
+        },
+      },
+    });
+
+    res.json({ success: true, message: "Product deleted" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllOrders = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10, status } = req.query;
+    const filter = {};
+
+    if (status) filter.status = status;
+
+    const orders = await Order.find(filter)
+      .skip((page - 1) * limit)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await Order.countDocuments(filter);
+
+    res.json({ success: true, data: orders, total });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findByIdAndDelete(req.params.id);
+    if (!order) return next(createHttpError(404, "Order not found"));
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: {
+        adminLogs: {
+          action: "Delete Order",
+          targetUser: order.user,
+          details: { orderId: order._id, total: order.total },
+        },
+      },
+    });
+
+    res.json({ success: true, message: "Order deleted" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllReviews = async (req, res, next) => {
+  try {
+    const { product } = req.query;
+    const filter = {};
+
+    if (product) filter.product = product;
+
+    const reviews = await Review.find(filter)
+      .populate("user", "username")
+      .populate("product", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: reviews });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const deleteReview = async (req, res, next) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) return next(createHttpError(404, "Review not found"));
+
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: {
+        adminLogs: {
+          action: "Delete Review",
+          targetUser: review.user,
+          details: {
+            reviewId: review._id,
+            productId: review.product,
+            rating: review.rating,
+          },
+        },
+      },
+    });
+
+    res.json({ success: true, message: "Review deleted" });
   } catch (err) {
     next(err);
   }
