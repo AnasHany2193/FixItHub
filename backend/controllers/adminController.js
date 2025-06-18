@@ -359,7 +359,7 @@ export const getAllProducts = async (req, res, next) => {
 
 export const getProductDetails = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate("seller");
     if (!product) return next(createHttpError(404, "Product not found"));
 
     res.json({ success: true, data: product });

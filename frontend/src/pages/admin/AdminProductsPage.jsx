@@ -171,7 +171,7 @@ const ProductCard = ({ product, navigate }) => {
       whileHover={{ scale: 1.02 }}
       transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
       className="cursor-pointer group"
-      onClick={() => navigate(`/admin-dashboard/products/${product._id}`)}
+      onClick={() => navigate(`/admin/products/${product._id}`)}
     >
       <Card className="overflow-hidden transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 dark:hover:shadow-gray-700/50 bg-white/80 dark:bg-gray-800/80">
         <CardHeader className="p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600">

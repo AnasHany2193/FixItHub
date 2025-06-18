@@ -57,6 +57,7 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
+import AdminProductDetailsPage from "./pages/admin/AdminProductDetailsPage";
 
 function App() {
   return (
@@ -151,11 +152,11 @@ function App() {
 
               {/* Product Routes */}
               <Route path="products" element={<AdminProductsPage />} />
-              {/*<Route
+              <Route
                 path="products/:id"
                 element={<AdminProductDetailsPage />}
               />
-              <Route path="orders" element={<AdminOrdersPage />} />
+              {/*<Route path="orders" element={<AdminOrdersPage />} />
               <Route path="reviews" element={<AdminReviewsPage />} /> */}
             </Route>
           </Route>
