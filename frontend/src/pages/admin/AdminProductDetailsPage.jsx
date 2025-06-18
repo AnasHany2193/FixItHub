@@ -10,6 +10,12 @@ import {
   ChevronDown,
   Trash2,
   ArrowLeft,
+  DollarSign,
+  Box,
+  Layers,
+  FileText,
+  Settings,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,28 +34,36 @@ import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteProduct, useProductDetails } from "@/hooks/useAdmin";
 
-const StatCard = ({ icon, title, value }) => (
-  <div className="p-4 border rounded-lg bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-indigo-900/20 dark:to-gray-800/20">
+const StatCard = ({ icon, title, value, color }) => (
+  <motion.div
+    whileHover={{ scale: 1.03 }}
+    className={`p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br ${color}`}
+  >
     <div className="flex items-center gap-3">
-      <div className="p-2 bg-indigo-100 rounded-full dark:bg-indigo-800/30">
+      <div className="p-2.5 rounded-xl bg-white/30 dark:bg-black/20 backdrop-blur-sm">
         {icon}
       </div>
       <div>
-        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {title}
         </h3>
-        <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+        <p className="text-2xl font-bold text-gray-900 dark:text-white">
           {value}
         </p>
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
-const DetailItem = ({ label, value }) => (
-  <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-700">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-medium text-gray-900 dark:text-gray-100">
+const DetailItem = ({ icon, label, value, highlight }) => (
+  <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
+      {icon}
+      <span>{label}</span>
+    </div>
+    <span
+      className={`font-medium ${highlight ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"}`}
+    >
       {value}
     </span>
   </div>
@@ -59,11 +73,12 @@ const ProductReviews = ({ reviews }) => {
   const [showReviews, setShowReviews] = useState(true);
 
   return (
-    <section>
+    <section className="pt-8 mt-12 border-t border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-gray-100">
+          <Star className="w-5 h-5 text-amber-500 fill-amber-500/20" />
           Customer Reviews
-          <span className="ml-2 font-normal text-muted-foreground">
+          <span className="ml-1 font-normal text-muted-foreground">
             ({reviews?.length || 0})
           </span>
         </h2>
@@ -86,6 +101,7 @@ const ProductReviews = ({ reviews }) => {
           )}
         </Button>
       </div>
+
       <AnimatePresence>
         {showReviews && (
           <motion.div
@@ -100,9 +116,9 @@ const ProductReviews = ({ reviews }) => {
                   key={review._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-white border rounded-lg shadow-sm dark:bg-gray-800"
+                  className="p-4 bg-white border shadow-sm rounded-xl dark:bg-gray-800"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start gap-4">
                     <Avatar className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800">
                       <AvatarImage
                         src={review.user.profile.avatar.url}
@@ -112,36 +128,42 @@ const ProductReviews = ({ reviews }) => {
                         {review.user.username[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
+
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 py-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <h4 className="font-medium text-gray-900 capitalize dark:text-gray-100">
                           {review.user.username.replace(/_/g, " ")}
                         </h4>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(review.createdAt)}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-5">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-4 h-4 ${i < review.rating ? "text-amber-500 fill-amber-500" : "text-gray-300 dark:text-gray-600"}`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-muted-foreground">
-                          {review.comment}
-                        </p>
+
+                      <div className="flex items-center mt-2 mb-3">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-4 h-4 ${i < review.rating ? "text-amber-500 fill-amber-500" : "text-gray-300 dark:text-gray-600"}`}
+                          />
+                        ))}
                       </div>
+
+                      <p className="text-gray-700 dark:text-gray-300">
+                        {review.comment}
+                      </p>
                     </div>
-                    <span className="ml-auto text-sm text-muted-foreground">
-                      {formatDistanceToNow(review.createdAt)}
-                    </span>
                   </div>
                 </motion.div>
               ))
             ) : (
-              <div className="p-4 text-center rounded-lg bg-muted">
-                <p className="text-muted-foreground">No reviews yet</p>
-              </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="p-6 text-center rounded-xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
+              >
+                <Package className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500" />
+                <p className="mt-3 text-muted-foreground">No reviews yet</p>
+              </motion.div>
             )}
           </motion.div>
         )}
@@ -153,20 +175,20 @@ const ProductReviews = ({ reviews }) => {
 const ProductDetailsSkeleton = () => (
   <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
     <Skeleton className="w-32 h-8 mb-6" />
-    <div className="grid items-start gap-12 md:grid-cols-[1fr_400px] lg:grid-cols-[1fr_500px]">
-      <Skeleton className="aspect-video rounded-xl md:sticky top-24" />
-      <div className="p-8 space-y-8 bg-white border-2 shadow-xl dark:bg-gray-800 rounded-2xl">
-        <Skeleton className="w-3/4 h-12 rounded-full" />
+    <div className="grid items-start gap-12 md:grid-cols-2">
+      <Skeleton className="aspect-video rounded-2xl md:sticky top-24" />
+      <div className="space-y-8">
+        <Skeleton className="w-3/4 h-12 rounded-xl" />
         <div className="grid grid-cols-2 gap-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
         </div>
-        <Skeleton className="h-16 rounded-lg" />
+        <Skeleton className="h-16 rounded-xl" />
         <div className="space-y-6">
-          <Skeleton className="h-48 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-32 rounded-xl" />
+          <Skeleton className="h-48 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-32 rounded-2xl" />
         </div>
       </div>
     </div>
@@ -206,63 +228,103 @@ export default function AdminProductDetailsPage() {
       <Button
         variant="ghost"
         onClick={() => navigate("/admin/products")}
-        className="gap-2 mb-4 -ml-2 text-gray-600 dark:text-gray-400"
+        className="gap-2 mb-6 -ml-2 text-gray-600 dark:text-gray-400"
       >
         <ArrowLeft className="w-5 h-5" />
         Back to Products
       </Button>
 
-      <div className="grid items-start gap-12 md:grid-cols-[1fr_400px] lg:grid-cols-[1fr_500px]">
+      <div className="grid items-start gap-8 md:grid-cols-2">
         {/* Image Gallery */}
-        <div className="md:sticky top-24">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="md:sticky top-24"
+        >
           {product.images?.length ? (
             <ImageCarousel
               images={product.images}
-              className="bg-white border shadow-lg rounded-xl dark:bg-gray-800"
+              className="bg-white border shadow-xl rounded-2xl dark:bg-gray-800"
             />
           ) : (
-            <div className="flex items-center justify-center bg-gray-100 aspect-video dark:bg-gray-700 rounded-xl">
+            <div className="flex items-center justify-center bg-gray-100 aspect-video dark:bg-gray-700 rounded-2xl">
               <Package className="w-20 h-20 text-gray-400 dark:text-gray-500" />
             </div>
           )}
-        </div>
+        </motion.div>
 
         {/* Product Details */}
-        <div className="p-6 space-y-8 bg-white border shadow-lg dark:bg-gray-800 rounded-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-8"
+        >
           {/* Header */}
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold text-indigo-600 dark:text-indigo-400">
-              {product.name}
-            </h1>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className="font-mono">
-                #{product._id.slice(-6)}
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {product.name}
+              </h1>
+              <Badge variant="premium" className="text-sm">
+                ${product.price.toFixed(2)}
               </Badge>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary" className="capitalize">
                 {product.category}
               </Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <StatCard
-                icon={<BarChart className="w-6 h-6 text-emerald-600" />}
-                title="Purchases"
-                value={product.purchasesCount || 0}
-              />
-              <StatCard
-                icon={<Users className="w-6 h-6 text-pink-600" />}
-                title="Favorites"
-                value={product.favoritesCount || 0}
-              />
-              <StatCard
-                icon={<Star className="w-6 h-6 text-amber-500" />}
-                title="Avg Rating"
-                value={product.avgRating.toFixed(1)}
-              />
+              <Badge variant="outline" className="font-mono">
+                #{product._id.slice(-6)}
+              </Badge>
             </div>
           </div>
 
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard
+              icon={
+                <BarChart className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              }
+              title="Purchases"
+              value={product.purchasesCount || 0}
+              color="from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20"
+            />
+            <StatCard
+              icon={
+                <Users className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+              }
+              title="Favorites"
+              value={product.favoritesCount || 0}
+              color="from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20"
+            />
+            <StatCard
+              icon={
+                <Star className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+              }
+              title="Avg Rating"
+              value={product.avgRating.toFixed(1)}
+              color="from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20"
+            />
+            <StatCard
+              icon={
+                <Box className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              }
+              title="In Stock"
+              value={product.stock}
+              color="from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20"
+            />
+          </div>
+
           {/* Seller Info */}
-          <div className="p-6 border rounded-xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-indigo-900/20 dark:to-gray-800/20">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
+          >
             <div className="flex items-center gap-4">
               <Avatar className="w-12 h-12 border-2 border-indigo-200 dark:border-indigo-800">
                 <AvatarImage
@@ -282,20 +344,30 @@ export default function AdminProductDetailsPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Product Info */}
           <div className="space-y-6">
-            <div className="p-6 border rounded-xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-indigo-900/20 dark:to-gray-800/20">
-              <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            {/* Overview */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="p-5 border rounded-2xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
+            >
+              <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <Info className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 Product Overview
               </h2>
-              <div className="grid gap-4">
+              <div className="space-y-3">
                 <DetailItem
+                  icon={<DollarSign className="w-4 h-4" />}
                   label="Price"
                   value={`$${product.price.toFixed(2)}`}
+                  highlight
                 />
                 <DetailItem
+                  icon={<Layers className="w-4 h-4" />}
                   label="Stock"
                   value={
                     <span
@@ -311,75 +383,107 @@ export default function AdminProductDetailsPage() {
                     </span>
                   }
                 />
-                <DetailItem label="Category" value={product.category} />
+                <DetailItem
+                  icon={<Package className="w-4 h-4" />}
+                  label="Category"
+                  value={product.category}
+                />
               </div>
-            </div>
+            </motion.div>
 
             {/* Specifications */}
-            <div className="p-6 border rounded-xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-indigo-900/20 dark:to-gray-800/20">
-              <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="p-5 border rounded-2xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
+            >
+              <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <Settings className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                 Technical Specifications
               </h2>
-              <div className="grid gap-3">
+              <div className="space-y-3">
                 {product.specs?.length ? (
                   product.specs.map((spec, index) => (
                     <div
                       key={index}
-                      className="flex justify-between p-3 bg-white rounded-lg dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="flex justify-between p-3 bg-white rounded-lg dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                     >
-                      <span className="text-muted-foreground">{spec.name}</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {spec.name}
+                      </span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">
                         {spec.value}
                       </span>
                     </div>
                   ))
                 ) : (
-                  <p className="text-muted-foreground">
+                  <p className="p-3 text-center rounded-lg bg-muted text-muted-foreground">
                     No specifications provided
                   </p>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Description */}
-            <div className="p-6 border rounded-xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-indigo-900/20 dark:to-gray-800/20">
-              <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                Product Details
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="p-5 border rounded-2xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
+            >
+              <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                Product Description
               </h2>
-              <p className="text-muted-foreground">{product.description}</p>
-            </div>
+              <p className="text-gray-700 dark:text-gray-300">
+                {product.description}
+              </p>
+            </motion.div>
           </div>
 
           {/* Admin Actions */}
-          <div className="sticky bottom-0 z-20 flex gap-4 py-4 bg-white border-t shadow-lg dark:bg-gray-800">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="sticky bottom-0 z-20 flex gap-3 py-4 mt-8 bg-inherit "
+          >
             <Button
               variant="destructive"
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 shadow-lg"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isDeleting}
             >
               <Trash2 className="w-5 h-5" />
               Delete Product
             </Button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Reviews Section */}
-      <div className="pt-12 mt-16 border-t border-gray-200 dark:border-gray-700">
-        <ProductReviews reviews={product.reviews || []} />
-      </div>
+      <ProductReviews reviews={product.reviews || []} />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
+        <DialogContent className="border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
           <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white">
+              Confirm Product Deletion
+            </DialogTitle>
+            <DialogDescription className="text-gray-700 dark:text-gray-300">
               Are you sure you want to delete &quot;{product.name}&quot;? This
               action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="p-4 my-4 text-center bg-red-50 rounded-xl dark:bg-red-900/20">
+            <p className="font-medium text-red-700 dark:text-red-400">
+              All product data, images, and reviews will be permanently removed.
+            </p>
+          </div>
+
           <DialogFooter>
             <Button
               variant="outline"
@@ -389,13 +493,10 @@ export default function AdminProductDetailsPage() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                handleDelete();
-                setShowDeleteConfirm(false);
-              }}
+              onClick={handleDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "Deleting..." : "Delete Permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>
