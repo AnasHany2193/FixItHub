@@ -45,8 +45,10 @@ import WorkerProductDetailsPage from "./pages/worker/products/WorkerProductDetai
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminLogsPage from "./pages/admin/AdminLogsPage";
+import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminRepairsPage from "./pages/admin/AdminRepairsPage";
+import AdminRepairDetailsPage from "./pages/admin/AdminRepairDetailsPage";
 
 // Public
 import Layout from "./components/layout/Layout";
@@ -54,7 +56,6 @@ import HomePage from "./pages/public/HomePage";
 import AboutPage from "./pages/public/AboutPage";
 import ContactPage from "./pages/public/ContactPage";
 import NotFoundPage from "./pages/public/NotFoundPage";
-import AdminRepairsPage from "./pages/admin/AdminRepairsPage";
 
 function App() {
   return (
@@ -145,7 +146,7 @@ function App() {
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="logs" element={<AdminLogsPage />} />
               <Route path="repairs" element={<AdminRepairsPage />} />
-              {/*<Route path="repairs/:id" element={<AdminRepairDetailsPage />} /> */}
+              <Route path="repairs/:id" element={<AdminRepairDetailsPage />} />
             </Route>
           </Route>
         </Route>

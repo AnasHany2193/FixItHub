@@ -154,7 +154,7 @@ export default function AdminRepairsPage() {
             className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
           >
             <AnimatePresence>
-              {repairs.map((repair, i) => (
+              {repairs.map((repair) => (
                 <motion.div
                   key={repair._id}
                   layout
@@ -163,9 +163,7 @@ export default function AdminRepairsPage() {
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
                   className="cursor-pointer group"
-                  onClick={() =>
-                    navigate(`/admin-dashboard/repairs/${repair._id}`)
-                  }
+                  onClick={() => navigate(`/admin/repairs/${repair._id}`)}
                 >
                   <Card className="flex flex-col h-full overflow-hidden transition-all border shadow-lg hover:shadow-xl dark:border-gray-700 backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 hover:shadow-indigo-500/20 dark:hover:shadow-indigo-900/20">
                     <CardHeader className="p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700">
