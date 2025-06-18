@@ -284,10 +284,10 @@ export const useDeleteOrder = () => {
 };
 
 // Reviews
-export const useAllReviews = () =>
+export const useAllReviews = (filters) =>
   useQuery({
-    queryKey: ["admin-reviews"],
-    queryFn: getAllReviews,
+    queryKey: ["admin-reviews", filters],
+    queryFn: () => getAllReviews(filters),
   });
 
 export const useDeleteReview = () => {

@@ -189,9 +189,9 @@ export const deleteOrder = async (id) => {
 };
 
 // Reviews
-export const getAllReviews = async () => {
+export const getAllReviews = async (params = {}) => {
   try {
-    const { data } = await axiosClient.get("/admin/reviews");
+    const { data } = await axiosClient.get("/admin/reviews", { params });
     return data;
   } catch (error) {
     throw new Error(

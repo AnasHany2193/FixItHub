@@ -433,55 +433,19 @@ export const deleteOrder = async (req, res, next) => {
 
 export const getAllReviews = async (req, res, next) => {
   try {
-    const { product, category, page = 1, limit = 10 } = req.query;
-    const filter = {};
+    const { page = 1, limit = 10, sortByRating = "desc" } = req.query;
+    const sortDirection = sortByRating === "asc" ? 1 : -1;
 
-    // Apply filters
-    if (product && product !== "all") filter.product = product;
-    if (category && category !== "all") filter["product.category"] = category;
-
-    // Get paginated reviews
-    const reviews = await Review.find(filter)
-      .populate({
-        path: "user",
-        select: "username profile",
-      })
-      .populate({
-        path: "product",
-        select: "name category",
-      })
-      .sort({ createdAt: -1 })
+    const reviews = await Review.find()
+      .populate("user", "username")
+      .populate("product", "name")
+      .sort({ rating: sortDirection, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
-    // Get total count for pagination
-    const total = await Review.countDocuments(filter);
+    const total = await Review.countDocuments();
 
-    // Calculate stats
-    const allRatings = await Review.find(filter).select("rating");
-    const totalRatings = allRatings.length;
-    const ratingSum = allRatings.reduce((sum, r) => sum + r.rating, 0);
-    const avgRating = totalRatings > 0 ? ratingSum / totalRatings : 0;
-
-    const positiveReviews = allRatings.filter((r) => r.rating >= 4).length;
-    const criticalReviews = allRatings.filter((r) => r.rating <= 2).length;
-
-    res.json({
-      success: true,
-      data: reviews,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / limit),
-      avgRating,
-      positivePercentage:
-        totalRatings > 0
-          ? Math.round((positiveReviews / totalRatings) * 100)
-          : 0,
-      criticalPercentage:
-        totalRatings > 0
-          ? Math.round((criticalReviews / totalRatings) * 100)
-          : 0,
-    });
+    res.json({ success: true, data: reviews, total });
   } catch (err) {
     next(err);
   }
