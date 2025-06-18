@@ -52,6 +52,8 @@ import AdminRepairDetailsPage from "./pages/admin/AdminRepairDetailsPage";
 import AdminProductsPage from "./pages/admin/AdminProductsPage";
 import AdminProductDetailsPage from "./pages/admin/AdminProductDetailsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
+import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
+
 // Public
 import Layout from "./components/layout/Layout";
 import HomePage from "./pages/public/HomePage";
@@ -157,7 +159,7 @@ function App() {
                 element={<AdminProductDetailsPage />}
               />
               <Route path="orders" element={<AdminOrdersPage />} />
-              {/*<Route path="reviews" element={<AdminReviewsPage />} /> */}
+              <Route path="reviews" element={<AdminReviewsPage />} />
             </Route>
           </Route>
         </Route>

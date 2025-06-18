@@ -192,7 +192,7 @@ export const deleteOrder = async (id) => {
 export const getAllReviews = async () => {
   try {
     const { data } = await axiosClient.get("/admin/reviews");
-    return data.data;
+    return data;
   } catch (error) {
     throw new Error(
       error.response?.data?.message || "Failed to fetch reviews."
