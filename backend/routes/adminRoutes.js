@@ -18,6 +18,8 @@ import {
   deleteOrder,
   getAllReviews,
   deleteReview,
+  getRecentActivities,
+  getAdminDashboardStats,
 } from "../controllers/adminController.js";
 import { protect, roleCheck } from "../middlewares/authMiddleware.js";
 
@@ -58,5 +60,9 @@ router.delete("/orders/:id", deleteOrder);
 // adminReviewRoutes.js
 router.get("/reviews", getAllReviews);
 router.delete("/reviews/:id", deleteReview);
+
+router.get("/dashboard/stats", getAdminDashboardStats);
+
+router.get("/dashboard/activities", getRecentActivities);
 
 export default router;

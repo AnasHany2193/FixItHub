@@ -210,3 +210,25 @@ export const deleteReview = async (id) => {
     );
   }
 };
+
+export const getAdminDashboardStats = async () => {
+  try {
+    const { data } = await axiosClient.get("/admin/dashboard/stats");
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch dashboard stats."
+    );
+  }
+};
+
+export const getRecentActivities = async () => {
+  try {
+    const { data } = await axiosClient.get("/admin/dashboard/activities");
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch recent activities."
+    );
+  }
+};

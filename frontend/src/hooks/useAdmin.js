@@ -20,6 +20,8 @@ import {
   getAllOrders,
   getAllReviews,
   deleteOrder,
+  getAdminDashboardStats,
+  getRecentActivities,
 } from "@/api/admin";
 
 // Users by role (customer/worker)
@@ -313,3 +315,17 @@ export const useDeleteReview = () => {
     },
   });
 };
+
+export const useAdminDashboardStats = () =>
+  useQuery({
+    queryKey: ["admin-dashboard-stats"],
+    queryFn: getAdminDashboardStats,
+    staleTime: 5 * 60 * 1000,
+  });
+
+export const useRecentActivities = () =>
+  useQuery({
+    queryKey: ["recent-activities"],
+    queryFn: getRecentActivities,
+    staleTime: 5 * 60 * 1000,
+  });

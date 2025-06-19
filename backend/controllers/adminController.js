@@ -475,3 +475,58 @@ export const deleteReview = async (req, res, next) => {
     next(err);
   }
 };
+
+// For Dashboard
+
+// Get admin dashboard stats
+export const getAdminDashboardStats = async (req, res, next) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalRepairs = await RepairRequest.countDocuments();
+    const totalProducts = await Product.countDocuments();
+    const totalOrders = await Order.countDocuments();
+    const totalReviews = await Review.countDocuments();
+
+    res.json({
+      success: true,
+      data: {
+        totalUsers,
+        totalRepairs,
+        totalProducts,
+        totalOrders,
+        totalReviews,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get recent activities
+export const getRecentActivities = async (req, res, next) => {
+  try {
+    const recentRepairs = await RepairRequest.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("title status createdAt");
+    const recentOrders = await Order.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("total status createdAt");
+    const recentReviews = await Review.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select("rating comment createdAt");
+
+    res.json({
+      success: true,
+      data: {
+        recentRepairs,
+        recentOrders,
+        recentReviews,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
