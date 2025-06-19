@@ -111,6 +111,30 @@ export const updateMyProfile = async (req, res, next) => {
     ) {
       return next(createHttpError(400, "Invalid Twitter URL"));
     }
+    // Validate avatar URL
+    if (filteredUpdates["profile.avatar.url"]) {
+      if (!validator.isURL(filteredUpdates["profile.avatar.url"])) {
+        return next(createHttpError(400, "Invalid avatar URL"));
+      }
+      // If public_id is provided, ensure it's a non-empty string
+      if (
+        filteredUpdates["profile.avatar.public_id"] &&
+        typeof filteredUpdates["profile.avatar.public_id"] !== "string"
+      ) {
+        return next(createHttpError(400, "Invalid avatar public_id"));
+      }
+      // If using a local upload URL, ensure public_id is provided
+      if (
+        filteredUpdates["profile.avatar.url"].startsWith(
+          `${process.env.BASE_URL || "http://localhost:5000"}/uploads`
+        ) &&
+        !filteredUpdates["profile.avatar.public_id"]
+      ) {
+        return next(
+          createHttpError(400, "public_id required for local upload avatar")
+        );
+      }
+    }
 
     // Handle password update
     if (filteredUpdates.password) {
