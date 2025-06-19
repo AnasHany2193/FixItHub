@@ -191,15 +191,17 @@ export const SidebarHeader = ({ user, isCollapsed, toggleCollapse }) => (
     <Separator />
 
     <div className="flex items-center gap-3">
-      <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-        <AvatarImage
-          src={user?.profile?.avatar?.url}
-          className="object-cover"
-        />
-        <AvatarFallback className="text-gray-800 bg-indigo-100 dark:bg-gray-700 dark:text-white">
-          {user?.username?.[0]?.toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <Link to="profile">
+        <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+          <AvatarImage
+            src={user?.profile?.avatar?.url}
+            className="object-cover"
+          />
+          <AvatarFallback className="text-gray-800 bg-indigo-100 dark:bg-gray-700 dark:text-white">
+            {user?.username?.[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
 
       {/* Collapse button */}
       {!isCollapsed && (

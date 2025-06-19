@@ -8,11 +8,8 @@ const addressSchema = new mongoose.Schema(
   {
     street: { type: String, trim: true },
     city: { type: String, trim: true },
-    state: { type: String, trim: true, maxlength: 2 },
-    zip: {
-      type: String,
-      validate: [validator.isPostalCode, "Invalid ZIP code"],
-    },
+    state: { type: String, trim: true },
+    zip: { type: String, trim: true },
     country: { type: String, default: "US" },
   },
   { _id: false }

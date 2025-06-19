@@ -303,7 +303,7 @@ const OrderStatus = ({ orders }) => {
 
   return (
     <div className="space-y-3">
-      {orders?.slice(-3).map((order, index) => (
+      {orders?.slice(-3)?.map((order, index) => (
         <motion.div
           key={order._id}
           initial={{ opacity: 0, y: 10 }}
@@ -328,17 +328,20 @@ const OrderStatus = ({ orders }) => {
           </div>
 
           <div className="space-y-2">
-            {order.items.slice(-3).map((item) => (
-              <div key={item.product._id} className="flex items-center gap-3">
+            {order?.items?.slice(-3).map((item) => (
+              <div key={item._id} className="flex items-center gap-3">
+                {console.log("item", item)}
                 <div className="relative w-10 h-10 overflow-hidden rounded-md bg-indigo-50/50">
                   <img
-                    src={item.product.images[0]?.url}
+                    src={item.product?.images[0]?.url}
                     className="object-cover w-full h-full"
-                    alt={item.product.name}
+                    alt={item.product?.name}
                   />
                 </div>
                 <div>
-                  <p className="text-sm dark:text-white">{item.product.name}</p>
+                  <p className="text-sm dark:text-white">
+                    {item.product?.name}
+                  </p>
                   <p className="text-xs text-indigo-700/70 dark:text-indigo-400/70">
                     Qty: {item.quantity}
                   </p>
@@ -374,9 +377,9 @@ const ProductCarousel = ({ products }) => {
           >
             <div className="relative bg-indigo-50/50 aspect-square dark:bg-gray-700">
               <img
-                src={product.images[0]?.url}
+                src={product?.images[0]?.url}
                 className="object-cover w-full h-full transition-opacity opacity-90 hover:opacity-100"
-                alt={product.name}
+                alt={product?.name}
               />
               <Badge
                 className="absolute text-xs top-2 left-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm"
@@ -388,7 +391,7 @@ const ProductCarousel = ({ products }) => {
 
             <div className="p-2">
               <h3 className="text-sm font-medium truncate dark:text-white">
-                {product.name}
+                {product?.name}
               </h3>
               <p className="text-sm font-semibold text-indigo-700 dark:text-indigo-400">
                 ${product.price.toFixed(2)}

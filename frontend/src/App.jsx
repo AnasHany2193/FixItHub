@@ -54,6 +54,9 @@ import AdminProductDetailsPage from "./pages/admin/AdminProductDetailsPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 
+// Common
+import UserProfilePage from "./pages/common/ProfilePage";
+
 // Public
 import Layout from "./components/layout/Layout";
 import HomePage from "./pages/public/HomePage";
@@ -78,6 +81,10 @@ function App() {
 
       {/* Protected Routes */}
       <Route element={<AuthGuard />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/profile" element={<UserProfilePage />} />
+        </Route>
+
         <Route element={<RoleGuard allowedRoles={["customer"]} />}>
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<CustomerDashboard />} />
