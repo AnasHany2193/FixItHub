@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Star, Trash2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,7 @@ export default function AdminReviewsPage() {
     page: 1,
     limit: 9,
     sortByRating: "desc",
+    search: "",
   });
   const [deleteReviewId, setDeleteReviewId] = useState(null);
 
@@ -67,8 +68,7 @@ export default function AdminReviewsPage() {
 
   return (
     <>
-      {/* Header */}
-      <div className="grid items-center grid-cols-1 gap-4 mb-8 md:grid-cols-4">
+      <div className="grid items-center grid-cols-1 gap-4 md:grid-cols-4">
         <div className="relative md:col-span-2">
           <HeaderPages
             title="Manage Reviews"
@@ -113,53 +113,80 @@ export default function AdminReviewsPage() {
       </div>
 
       {/* Review Grid */}
-      {isLoading ? (
-        <motion.div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <ReviewSkeleton key={i} />
-          ))}
-        </motion.div>
-      ) : reviews.length === 0 ? (
-        <NotFoundStatus
-          icon={<Star className="w-12 h-12 text-gray-400" />}
-          title="No Reviews Found"
-          message="No reviews available at the moment."
-        />
-      ) : (
-        <motion.div
-          layout
-          className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-        >
-          {reviews.map((review) => (
-            <ReviewCard
-              key={review._id}
-              review={review}
-              onDelete={() => setDeleteReviewId(review._id)}
-            />
-          ))}
-        </motion.div>
-      )}
+      <div className="relative">
+        {/* Loading State */}
+        {isLoading && <LoadingState />}
+
+        {/* Empty State */}
+        {!isLoading && reviews.length === 0 && (
+          <NotFoundStatus
+            icon={<Star className="w-12 h-12 text-gray-400" />}
+            title="No Reviews Found"
+            message="No reviews available at the moment."
+          />
+        )}
+
+        {/* Reviews Grid */}
+        {!isLoading && reviews.length > 0 && (
+          <ReviewsGrid reviews={reviews} onDelete={setDeleteReviewId} />
+        )}
+      </div>
 
       {/* Pagination */}
       {total > 0 && (
         <div className="flex items-center justify-between mt-6">
-          <Button
-            onClick={handlePrevPage}
-            disabled={filters.page === 1}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Previous
-          </Button>
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            Page {filters.page} of {pages} ({total} total)
-          </span>
-          <Button
-            onClick={handleNextPage}
-            disabled={filters.page === pages}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
-          >
-            Next
-          </Button>
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            Showing {(filters.page - 1) * filters.limit + 1} to{" "}
+            {Math.min(filters.page * filters.limit, total)} of {total} reviews
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePrevPage}
+              disabled={filters.page === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, pages) }).map((_, i) => {
+                const pageNum =
+                  pages <= 5
+                    ? i + 1
+                    : filters.page <= 3
+                      ? i + 1
+                      : filters.page >= pages - 2
+                        ? pages - 4 + i
+                        : filters.page - 2 + i;
+
+                return (
+                  <Button
+                    key={i}
+                    variant={filters.page === pageNum ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => setFilters({ ...filters, page: pageNum })}
+                    disabled={pageNum > pages}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              {pages > 5 && filters.page < pages - 2 && (
+                <span className="px-2">...</span>
+              )}
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleNextPage}
+              disabled={filters.page === pages}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
 
@@ -168,12 +195,15 @@ export default function AdminReviewsPage() {
         open={!!deleteReviewId}
         onOpenChange={() => setDeleteReviewId(null)}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent className="bg-white dark:bg-gray-800 rounded-xl">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+              Confirm Review Deletion
+            </DialogTitle>
             <DialogDescription>
               Are you sure you want to delete this review? This action cannot be
-              undone.
+              undone and will remove the review permanently.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -184,8 +214,10 @@ export default function AdminReviewsPage() {
               variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
+              className="gap-2"
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              <Trash2 className="w-4 h-4" />
+              {isDeleting ? "Deleting..." : "Delete Review"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -194,55 +226,105 @@ export default function AdminReviewsPage() {
   );
 }
 
+// ===== COMPONENTS =====
+const LoadingState = () => (
+  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {[1, 2, 3, 4, 5, 6].map((i) => (
+      <ReviewSkeleton key={i} />
+    ))}
+  </div>
+);
+
+const ReviewsGrid = ({ reviews, onDelete }) => (
+  <motion.div
+    layout
+    className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+  >
+    <AnimatePresence>
+      {reviews.map((review) => (
+        <ReviewCard key={review._id} review={review} onDelete={onDelete} />
+      ))}
+    </AnimatePresence>
+  </motion.div>
+);
+
 const ReviewCard = ({ review, onDelete }) => {
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
+      layout
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
       transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
       className="group"
     >
-      <Card className="overflow-hidden transition-all shadow-sm hover:shadow-lg hover:shadow-indigo-500/20 dark:hover:shadow-gray-700/50 bg-white/80 dark:bg-gray-800/80">
-        <CardHeader className="p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600">
+      <Card className="h-full overflow-hidden transition-shadow border shadow-sm dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50 hover:shadow-lg">
+        {/* Rating Header */}
+        <div className="p-4 text-white bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-700 dark:to-purple-700">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">
-              Review #{review._id.slice(-6)}
-            </h3>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-white/20">
+                <Star className="w-5 h-5 text-amber-300 fill-amber-300" />
+              </div>
+              <h3 className="text-lg font-semibold">
+                Review #{review._id.slice(-6).toUpperCase()}
+              </h3>
+            </div>
             <Badge variant="secondary" className="text-white bg-white/20">
-              {formatDistanceToNow(new Date(review.createdAt))}
+              {formatDistanceToNow(new Date(review.createdAt), {
+                addSuffix: true,
+              })}
             </Badge>
           </div>
-        </CardHeader>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2">
+        </div>
+
+        <CardContent className="p-4 space-y-4">
+          {/* Rating Stars */}
+          <div className="flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
                 className={`w-5 h-5 ${i < review.rating ? "text-amber-500 fill-amber-500" : "text-gray-300 dark:text-gray-600"}`}
               />
             ))}
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              ({review.rating}/5)
+            <span className="ml-2 font-medium text-gray-900 dark:text-white">
+              {review.rating}/5
             </span>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-            {review.comment}
-          </p>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              User: {review.user?.username || "Unknown"}
-            </span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Product: {review.product?.name || "Unknown"}
-            </span>
+
+          {/* Comment */}
+          <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+            <p className="text-gray-700 dark:text-gray-300">{review.comment}</p>
           </div>
-          <div className="flex justify-end">
+
+          {/* User & Product Info */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400">User</p>
+              <p className="font-medium text-gray-900 dark:text-white">
+                {review.user?.username || "Unknown"}
+              </p>
+            </div>
+
+            <div className="p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Product
+              </p>
+              <p className="font-medium text-gray-900 truncate dark:text-white">
+                {review.product?.name || "Unknown"}
+              </p>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="flex justify-end pt-2">
             <Button
               variant="destructive"
               size="sm"
-              className="gap-2"
+              className="gap-2 group-hover:bg-red-600 dark:group-hover:bg-red-700"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete();
+                onDelete(review._id);
               }}
             >
               <Trash2 className="w-4 h-4" />
@@ -256,12 +338,19 @@ const ReviewCard = ({ review, onDelete }) => {
 };
 
 const ReviewSkeleton = () => (
-  <Card className="overflow-hidden">
+  <Card className="overflow-hidden border dark:border-gray-700">
     <Skeleton className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600" />
-    <CardContent className="p-4 space-y-3">
-      <Skeleton className="w-3/4 h-4" />
-      <Skeleton className="w-1/2 h-4" />
-      <Skeleton className="w-full h-4" />
+    <CardContent className="p-4 space-y-4">
+      <div className="space-y-2">
+        <Skeleton className="w-3/4 h-4 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
+        <Skeleton className="w-1/2 h-4 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
+      </div>
+      <Skeleton className="w-full h-16 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
+      <div className="grid grid-cols-2 gap-3">
+        <Skeleton className="w-full h-10 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
+        <Skeleton className="w-full h-10 rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
+      </div>
+      <Skeleton className="w-20 h-8 ml-auto rounded-lg bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600" />
     </CardContent>
   </Card>
 );
