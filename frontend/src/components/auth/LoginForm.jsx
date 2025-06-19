@@ -32,7 +32,7 @@ export const LoginForm = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "anashany219@gmail.com",
-      password: "123456Aa",
+      password: "Aa123456",
     },
   });
 
