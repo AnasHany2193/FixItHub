@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./useToast";
-import { getMyProfile, updateMyProfile } from "@/api/user";
+import { getMyProfile, getUserProfile, updateMyProfile } from "@/api/user";
 
 // Fetch my profile
 export const useMyProfile = () =>
@@ -34,3 +34,11 @@ export const useUpdateMyProfile = () => {
     },
   });
 };
+
+// hooks/useUser.js
+export const useUserProfile = (id) =>
+  useQuery({
+    queryKey: ["user", id],
+    queryFn: () => getUserProfile(id),
+    enabled: !!id,
+  });

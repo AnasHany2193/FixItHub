@@ -23,3 +23,15 @@ export const updateMyProfile = async (payload) => {
     );
   }
 };
+
+// api/user.js
+export const getUserProfile = async (id) => {
+  try {
+    const { data } = await axiosClient.get(`/users/${id}`);
+    return data.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch user profile."
+    );
+  }
+};

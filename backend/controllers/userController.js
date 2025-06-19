@@ -216,3 +216,90 @@ export const updateMyProfile = async (req, res, next) => {
     next(err);
   }
 };
+
+// Get user profile by ID
+export const getUserProfile = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const requester = req.user; // Assumes auth middleware sets req.user
+
+    // Define fields to exclude (sensitive data)
+    const excludedFields = [
+      "-password",
+      "-tokenVersion",
+      "-adminLogs",
+      "-warnings",
+      "-__v",
+    ];
+
+    // Define fields to include based on requester's role
+    let includedFields = [];
+    if (requester.role === "customer") {
+      // Customers can view worker details
+      includedFields = [
+        "username",
+        "profile.avatar",
+        "profile.phone",
+        "profile.bio",
+        "profile.address",
+        "profile.socialMedia",
+        "role",
+        "workerApplication.status",
+        "workerApplication.skills",
+        "workerApplication.certifications",
+        "workerApplication.experience",
+        "workerApplication.workHistory",
+        "workerApplication.availability",
+        "rating",
+        "stats.completedRepairs",
+        "stats.responseRate",
+        "status",
+      ];
+    } else if (requester.role === "worker") {
+      // Workers can view customer details
+      includedFields = [
+        "username",
+        "profile.avatar",
+        "profile.phone",
+        "profile.bio",
+        "profile.address",
+        "profile.socialMedia",
+        "role",
+        "rating",
+        "stats.completedSales",
+        "status",
+      ];
+    } else if (requester.role === "admin") {
+      // Admins can view most fields (except sensitive ones)
+      includedFields = [
+        "username",
+        "email",
+        "profile",
+        "role",
+        "workerApplication",
+        "rating",
+        "stats",
+        "status",
+        "lastLogin",
+        "isVerified",
+        "location",
+      ];
+    } else {
+      return next(createHttpError(403, "Unauthorized to view user profiles"));
+    }
+
+    // Construct select string
+    const selectFields = [...includedFields, ...excludedFields].join(" ");
+
+    // Fetch user
+    const user = await User.findById(id).select(selectFields);
+
+    if (!user) {
+      return next(createHttpError(404, "User not found"));
+    }
+
+    res.json({ success: true, data: user });
+  } catch (err) {
+    next(err);
+  }
+};
