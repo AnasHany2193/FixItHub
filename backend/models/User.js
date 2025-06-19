@@ -51,8 +51,6 @@ const userSchema = new mongoose.Schema(
       unique: true,
       minlength: 3,
       maxlength: 30,
-      lowercase: true,
-      match: /^[a-z0-9_]+$/,
     },
     email: {
       type: String,
@@ -87,6 +85,8 @@ const userSchema = new mongoose.Schema(
         type: String,
         maxlength: 500,
       },
+      address: addressSchema,
+      socialMedia: socialMediaSchema,
     },
     status: {
       type: String,
