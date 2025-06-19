@@ -24,7 +24,7 @@ export const updateMyProfile = async (payload) => {
   }
 };
 
-// api/user.js
+// Get another user's profile by ID
 export const getUserProfile = async (id) => {
   try {
     const { data } = await axiosClient.get(`/users/${id}`);

@@ -223,20 +223,11 @@ export const getUserProfile = async (req, res, next) => {
     const { id } = req.params;
     const requester = req.user; // Assumes auth middleware sets req.user
 
-    // Define fields to exclude (sensitive data)
-    const excludedFields = [
-      "-password",
-      "-tokenVersion",
-      "-adminLogs",
-      "-warnings",
-      "-__v",
-    ];
-
     // Define fields to include based on requester's role
-    let includedFields = [];
+    let selectFields = [];
     if (requester.role === "customer") {
       // Customers can view worker details
-      includedFields = [
+      selectFields = [
         "username",
         "profile.avatar",
         "profile.phone",
@@ -257,7 +248,7 @@ export const getUserProfile = async (req, res, next) => {
       ];
     } else if (requester.role === "worker") {
       // Workers can view customer details
-      includedFields = [
+      selectFields = [
         "username",
         "profile.avatar",
         "profile.phone",
@@ -271,7 +262,7 @@ export const getUserProfile = async (req, res, next) => {
       ];
     } else if (requester.role === "admin") {
       // Admins can view most fields (except sensitive ones)
-      includedFields = [
+      selectFields = [
         "username",
         "email",
         "profile",
@@ -287,9 +278,6 @@ export const getUserProfile = async (req, res, next) => {
     } else {
       return next(createHttpError(403, "Unauthorized to view user profiles"));
     }
-
-    // Construct select string
-    const selectFields = [...includedFields, ...excludedFields].join(" ");
 
     // Fetch user
     const user = await User.findById(id).select(selectFields);

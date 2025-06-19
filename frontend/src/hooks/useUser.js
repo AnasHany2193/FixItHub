@@ -35,10 +35,11 @@ export const useUpdateMyProfile = () => {
   });
 };
 
-// hooks/useUser.js
+// Fetch another user's profile by ID
 export const useUserProfile = (id) =>
   useQuery({
     queryKey: ["user", id],
     queryFn: () => getUserProfile(id),
     enabled: !!id,
+    staleTime: 5 * 60 * 1000,
   });

@@ -56,6 +56,7 @@ import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 
 // Common
 import UserProfilePage from "./pages/common/ProfilePage";
+import UserPublicProfilePage from "./pages/common/UserPublicProfilePage";
 
 // Public
 import Layout from "./components/layout/Layout";
@@ -83,6 +84,7 @@ function App() {
       <Route element={<AuthGuard />}>
         <Route element={<DashboardLayout />}>
           <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/profile/:id" element={<UserPublicProfilePage />} />
         </Route>
 
         <Route element={<RoleGuard allowedRoles={["customer"]} />}>
