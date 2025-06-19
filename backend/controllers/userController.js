@@ -1,7 +1,6 @@
 import User from "../models/User.js";
 import createHttpError from "http-errors";
 import validator from "validator";
-import bcrypt from "bcryptjs";
 
 // Utility to flatten nested objects into dot-notation keys
 const flattenObject = (obj, prefix = "") => {
@@ -21,9 +20,10 @@ const flattenObject = (obj, prefix = "") => {
 // Get authenticated user's profile
 export const getMyProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id)
-      .select("+password")
-      .populate("adminLogs.targetUser", "username");
+    const user = await User.findById(req.user._id).populate(
+      "adminLogs.targetUser",
+      "username"
+    );
     if (!user) return next(createHttpError(404, "User not found"));
 
     res.json({ success: true, data: user });
@@ -43,7 +43,6 @@ export const updateMyProfile = async (req, res, next) => {
       common: [
         "username",
         "email",
-        "password",
         "profile.avatar.url",
         "profile.avatar.public_id",
         "profile.phone",
@@ -159,20 +158,6 @@ export const updateMyProfile = async (req, res, next) => {
       }
     }
 
-    // Handle password update
-    if (filteredUpdates.password) {
-      if (filteredUpdates.password.length < 6) {
-        return next(
-          createHttpError(400, "Password must be at least 6 characters")
-        );
-      }
-      const salt = await bcrypt.genSalt(12);
-      filteredUpdates.password = await bcrypt.hash(
-        filteredUpdates.password,
-        salt
-      );
-    }
-
     // Check for unique constraints
     if (filteredUpdates.username) {
       const existingUser = await User.findOne({
@@ -207,7 +192,7 @@ export const updateMyProfile = async (req, res, next) => {
       userId,
       { $set: filteredUpdates },
       { new: true, runValidators: true }
-    ).select("+password");
+    );
 
     if (!user) return next(createHttpError(400, "User not found"));
 
@@ -221,66 +206,9 @@ export const updateMyProfile = async (req, res, next) => {
 export const getUserProfile = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const requester = req.user; // Assumes auth middleware sets req.user
-
-    // Define fields to include based on requester's role
-    let selectFields = [];
-    if (requester.role === "customer") {
-      // Customers can view worker details
-      selectFields = [
-        "username",
-        "profile.avatar",
-        "profile.phone",
-        "profile.bio",
-        "profile.address",
-        "profile.socialMedia",
-        "role",
-        "workerApplication.status",
-        "workerApplication.skills",
-        "workerApplication.certifications",
-        "workerApplication.experience",
-        "workerApplication.workHistory",
-        "workerApplication.availability",
-        "rating",
-        "stats.completedRepairs",
-        "stats.responseRate",
-        "status",
-      ];
-    } else if (requester.role === "worker") {
-      // Workers can view customer details
-      selectFields = [
-        "username",
-        "profile.avatar",
-        "profile.phone",
-        "profile.bio",
-        "profile.address",
-        "profile.socialMedia",
-        "role",
-        "rating",
-        "stats.completedSales",
-        "status",
-      ];
-    } else if (requester.role === "admin") {
-      // Admins can view most fields (except sensitive ones)
-      selectFields = [
-        "username",
-        "email",
-        "profile",
-        "role",
-        "workerApplication",
-        "rating",
-        "stats",
-        "status",
-        "lastLogin",
-        "isVerified",
-        "location",
-      ];
-    } else {
-      return next(createHttpError(403, "Unauthorized to view user profiles"));
-    }
 
     // Fetch user
-    const user = await User.findById(id).select(selectFields);
+    const user = await User.findById(id);
 
     if (!user) {
       return next(createHttpError(404, "User not found"));
