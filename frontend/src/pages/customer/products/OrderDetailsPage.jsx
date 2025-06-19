@@ -156,42 +156,42 @@ export default function OrderDetailsPage() {
           <div className="p-6 space-y-6 rounded-lg bg-muted/30">
             <h2 className="text-2xl font-bold">Items</h2>
             <div className="space-y-6">
-              {order.items.map((item, index) => (
+              {order?.items?.map((item, index) => (
                 <motion.div
-                  key={item.product._id + index}
+                  key={item.product?._id + index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <div className="flex gap-4">
                     <img
                       src={
-                        item.product.images?.[0]?.url ||
+                        item.product?.images[0]?.url ||
                         "/placeholder-product.jpg"
                       }
-                      alt={item.product.name}
+                      alt={item.product?.name}
                       className="object-cover w-24 h-24 rounded-md"
                     />
                     <div className="flex-1">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <h3 className="text-lg font-medium">
-                            {item.product.name}
+                            {item.product?.name}
                           </h3>
                           <p className="text-muted-foreground">
-                            Seller: {item.product.seller.username}
+                            Seller: {item.product?.seller?.username}
                           </p>
                         </div>
                         <Badge variant="outline" className="text-sm">
-                          Qty: {item.quantity}
+                          Qty: {item?.quantity}
                         </Badge>
                       </div>
                       <Separator className="my-2" />
                       <div className="flex items-center justify-between">
                         <div className="space-y-1">
                           <p className="text-sm text-muted-foreground">
-                            Unit Price: ${item.product.price.toFixed(2)}
+                            Unit Price: ${item?.product?.price.toFixed(2)}
                           </p>
-                          {item.product.specs?.map((spec, i) => (
+                          {item.product?.specs?.map((spec, i) => (
                             <p
                               key={i}
                               className="text-sm text-muted-foreground"
@@ -201,7 +201,7 @@ export default function OrderDetailsPage() {
                           ))}
                         </div>
                         <p className="font-medium">
-                          ${(item.product.price * item.quantity).toFixed(2)}
+                          ${(item?.product?.price * item.quantity).toFixed(2)}
                         </p>
                       </div>
                     </div>

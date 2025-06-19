@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import {
   ArrowLeft,
   Wrench,
@@ -558,12 +563,14 @@ const BidCard = ({ bid, repairId }) => {
   return (
     <div className="relative p-4 transition-all border rounded-lg group hover:border-indigo-200 dark:hover:border-gray-600">
       <div className="flex items-center gap-4">
-        <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-          <AvatarImage src={bid.worker?.profile?.avatar?.url} />
-          <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
-            {bid.worker?.username?.[0]?.toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${bid.worker?._id}`}>
+          <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+            <AvatarImage src={bid.worker?.profile?.avatar?.url} />
+            <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+              {bid.worker?.username?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
 
         <div className="flex flex-col flex-1 gap-3">
           <div className="flex items-center gap-2">
@@ -651,12 +658,14 @@ const OfferCard = ({ offer, repairId }) => {
   return (
     <div className="relative p-4 transition-all border rounded-lg group hover:border-green-200 dark:hover:border-gray-600">
       <div className="flex items-center gap-4">
-        <Avatar className="border-2 border-green-100 dark:border-gray-600">
-          <AvatarImage src={offer.worker?.profile?.avatar?.url} />
-          <AvatarFallback className="bg-green-100 dark:bg-gray-700">
-            {offer.worker?.username?.[0]?.toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${offer.worker?._id}`}>
+          <Avatar className="border-2 border-green-100 cursor-pointer dark:border-gray-600">
+            <AvatarImage src={offer.worker?.profile?.avatar?.url} />
+            <AvatarFallback className="bg-green-100 dark:bg-gray-700">
+              {offer.worker?.username?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
 
         <div className="flex-1">
           <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Gavel,
@@ -387,12 +387,14 @@ const ProposalItem = ({ proposal, type, isLeading }) => {
 
   return (
     <div className="flex items-center gap-5 p-4 rounded-lg bg-muted">
-      <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-        <AvatarImage src={proposal.worker?.profile?.avatar?.url} />
-        <AvatarFallback>
-          {proposal.worker?.username?.[0]?.toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <Link to={`/profile/${proposal.worker?._id}`}>
+        <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+          <AvatarImage src={proposal.worker?.profile?.avatar?.url} />
+          <AvatarFallback>
+            {proposal.worker?.username?.[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <span className="font-medium">
@@ -467,12 +469,14 @@ const PageSkeleton = () => (
 const CustomerInfo = ({ repair }) => (
   <div className="p-4 rounded-lg bg-indigo-50 dark:bg-gray-800">
     <div className="flex items-center gap-4">
-      <Avatar className="w-12 h-12 border-2 border-indigo-100 dark:border-gray-600">
-        <AvatarImage src={repair.customer?.profile?.avatar?.url} />
-        <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
-          {repair.customer?.username?.[0]?.toUpperCase() || "U"}
-        </AvatarFallback>
-      </Avatar>
+      <Link to={`/profile/${repair.customer?._id}`}>
+        <Avatar className="w-12 h-12 border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+          <AvatarImage src={repair.customer?.profile?.avatar?.url} />
+          <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+            {repair.customer?.username?.[0]?.toUpperCase() || "U"}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
       <div>
         <h3 className="text-sm font-medium text-indigo-600 dark:text-indigo-300">
           Repair Requester

@@ -178,20 +178,20 @@ export default function CustomerOrdersPage() {
                 <Separator className="my-4" />
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {order.items.slice(0, 2).map((item, idx) => (
+                  {order?.items?.slice(0, 2).map((item, idx) => (
                     <div key={idx} className="flex items-center gap-4">
                       <img
                         src={
-                          item.product.images?.[0]?.url ||
+                          item.product?.images[0]?.url ||
                           "/placeholder-product.jpg"
                         }
-                        alt={item.product.name}
+                        alt={item.product?.name}
                         className="object-cover w-12 h-12 rounded-md"
                       />
                       <div>
-                        <div className="font-medium">{item.product.name}</div>
+                        <div className="font-medium">{item.product?.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          Seller: {item.product.seller.username}
+                          Seller: {item?.product?.seller.username}
                         </div>
                       </div>
                     </div>

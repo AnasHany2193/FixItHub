@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Package,
@@ -119,15 +119,17 @@ const ProductReviews = ({ reviews }) => {
                   className="p-4 bg-white border shadow-sm rounded-xl dark:bg-gray-800"
                 >
                   <div className="flex items-start gap-4">
-                    <Avatar className="w-10 h-10 border-2 border-indigo-200 dark:border-indigo-800">
-                      <AvatarImage
-                        src={review.user.profile.avatar.url}
-                        className="object-cover"
-                      />
-                      <AvatarFallback className="text-indigo-600 bg-indigo-100 dark:bg-indigo-800 dark:text-indigo-400">
-                        {review.user.username[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
+                    <Link to={`/profile/${review.user?._id}`}>
+                      <Avatar className="w-10 h-10 border-2 border-indigo-200 cursor-pointer dark:border-indigo-800">
+                        <AvatarImage
+                          src={review.user.profile.avatar.url}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="text-indigo-600 bg-indigo-100 dark:bg-indigo-800 dark:text-indigo-400">
+                          {review.user.username[0].toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Link>
 
                     <div className="flex-1">
                       <div className="flex flex-wrap items-center gap-2">
@@ -326,15 +328,17 @@ export default function AdminProductDetailsPage() {
             className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
           >
             <div className="flex items-center gap-4">
-              <Avatar className="w-12 h-12 border-2 border-indigo-200 dark:border-indigo-800">
-                <AvatarImage
-                  src={product.seller?.profile?.avatar?.url}
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-indigo-600 bg-indigo-100 dark:bg-indigo-800 dark:text-indigo-400">
-                  {product.seller?.username?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <Link to={`/profile/${product.seller?._id}`}>
+                <Avatar className="w-12 h-12 border-2 border-indigo-200 cursor-pointer dark:border-indigo-800">
+                  <AvatarImage
+                    src={product.seller?.profile?.avatar?.url}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-indigo-600 bg-indigo-100 dark:bg-indigo-800 dark:text-indigo-400">
+                    {product.seller?.username?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
               <div>
                 <h3 className="font-medium text-gray-900 capitalize dark:text-gray-100">
                   Sold by {product.seller.username?.replace(/_/g, " ")}

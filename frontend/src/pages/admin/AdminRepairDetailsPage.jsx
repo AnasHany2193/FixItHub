@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -92,12 +92,14 @@ const ProposalCard = ({ proposal, isAuction }) => {
   return (
     <div className="p-4 border rounded-lg">
       <div className="flex items-center gap-4">
-        <Avatar>
-          <AvatarImage src={proposal.worker?.profile?.avatar?.url} />
-          <AvatarFallback>
-            {proposal.worker?.username?.[0]?.toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${proposal.worker?._id}`}>
+          <Avatar className="cursor-pointer">
+            <AvatarImage src={proposal.worker?.profile?.avatar?.url} />
+            <AvatarFallback>
+              {proposal.worker?.username?.[0]?.toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
         <div>
           <div className="font-medium">{proposal.worker?.username}</div>
           <div className="text-sm text-muted-foreground">
@@ -178,12 +180,14 @@ const CustomerInfo = ({ customer }) => (
     title="Customer Information"
   >
     <div className="flex items-center gap-4">
-      <Avatar>
-        <AvatarImage src={customer?.profile?.avatar?.url} />
-        <AvatarFallback>
-          {customer?.username?.[0]?.toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <Link to={`/profile/${customer?._id}`}>
+        <Avatar className="cursor-pointer">
+          <AvatarImage src={customer?.profile?.avatar?.url} />
+          <AvatarFallback>
+            {customer?.username?.[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
       <div>
         <div className="font-medium">{customer?.username}</div>
         <div className="text-sm text-muted-foreground">{customer?.email}</div>

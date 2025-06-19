@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Star,
@@ -228,17 +228,19 @@ const ProductDetails = ({ product, refetchProduct }) => {
       {/* Seller Info */}
       <div className="p-6 border rounded-xl bg-gradient-to-r from-primary/5 to-muted/50">
         <div className="flex items-center gap-4">
-          <Avatar className="w-12 h-12 border-2 border-primary/20">
-            <AvatarImage
-              src={product.seller.profile.avatar.url}
-              className="object-cover"
-            />
-            <AvatarFallback className="bg-primary/10 text-primary">
-              {product.seller.username?.[0]?.toUpperCase() || (
-                <User className="w-4 h-4" />
-              )}
-            </AvatarFallback>
-          </Avatar>
+          <Link to={`/profile/${product.seller?._id}`}>
+            <Avatar className="w-12 h-12 border-2 cursor-pointer border-primary/20">
+              <AvatarImage
+                src={product.seller.profile.avatar.url}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-primary/10 text-primary">
+                {product.seller.username?.[0]?.toUpperCase() || (
+                  <User className="w-4 h-4" />
+                )}
+              </AvatarFallback>
+            </Avatar>
+          </Link>
           <div>
             <h3 className="font-medium capitalize">
               Sold by {product.seller.username.replace(/_/g, " ")}
@@ -624,15 +626,17 @@ const ProductReviews = ({
                       className="p-4 border rounded-lg shadow-sm bg-background"
                     >
                       <div className="flex items-center gap-4">
-                        <Avatar className="w-10 h-10 border-2 border-primary/20">
-                          <AvatarImage
-                            src={review.user.profile.avatar.url}
-                            className="object-cover"
-                          />
-                          <AvatarFallback className="bg-primary/10 text-primary">
-                            {review.user.username[0].toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <Link to={`/profile/${review.user?._id}`}>
+                          <Avatar className="w-10 h-10 border-2 cursor-pointer border-primary/20">
+                            <AvatarImage
+                              src={review.user.profile.avatar.url}
+                              className="object-cover"
+                            />
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {review.user.username[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2 py-1">

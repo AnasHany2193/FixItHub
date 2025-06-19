@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { format, formatDistanceToNow } from "date-fns";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Wrench,
@@ -205,12 +205,14 @@ export default function WorkerActiveRepairDetailsPage() {
               title="Customer Information"
             >
               <div className="flex items-center gap-4 p-3">
-                <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-                  <AvatarImage src={repair.customer?.profile?.avatar?.url} />
-                  <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
-                    {repair.customer?.username?.[0]?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
+                <Link to={`/profile/${repair.customer?._id}`}>
+                  <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+                    <AvatarImage src={repair.customer?.profile?.avatar?.url} />
+                    <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+                      {repair.customer?.username?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
                 <div>
                   <p className="font-medium">
                     {repair.customer?.username || "Customer"}

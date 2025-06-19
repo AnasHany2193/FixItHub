@@ -206,6 +206,13 @@ const Header = () => {
                       <span className="dark:text-gray-200">Dashboard</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                      onClick={() => navigate("/profile")}
+                      className="cursor-pointer dark:hover:bg-gray-700"
+                    >
+                      <User className="w-4 h-4 mr-2 text-gray-700 dark:text-gray-300" />
+                      <span className="dark:text-gray-200">Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
                       onClick={logout}
                       className="text-red-600 cursor-pointer dark:text-red-400 dark:hover:bg-red-500/10"
                     >

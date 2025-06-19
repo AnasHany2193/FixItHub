@@ -25,13 +25,13 @@ const Footer = () => {
               Company
             </h3>
             <ul className="space-y-2">
-              <FooterLink to="/about" icon={<Info size={16} />}>
+              <FooterLink to="/how-it-works" icon={<Info size={16} />}>
                 About Us
               </FooterLink>
-              <FooterLink to="/careers" icon={<User size={16} />}>
+              <FooterLink to="/" icon={<User size={16} />}>
                 Careers
               </FooterLink>
-              <FooterLink to="/blog" icon={<HelpCircle size={16} />}>
+              <FooterLink to="/" icon={<HelpCircle size={16} />}>
                 Blog
               </FooterLink>
             </ul>
@@ -41,13 +41,13 @@ const Footer = () => {
               Support
             </h3>
             <ul className="space-y-2">
-              <FooterLink to="/help" icon={<HelpCircle size={16} />}>
+              <FooterLink to="/how-it-works" icon={<HelpCircle size={16} />}>
                 Help Center
               </FooterLink>
               <FooterLink to="/contact" icon={<User size={16} />}>
                 Contact Us
               </FooterLink>
-              <FooterLink to="/faq" icon={<HelpCircle size={16} />}>
+              <FooterLink to="/contact" icon={<HelpCircle size={16} />}>
                 FAQs
               </FooterLink>
             </ul>
@@ -57,13 +57,13 @@ const Footer = () => {
               Legal
             </h3>
             <ul className="space-y-2">
-              <FooterLink to="/privacy" icon={<Shield size={16} />}>
+              <FooterLink to="/" icon={<Shield size={16} />}>
                 Privacy
               </FooterLink>
-              <FooterLink to="/terms" icon={<Shield size={16} />}>
+              <FooterLink to="/" icon={<Shield size={16} />}>
                 Terms
               </FooterLink>
-              <FooterLink to="/security" icon={<Shield size={16} />}>
+              <FooterLink to="/" icon={<Shield size={16} />}>
                 Security
               </FooterLink>
             </ul>
@@ -73,13 +73,22 @@ const Footer = () => {
               Connect
             </h3>
             <ul className="space-y-2">
-              <FooterLink to="/twitter" icon={<User size={16} />}>
+              <FooterLink
+                to="https://x.com/anashany219"
+                icon={<User size={16} />}
+              >
                 Twitter
               </FooterLink>
-              <FooterLink to="/facebook" icon={<User size={16} />}>
+              <FooterLink
+                to="https://www.facebook.com/anashany219/"
+                icon={<User size={16} />}
+              >
                 Facebook
               </FooterLink>
-              <FooterLink to="/linkedin" icon={<User size={16} />}>
+              <FooterLink
+                to="https://www.linkedin.com/in/anashany219/"
+                icon={<User size={16} />}
+              >
                 LinkedIn
               </FooterLink>
             </ul>

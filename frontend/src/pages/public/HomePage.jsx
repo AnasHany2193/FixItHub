@@ -117,7 +117,7 @@ const HomePage = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-6 py-3 mt-6 font-semibold text-white transition-colors bg-indigo-600 rounded-lg hover:bg-indigo-700"
-            onClick={() => navigate("/join")}
+            onClick={() => navigate("/signup")}
           >
             Join Now <ArrowRight className="inline w-5 h-5 ml-2" />
           </motion.button>
@@ -183,7 +183,7 @@ const HomePage = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             className="px-6 py-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
-            onClick={() => navigate("/about")}
+            onClick={() => navigate("/how-it-works")}
           >
             Learn More
           </motion.button>

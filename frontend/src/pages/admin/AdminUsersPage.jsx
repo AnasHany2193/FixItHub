@@ -37,6 +37,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "react-router";
 
 export default function AdminUsersPage() {
   const [selectedRole, setSelectedRole] = useState("");
@@ -110,15 +111,17 @@ export default function AdminUsersPage() {
               {/* Profile Header */}
               <div className="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
                 <div className="flex items-center gap-4">
-                  <Avatar className="w-16 h-16 border-2 border-indigo-100 dark:border-gray-600">
-                    <AvatarImage
-                      src={userDetails.profile?.avatar?.url}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="text-gray-800 bg-indigo-100 dark:bg-gray-700 dark:text-white">
-                      {userDetails?.username?.[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                  <Link to={`/profile/${userDetails?._id}`}>
+                    <Avatar className="w-16 h-16 border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+                      <AvatarImage
+                        src={userDetails.profile?.avatar?.url}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="text-gray-800 bg-indigo-100 dark:bg-gray-700 dark:text-white">
+                        {userDetails?.username?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Link>
 
                   <div>
                     <h3 className="text-xl font-bold text-gray-900 capitalize dark:text-white">
@@ -449,22 +452,24 @@ const UserCard = ({ user, onManage }) => {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ type: "spring", stiffness: 300, duration: 0.2 }}
-      className="cursor-pointer group"
+      className="group"
     >
       <Card className="flex flex-col justify-between h-full overflow-hidden transition-all border shadow-lg hover:shadow-xl dark:border-gray-700 backdrop-blur-sm bg-white/50 dark:bg-gray-800/50">
         {/* Status Header */}
         <div className={`p-4 text-white bg-gradient-to-r ${statusGradient}`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Avatar className="border-2 border-indigo-100 dark:border-gray-600">
-                <AvatarImage
-                  src={user.profile?.avatar?.url}
-                  className="object-cover"
-                />
-                <AvatarFallback className="text-gray-800 bg-indigo-100 dark:bg-gray-700 dark:text-white">
-                  {user?.username?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <Link to={`/profile/${user?._id}`}>
+                <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+                  <AvatarImage
+                    src={user.profile?.avatar?.url}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-gray-800 bg-indigo-100 dark:bg-gray-700 dark:text-white">
+                    {user?.username?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
 
               <h3 className="font-semibold capitalize">
                 {user.username.replace(/_/g, " ")}

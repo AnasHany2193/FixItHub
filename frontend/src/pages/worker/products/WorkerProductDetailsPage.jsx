@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   BarChart,
@@ -373,12 +373,14 @@ export const WorkerProductReviews = ({
               className="p-6 transition-colors border-2 rounded-xl hover:border-primary/20 bg-gradient-to-r from-primary/5 to-muted/50"
             >
               <div className="flex items-center gap-4 mb-4">
-                <Avatar className="w-12 h-12 border-2 border-primary/20">
-                  <AvatarImage src={review.user.profile.avatar.url} />
-                  <AvatarFallback className="bg-primary/10">
-                    {review.user.username[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <Link to={`/profile/${review.user?._id}`}>
+                  <Avatar className="w-12 h-12 border-2 border-primary/20">
+                    <AvatarImage src={review.user.profile.avatar.url} />
+                    <AvatarFallback className="bg-primary/10">
+                      {review.user.username[0].toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
 
                 <div>
                   <h4 className="font-medium capitalize">
