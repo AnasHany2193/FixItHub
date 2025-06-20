@@ -211,7 +211,7 @@ export const getAllRepairs = async (req, res, next) => {
 export const getRepairDetails = async (req, res, next) => {
   try {
     const repair = await RepairRequest.findById(req.params.id)
-      .populate("customer", "username email")
+      .populate("customer", "username email profile")
       .populate("worker", "username")
       .populate({
         path: "offers",
@@ -221,7 +221,7 @@ export const getRepairDetails = async (req, res, next) => {
         path: "auction",
         populate: {
           path: "bids currentLowestBid",
-          populate: { path: "worker", select: "username" },
+          populate: { path: "worker", select: "username profile" },
         },
       });
 

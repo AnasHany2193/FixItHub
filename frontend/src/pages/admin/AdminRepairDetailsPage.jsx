@@ -90,7 +90,7 @@ const ProposalCard = ({ proposal, isAuction }) => {
   const submittedAt = proposal.submittedAt || proposal.createdAt;
 
   return (
-    <div className="p-4 border rounded-lg">
+    <div className="px-2 border rounded-lg">
       <div className="flex items-center gap-4">
         <Link to={`/profile/${proposal.worker?._id}`}>
           <Avatar className="cursor-pointer">

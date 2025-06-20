@@ -179,7 +179,7 @@ const StatCard = ({ icon, title, value, loading, delay = 0 }) => (
 
 const RecentActivities = ({ activities }) => (
   <div className="space-y-3">
-    {activities?.recentRepairs?.map((repair, index) => (
+    {activities?.recentRepairs?.slice(-2)?.map((repair, index) => (
       <motion.div
         key={repair._id}
         initial={{ opacity: 0, x: -20 }}
@@ -203,7 +203,7 @@ const RecentActivities = ({ activities }) => (
         </div>
       </motion.div>
     ))}
-    {activities?.recentOrders?.map((order, index) => (
+    {activities?.recentOrders?.slice(-2)?.map((order, index) => (
       <motion.div
         key={order._id}
         initial={{ opacity: 0, x: -20 }}
@@ -229,7 +229,7 @@ const RecentActivities = ({ activities }) => (
         </div>
       </motion.div>
     ))}
-    {activities?.recentReviews?.map((review, index) => (
+    {activities?.recentReviews?.slice(-2)?.map((review, index) => (
       <motion.div
         key={review._id}
         initial={{ opacity: 0, x: -20 }}

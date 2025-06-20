@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Package,
   BarChart,
   Users,
   Star,
-  ChevronUp,
-  ChevronDown,
   Trash2,
   ArrowLeft,
   DollarSign,
@@ -68,111 +66,6 @@ const DetailItem = ({ icon, label, value, highlight }) => (
     </span>
   </div>
 );
-
-const ProductReviews = ({ reviews }) => {
-  const [showReviews, setShowReviews] = useState(true);
-
-  return (
-    <section className="pt-8 mt-12 border-t border-gray-200 dark:border-gray-700">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-gray-100">
-          <Star className="w-5 h-5 text-amber-500 fill-amber-500/20" />
-          Customer Reviews
-          <span className="ml-1 font-normal text-muted-foreground">
-            ({reviews?.length || 0})
-          </span>
-        </h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowReviews(!showReviews)}
-          className="text-gray-600 dark:text-gray-400"
-        >
-          {showReviews ? (
-            <>
-              <ChevronUp className="w-4 h-4 mr-2" />
-              Hide Reviews
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-4 h-4 mr-2" />
-              Show Reviews
-            </>
-          )}
-        </Button>
-      </div>
-
-      <AnimatePresence>
-        {showReviews && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="space-y-4"
-          >
-            {reviews?.length ? (
-              reviews.map((review) => (
-                <motion.div
-                  key={review._id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="p-4 bg-white border shadow-sm rounded-xl dark:bg-gray-800"
-                >
-                  <div className="flex items-start gap-4">
-                    <Link to={`/profile/${review.user?._id}`}>
-                      <Avatar className="w-10 h-10 border-2 border-indigo-200 cursor-pointer dark:border-indigo-800">
-                        <AvatarImage
-                          src={review.user.profile.avatar.url}
-                          className="object-cover"
-                        />
-                        <AvatarFallback className="text-indigo-600 bg-indigo-100 dark:bg-indigo-800 dark:text-indigo-400">
-                          {review.user.username[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Link>
-
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-medium text-gray-900 capitalize dark:text-gray-100">
-                          {review.user.username.replace(/_/g, " ")}
-                        </h4>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(review.createdAt)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center mt-2 mb-3">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${i < review.rating ? "text-amber-500 fill-amber-500" : "text-gray-300 dark:text-gray-600"}`}
-                          />
-                        ))}
-                      </div>
-
-                      <p className="text-gray-700 dark:text-gray-300">
-                        {review.comment}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="p-6 text-center rounded-xl bg-gradient-to-r from-indigo-50 to-gray-50 dark:from-gray-800 dark:to-gray-900"
-              >
-                <Package className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500" />
-                <p className="mt-3 text-muted-foreground">No reviews yet</p>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </section>
-  );
-};
 
 const ProductDetailsSkeleton = () => (
   <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -465,9 +358,6 @@ export default function AdminProductDetailsPage() {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Reviews Section */}
-      <ProductReviews reviews={product.reviews || []} />
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
