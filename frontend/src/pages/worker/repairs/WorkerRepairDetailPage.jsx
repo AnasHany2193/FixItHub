@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import UpdateProposalDialog from "@/components/common/UpdateProposalDialog";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import { Helmet } from "react-helmet-async";
 
 const formatDate = (dateString) => {
   try {
@@ -102,278 +103,276 @@ export default function WorkerRepairDetailPage({ type = "auction" }) {
 
   return (
     <div className="min-h-screen">
-      <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <header className="mb-8 space-y-4">
-          <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="ghost"
-              className="gap-2 -ml-2 group text-muted-foreground hover:text-foreground"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              <span className="text-sm">
-                Back to {type === "auction" ? "Auctions" : "Offers"}
-              </span>
-            </Button>
-          </motion.div>
+      <Helmet>
+        <title>{repair.title || "Repair Details"} | FixItHub</title>
+      </Helmet>
+      {/* Header Section */}
+      <header className="mb-8 space-y-4">
+        <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            variant="ghost"
+            className="gap-2 -ml-2 group text-muted-foreground hover:text-foreground"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+            <span className="text-sm">
+              Back to {type === "auction" ? "Auctions" : "Offers"}
+            </span>
+          </Button>
+        </motion.div>
 
-          <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                  {repair.title}
-                </h1>
-                <Badge variant="outline" className="font-mono">
-                  #{id.slice(-6)}
-                </Badge>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="default">Auction Active</Badge>
-                <Badge
-                  variant={repair.shippingRequired ? "default" : "secondary"}
-                >
-                  {repair.shippingRequired
-                    ? "Shipping Required"
-                    : "Local Service"}
-                </Badge>
-              </div>
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                {repair.title}
+              </h1>
+              <Badge variant="outline" className="font-mono">
+                #{id.slice(-6)}
+              </Badge>
             </div>
-
-            <div className="flex flex-col items-end gap-1">
-              <p className="text-sm text-muted-foreground">
-                Created: {formatDate(repair.createdAt)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Updated: {formatDate(repair.updatedAt)}
-              </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="default">Auction Active</Badge>
+              <Badge
+                variant={repair.shippingRequired ? "default" : "secondary"}
+              >
+                {repair.shippingRequired
+                  ? "Shipping Required"
+                  : "Local Service"}
+              </Badge>
             </div>
           </div>
-        </header>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Left Column */}
-          <div className="space-y-8 lg:col-span-2">
-            {/* Image Carousel */}
-            <ImageCarousel images={repair.photos} />
+          <div className="flex flex-col items-end gap-1">
+            <p className="text-sm text-muted-foreground">
+              Created: {formatDate(repair.createdAt)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Updated: {formatDate(repair.updatedAt)}
+            </p>
+          </div>
+        </div>
+      </header>
 
-            {/* Customer Info Section */}
-            <CustomerInfo repair={repair} />
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        {/* Left Column */}
+        <div className="space-y-8 lg:col-span-2">
+          {/* Image Carousel */}
+          <ImageCarousel images={repair.photos} />
 
-            {/* Details Section */}
-            <SectionCard
-              icon={
-                <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Repair Details"
-            >
-              <Tabs defaultValue="description">
-                <TabsList className="flex w-full bg-gray-100 justify-evenly dark:bg-gray-600">
-                  <TabsTrigger value="description" className="w-1/2">
-                    Item Details
-                  </TabsTrigger>
-                  <TabsTrigger value="proposals" className="w-1/2">
-                    {type === "auction" ? "Bids" : "Offers"}
-                  </TabsTrigger>
-                </TabsList>
+          {/* Customer Info Section */}
+          <CustomerInfo repair={repair} />
 
-                <TabsContent value="description" className="pt-4">
-                  <div className="space-y-4">
-                    <InfoItem label="Item Type" value={repair.itemType} />
-                    <InfoItem label="Category" value={repair.category} />
-                    <div className="pt-4">
-                      <h3 className="mb-2 font-medium text-foreground">
-                        About This Repair
-                      </h3>
-                      <p className="text-muted-foreground">
-                        {repair.issueDescription}
-                      </p>
-                      {repair.shippingRequired && (
-                        <div className="p-4 mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/20">
-                          <h4 className="flex items-center gap-2 font-medium">
-                            <Package className="w-5 h-5" />
-                            Shipping Instructions
-                          </h4>
-                          <p className="mt-2 text-sm">
-                            This item requires special shipping handling.
-                            Contact the customer for shipping details.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </TabsContent>
+          {/* Details Section */}
+          <SectionCard
+            icon={
+              <Gavel className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            }
+            title="Repair Details"
+          >
+            <Tabs defaultValue="description">
+              <TabsList className="flex w-full bg-gray-100 justify-evenly dark:bg-gray-600">
+                <TabsTrigger value="description" className="w-1/2">
+                  Item Details
+                </TabsTrigger>
+                <TabsTrigger value="proposals" className="w-1/2">
+                  {type === "auction" ? "Bids" : "Offers"}
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="proposals">
-                  <div className="flex items-center justify-between my-4">
-                    <h3 className="text-lg font-semibold">
-                      {type === "auction" ? "Bid" : "Offer"} Activity
+              <TabsContent value="description" className="pt-4">
+                <div className="space-y-4">
+                  <InfoItem label="Item Type" value={repair.itemType} />
+                  <InfoItem label="Category" value={repair.category} />
+                  <div className="pt-4">
+                    <h3 className="mb-2 font-medium text-foreground">
+                      About This Repair
                     </h3>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleRefresh}
-                      disabled={isFetching}
-                    >
-                      <RefreshCw
-                        className={`mr-2 ${isFetching ? "animate-spin" : ""}`}
-                      />
-                      Refresh
-                    </Button>
-                  </div>
-                  <div className="space-y-3">
-                    {proposals?.length > 0 ? (
-                      proposals.map((proposal) => (
-                        <ProposalItem
-                          key={proposal._id}
-                          proposal={proposal}
-                          type={type}
-                          isLeading={
-                            type === "auction"
-                              ? repairData.currentLowestBid?._id ===
-                                proposal._id
-                              : false
-                          }
-                        />
-                      ))
-                    ) : (
-                      <div className="p-4 text-center rounded-lg bg-muted">
-                        <p className="text-muted-foreground">
-                          No {type === "auction" ? "bids" : "offers"} yet - be
-                          the first!
+                    <p className="text-muted-foreground">
+                      {repair.issueDescription}
+                    </p>
+                    {repair.shippingRequired && (
+                      <div className="p-4 mt-4 rounded-lg bg-amber-50 dark:bg-amber-900/20">
+                        <h4 className="flex items-center gap-2 font-medium">
+                          <Package className="w-5 h-5" />
+                          Shipping Instructions
+                        </h4>
+                        <p className="mt-2 text-sm">
+                          This item requires special shipping handling. Contact
+                          the customer for shipping details.
                         </p>
                       </div>
                     )}
                   </div>
-                </TabsContent>
-              </Tabs>
-            </SectionCard>
-          </div>
+                </div>
+              </TabsContent>
 
-          {/* Right Column */}
-          <div className="space-y-8">
-            <SectionCard
-              icon={
-                type === "auction" ? (
-                  <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                ) : (
-                  <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
-                )
-              }
-              title={type === "auction" ? "Auction Timeline" : "Offer Details"}
-            >
-              <div className="space-y-4">
-                {type === "auction" && (
-                  <InfoItem
-                    label="Time Remaining"
-                    value={formatDistanceToNow(new Date(repairData.expiresAt))}
-                  />
-                )}
-                <InfoItem
-                  label={
-                    type === "auction" ? "Starting Price" : "Average Offer"
-                  }
-                  value={`$${
-                    type === "auction"
-                      ? repairData.startingMaxPrice
-                      : currentPrice?.toFixed(2) || "N/A"
-                  }`}
-                />
-                {type === "auction" && (
-                  <InfoItem
-                    label="Current Lowest"
-                    value={
-                      <div className="flex items-center gap-2">
-                        <Trophy className="w-4 h-4 text-amber-500" />
-                        <span>${currentPrice}</span>
-                      </div>
-                    }
-                  />
-                )}
-                <InfoItem
-                  label={`Total ${type === "auction" ? "Bids" : "Offers"}`}
-                  value={proposals?.length || 0}
-                />
-              </div>
-            </SectionCard>
-
-            {/* Proposal Form */}
-            <SectionCard
-              icon={
-                type === "auction" ? (
-                  <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                ) : (
-                  <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
-                )
-              }
-              title={
-                repairData.hasBid || repairData.hasOffer
-                  ? "Your Proposal"
-                  : `Place ${type === "auction" ? "Bid" : "Offer"}`
-              }
-            >
-              {repairData.hasBid || repairData.hasOffer ? (
-                <div className="space-y-4">
-                  <InfoItem
-                    label={`Your ${type === "auction" ? "Bid" : "Offer"}`}
-                    value={`$${repairData.myBid?.bidPrice?.toFixed(2) || repairData.myOffer?.offerPrice?.toFixed(2)}`}
-                  />
-                  <InfoItem
-                    label="Status"
-                    value={
-                      <Badge variant="default">
-                        {repairData.myBid?.status || repairData.myOffer?.status}
-                      </Badge>
-                    }
-                  />
+              <TabsContent value="proposals">
+                <div className="flex items-center justify-between my-4">
+                  <h3 className="text-lg font-semibold">
+                    {type === "auction" ? "Bid" : "Offer"} Activity
+                  </h3>
                   <Button
                     variant="outline"
-                    className="w-full"
-                    onClick={() => setShowUpdateDialog(true)}
+                    size="sm"
+                    onClick={handleRefresh}
+                    disabled={isFetching}
                   >
-                    Modify {type === "auction" ? "Bid" : "Offer"}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Input
-                      type="number"
-                      label={`Enter ${type === "auction" ? "Bid" : "Offer"} Amount`}
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      placeholder={
-                        type === "auction"
-                          ? `Max $${currentPrice - 0.01}`
-                          : "Minimum $1"
-                      }
-                      min={type === "auction" ? 0.01 : 1}
-                      step="0.01"
+                    <RefreshCw
+                      className={`mr-2 ${isFetching ? "animate-spin" : ""}`}
                     />
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleProposalSubmit}
-                    disabled={!price}
-                  >
-                    Submit {type === "auction" ? "Competitive Bid" : "Offer"}
+                    Refresh
                   </Button>
                 </div>
-              )}
-            </SectionCard>
+                <div className="space-y-3">
+                  {proposals?.length > 0 ? (
+                    proposals.map((proposal) => (
+                      <ProposalItem
+                        key={proposal._id}
+                        proposal={proposal}
+                        type={type}
+                        isLeading={
+                          type === "auction"
+                            ? repairData.currentLowestBid?._id === proposal._id
+                            : false
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="p-4 text-center rounded-lg bg-muted">
+                      <p className="text-muted-foreground">
+                        No {type === "auction" ? "bids" : "offers"} yet - be the
+                        first!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </SectionCard>
+        </div>
 
-            <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
-              {showUpdateDialog && (
-                <UpdateProposalDialog
-                  proposal={repairData.myBid || repairData.myOffer}
-                  type={type}
-                  currentPrice={currentPrice}
-                  onOpenChange={setShowUpdateDialog}
+        {/* Right Column */}
+        <div className="space-y-8">
+          <SectionCard
+            icon={
+              type === "auction" ? (
+                <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              ) : (
+                <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
+              )
+            }
+            title={type === "auction" ? "Auction Timeline" : "Offer Details"}
+          >
+            <div className="space-y-4">
+              {type === "auction" && (
+                <InfoItem
+                  label="Time Remaining"
+                  value={formatDistanceToNow(new Date(repairData.expiresAt))}
                 />
               )}
-            </Dialog>
-          </div>
+              <InfoItem
+                label={type === "auction" ? "Starting Price" : "Average Offer"}
+                value={`$${
+                  type === "auction"
+                    ? repairData.startingMaxPrice
+                    : currentPrice?.toFixed(2) || "N/A"
+                }`}
+              />
+              {type === "auction" && (
+                <InfoItem
+                  label="Current Lowest"
+                  value={
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-amber-500" />
+                      <span>${currentPrice}</span>
+                    </div>
+                  }
+                />
+              )}
+              <InfoItem
+                label={`Total ${type === "auction" ? "Bids" : "Offers"}`}
+                value={proposals?.length || 0}
+              />
+            </div>
+          </SectionCard>
+
+          {/* Proposal Form */}
+          <SectionCard
+            icon={
+              type === "auction" ? (
+                <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              ) : (
+                <Handshake className="w-5 h-5 text-green-600 dark:text-green-400" />
+              )
+            }
+            title={
+              repairData.hasBid || repairData.hasOffer
+                ? "Your Proposal"
+                : `Place ${type === "auction" ? "Bid" : "Offer"}`
+            }
+          >
+            {repairData.hasBid || repairData.hasOffer ? (
+              <div className="space-y-4">
+                <InfoItem
+                  label={`Your ${type === "auction" ? "Bid" : "Offer"}`}
+                  value={`$${repairData.myBid?.bidPrice?.toFixed(2) || repairData.myOffer?.offerPrice?.toFixed(2)}`}
+                />
+                <InfoItem
+                  label="Status"
+                  value={
+                    <Badge variant="default">
+                      {repairData.myBid?.status || repairData.myOffer?.status}
+                    </Badge>
+                  }
+                />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowUpdateDialog(true)}
+                >
+                  Modify {type === "auction" ? "Bid" : "Offer"}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Input
+                    type="number"
+                    label={`Enter ${type === "auction" ? "Bid" : "Offer"} Amount`}
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder={
+                      type === "auction"
+                        ? `Max $${currentPrice - 0.01}`
+                        : "Minimum $1"
+                    }
+                    min={type === "auction" ? 0.01 : 1}
+                    step="0.01"
+                  />
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={handleProposalSubmit}
+                  disabled={!price}
+                >
+                  Submit {type === "auction" ? "Competitive Bid" : "Offer"}
+                </Button>
+              </div>
+            )}
+          </SectionCard>
+
+          <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+            {showUpdateDialog && (
+              <UpdateProposalDialog
+                proposal={repairData.myBid || repairData.myOffer}
+                type={type}
+                currentPrice={currentPrice}
+                onOpenChange={setShowUpdateDialog}
+              />
+            )}
+          </Dialog>
         </div>
       </div>
     </div>

@@ -23,6 +23,7 @@ import {
   Wrench,
 } from "lucide-react";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import { Helmet } from "react-helmet-async";
 
 // Animation variants
 const fadeIn = {
@@ -125,6 +126,9 @@ export default function UserPublicProfilePage() {
       transition={{ duration: 0.5 }}
       className="max-w-6xl mx-auto"
     >
+      <Helmet>
+        <title>{user.username} | FixItHub</title>
+      </Helmet>
       {/* Header Section */}
       <div className="relative overflow-hidden h-60 rounded-t-xl bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />

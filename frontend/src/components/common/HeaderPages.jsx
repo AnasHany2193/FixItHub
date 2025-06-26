@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 const HeaderPages = ({ title, subtitle }) => {
   return (
@@ -7,6 +8,9 @@ const HeaderPages = ({ title, subtitle }) => {
       animate={{ y: 0 }}
       className="py-8 space-y-2"
     >
+      <Helmet>
+        <title>{title} | FixItHub</title>
+      </Helmet>
       <h1 className="text-2xl font-bold text-transparent md:text-3xl bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
         {title}
       </h1>

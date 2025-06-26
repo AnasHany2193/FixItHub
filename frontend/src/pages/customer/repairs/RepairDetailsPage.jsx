@@ -54,6 +54,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { useToast } from "@/hooks/useToast";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import { Helmet } from "react-helmet-async";
 
 const trackingStatusOrder = [
   "received", // 1. Item received
@@ -214,6 +215,9 @@ export default function RepairDetailsPage() {
 
   return (
     <div className="min-h-screen">
+      <Helmet>
+        <title>Repair Request Details | FixItHub</title>
+      </Helmet>
       <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
         {/* Header Section */}
         <header className="mb-8 space-y-4">

@@ -31,6 +31,7 @@ import NotFoundStatus from "@/components/common/NotFoundStatus";
 import { formatDistanceToNow } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDeleteProduct, useProductDetails } from "@/hooks/useAdmin";
+import { Helmet } from "react-helmet-async";
 
 const StatCard = ({ icon, title, value, color }) => (
   <motion.div
@@ -115,11 +116,10 @@ export default function AdminProductDetailsPage() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="min-h-screen px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Helmet>
+        <title>{product.name || "Product Details"} | FixItHub</title>
+      </Helmet>
       <Button
         variant="ghost"
         onClick={() => navigate("/admin/products")}

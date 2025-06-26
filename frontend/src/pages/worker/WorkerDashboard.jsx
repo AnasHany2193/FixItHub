@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import HeaderPages from "@/components/common/HeaderPages";
 import { Badge } from "@/components/ui/badge";
 import { useWorkerHistory } from "@/hooks/useRepair";
+import { Helmet } from "react-helmet-async";
 
 export default function WorkerDashboard() {
   const { data, isLoading } = useWorkerDashboard();
@@ -39,6 +40,9 @@ export default function WorkerDashboard() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      <Helmet>
+        <title>Dashboard | FixItHub</title>
+      </Helmet>
       {/* Header Section */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <HeaderPages

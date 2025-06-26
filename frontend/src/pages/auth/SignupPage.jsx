@@ -12,12 +12,16 @@ import { AuthLink } from "@/components/auth/AuthLink";
 import RoleSelection from "@/components/auth/RoleSelection";
 import CustomerRegisterForm from "@/components/auth/CustomerRegisterForm";
 import WorkerRegisterForm from "@/components/auth/WorkerRegisterForm";
+import { Helmet } from "react-helmet-async";
 
 export default function SignupPage() {
   const [selectedRole, setSelectedRole] = useState(null);
 
   return (
     <div className="relative z-10 w-full space-y-6">
+      <Helmet>
+        <title>Signup | FixItHub</title>
+      </Helmet>
       <CardHeader className="p-0 space-y-2 text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -34,7 +38,6 @@ export default function SignupPage() {
             : "Create your account in 30 seconds"}
         </CardDescription>
       </CardHeader>
-
       <motion.div
         key={selectedRole ? "form" : "role-select"}
         initial={{ opacity: 0, x: selectedRole ? 50 : -50 }}
@@ -51,7 +54,6 @@ export default function SignupPage() {
           <WorkerRegisterForm onBack={() => setSelectedRole(null)} />
         )}
       </motion.div>
-
       <CardFooter className="flex justify-center w-full gap-2 p-0 text-sm text-gray-600 dark:text-gray-400">
         <p>Already have an account?</p>
         <AuthLink to="/login">Log In</AuthLink>

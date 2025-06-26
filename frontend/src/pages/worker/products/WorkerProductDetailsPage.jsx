@@ -26,6 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { Separator } from "@/components/ui/separator";
+import { Helmet } from "react-helmet-async";
 
 export default function WorkerProductDetailsPage() {
   const navigate = useNavigate();
@@ -76,7 +77,11 @@ export default function WorkerProductDetailsPage() {
       animate={{ opacity: 1 }}
       className="min-h-screen"
     >
-      <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
+      <Helmet>
+        <title>{product.name || "Product Details"} | FixItHub</title>
+      </Helmet>
+
+      <div className="">
         <div className="flex items-center justify-between mb-6">
           <Button
             variant="link"

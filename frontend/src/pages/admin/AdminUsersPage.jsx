@@ -53,9 +53,9 @@ export default function AdminUsersPage() {
   const { mutate: updateWorkerApproval } = useUpdateWorkerApproval();
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Header Section */}
-      <div className="flex flex-col justify-between gap-4 mb-8 sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <HeaderPages
           title="User Management"
           subtitle="Manage users, change their statuses, or approve workers"
@@ -363,7 +363,7 @@ export default function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 

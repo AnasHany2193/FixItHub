@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 import axiosClient from "@/api/client";
+import { Helmet } from "react-helmet-async";
 
 const Section = ({ title, icon, children, isOpen, setIsOpen }) => (
   <div className="mb-6 overflow-hidden border border-gray-200 rounded-xl dark:border-gray-700">
@@ -241,6 +242,9 @@ export default function UserProfilePage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <Helmet>
+        <title>{user.username} | FixItHub</title>
+      </Helmet>
       {/* Header Gradient */}
       <div className="relative h-48 rounded-t-xl bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
@@ -823,7 +827,7 @@ export default function UserProfilePage() {
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <Button
               type="submit"
-              className="gap-2 shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/30"
+              className="gap-2 shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:shadow-indigo-500/30 dark:text-gray-300"
               disabled={isPending}
             >
               <Save className="w-5 h-5" />

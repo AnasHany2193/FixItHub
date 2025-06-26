@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import contact from "../../img/contact-page/contact.jpg";
+import { Helmet } from "react-helmet-async";
 
 const ContactPage = () => {
   const contactInfo = [
@@ -72,6 +73,9 @@ const ContactPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-JosefinSans">
+      <Helmet>
+        <title>Contact | FixItHub</title>
+      </Helmet>
       {/* Hero Section */}
       <motion.section
         initial={{ opacity: 0 }}

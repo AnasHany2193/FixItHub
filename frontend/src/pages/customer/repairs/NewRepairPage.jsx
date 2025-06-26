@@ -21,12 +21,10 @@ export default function NewRepairPage() {
       >
         ← Back to Repairs
       </Button>
-
       <HeaderPages
         title="New Repair Request"
         subtitle="Fill in the details below to create a new repair auction"
       />
-
       <RepairRequestForm />
     </motion.div>
   );

@@ -8,10 +8,14 @@ import {
 
 import ResendOtpForm from "@/components/auth/ResendOtpForm";
 import { AuthLink } from "@/components/auth/AuthLink";
+import { Helmet } from "react-helmet-async";
 
 const ResendOtpPage = () => {
   return (
     <div className="relative z-10 w-full space-y-6">
+      <Helmet>
+        <title>Resend OTP | FixItHub</title>
+      </Helmet>
       <CardHeader className="p-0 space-y-2 text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}

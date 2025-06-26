@@ -44,6 +44,7 @@ import { useAuth } from "@/context/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { Rating } from "@/components/common/Rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Helmet } from "react-helmet-async";
 
 export default function CustomerMarketplaceDetailsPage() {
   const navigate = useNavigate();
@@ -82,6 +83,9 @@ export default function CustomerMarketplaceDetailsPage() {
       animate={{ opacity: 1 }}
       className="min-h-screen"
     >
+      <Helmet>
+        <title>Product Details | FixItHub</title>
+      </Helmet>
       <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <Button
           variant="link"

@@ -8,10 +8,14 @@ import {
 } from "@/components/ui/card";
 import ResetPasswordForm from "@/components/auth/ResetPasswordForm";
 import { AuthLink } from "@/components/auth/AuthLink";
+import { Helmet } from "react-helmet-async";
 
 const ResetPasswordPage = () => {
   return (
     <div className="relative z-10 w-full space-y-6">
+      <Helmet>
+        <title>Reset Password | FixItHub</title>
+      </Helmet>
       <CardHeader className="p-0 space-y-2 text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -26,7 +30,6 @@ const ResetPasswordPage = () => {
           Enter your new password
         </CardDescription>
       </CardHeader>
-
       <motion.div
         initial={{ opacity: 0, x: 50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -34,7 +37,6 @@ const ResetPasswordPage = () => {
       >
         <ResetPasswordForm />
       </motion.div>
-
       <CardFooter className="flex justify-center gap-2 p-0 text-sm text-center text-gray-600 dark:text-gray-400">
         <AuthLink to="/verify-email">Login</AuthLink>
         <span className="text-gray-400">•</span>

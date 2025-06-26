@@ -19,6 +19,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 import { useToast } from "@/hooks/useToast";
 import { useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 
 export default function OrderDetailsPage() {
   const { toast } = useToast();
@@ -68,6 +69,9 @@ export default function OrderDetailsPage() {
       animate={{ opacity: 1 }}
       className="px-4 py-8 mx-auto max-w-7xl"
     >
+      <Helmet>
+        <title>Order Details | FixItHub</title>
+      </Helmet>
       <div className="mb-6">
         <Button
           variant="ghost"
@@ -78,7 +82,6 @@ export default function OrderDetailsPage() {
           Back to Orders
         </Button>
       </div>
-
       {isLoading ? (
         <div className="flex items-center justify-center min-h-screen">
           <LoadingSpinner size="lg" />

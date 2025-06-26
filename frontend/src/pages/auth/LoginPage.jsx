@@ -6,10 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Helmet } from "react-helmet-async";
 
 export default function LoginPage() {
   return (
     <div className="relative z-10 w-full space-y-6">
+      <Helmet>
+        <title>Login | FixItHub</title>
+      </Helmet>
       {/* Header and Description */}
       <CardHeader className="p-0 space-y-2 text-center">
         <CardTitle className="text-3xl font-bold text-transparent bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text dark:from-indigo-400 dark:to-indigo-300">

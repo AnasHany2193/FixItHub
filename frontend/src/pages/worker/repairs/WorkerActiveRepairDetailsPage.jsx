@@ -40,6 +40,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
+import { Helmet } from "react-helmet-async";
 
 const trackingStatusOrder = [
   "received", // 1. Item received
@@ -107,241 +108,238 @@ export default function WorkerActiveRepairDetailsPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="px-4 py-8 mx-auto max-w-7xl sm:px-6 lg:px-8">
-        {/* Header Section */}
-        <header className="mb-8 space-y-4">
-          <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.98 }}>
-            <Button
-              variant="ghost"
-              className="gap-2 -ml-2 group text-muted-foreground hover:text-foreground"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-              <span className="text-sm">Back to Repairs</span>
-            </Button>
-          </motion.div>
+      <Helmet>
+        <title>{repair.title || "Repair Details"} | FixItHub</title>
+      </Helmet>
+      {/* Header Section */}
+      <header className="mb-8 space-y-4">
+        <motion.div whileHover={{ x: -5 }} whileTap={{ scale: 0.98 }}>
+          <Button
+            variant="ghost"
+            className="gap-2 -ml-2 group text-muted-foreground hover:text-foreground"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+            <span className="text-sm">Back to Repairs</span>
+          </Button>
+        </motion.div>
 
-          <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                  {repair.title}
-                </h1>
-                <Badge variant="outline" className="font-mono">
-                  #{id.slice(-6)}
-                </Badge>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className={statusConfig.color}>
-                  {statusConfig.label}
-                </Badge>
-                <Badge
-                  variant={repair.shippingRequired ? "default" : "secondary"}
-                >
-                  {repair.shippingRequired
-                    ? "Shipping Required"
-                    : "Local Service"}
-                </Badge>
-              </div>
+        <div className="flex flex-col items-start justify-between gap-4 md:flex-row">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                {repair.title}
+              </h1>
+              <Badge variant="outline" className="font-mono">
+                #{id.slice(-6)}
+              </Badge>
             </div>
-
-            <div className="flex flex-col items-end gap-1">
-              <p className="text-sm text-muted-foreground">
-                Created: {formatDate(repair.createdAt)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Updated: {formatDate(repair.updatedAt)}
-              </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
+              <Badge
+                variant={repair.shippingRequired ? "default" : "secondary"}
+              >
+                {repair.shippingRequired
+                  ? "Shipping Required"
+                  : "Local Service"}
+              </Badge>
             </div>
           </div>
-        </header>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Left Column */}
-          <div className="space-y-8 lg:col-span-2">
-            <ImageCarousel images={repair.photos} />
+          <div className="flex flex-col items-end gap-1">
+            <p className="text-sm text-muted-foreground">
+              Created: {formatDate(repair.createdAt)}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Updated: {formatDate(repair.updatedAt)}
+            </p>
+          </div>
+        </div>
+      </header>
 
-            {/* Issue Details */}
-            <SectionCard
-              icon={
-                <Wrench className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Job Details"
-            >
-              <div className="space-y-4">
-                <InfoItem label="Item Type" value={repair.itemType} />
-                <InfoItem label="Category" value={repair.category} />
-                <div className="pt-4">
-                  <h3 className="mb-2 font-medium text-foreground">
-                    Customer Issue
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {repair.issueDescription}
-                  </p>
-                </div>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        {/* Left Column */}
+        <div className="space-y-8 lg:col-span-2">
+          <ImageCarousel images={repair.photos} />
+
+          {/* Issue Details */}
+          <SectionCard
+            icon={
+              <Wrench className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            }
+            title="Job Details"
+          >
+            <div className="space-y-4">
+              <InfoItem label="Item Type" value={repair.itemType} />
+              <InfoItem label="Category" value={repair.category} />
+              <div className="pt-4">
+                <h3 className="mb-2 font-medium text-foreground">
+                  Customer Issue
+                </h3>
+                <p className="text-muted-foreground">
+                  {repair.issueDescription}
+                </p>
               </div>
-            </SectionCard>
+            </div>
+          </SectionCard>
 
-            <SectionCard
-              icon={
-                <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Repair Journey"
-            >
-              <StatusTimeline
-                trackingUpdates={repair.trackingUpdates}
-                onAddStep={() => setSelectedStatus("")}
+          <SectionCard
+            icon={
+              <RefreshCw className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            }
+            title="Repair Journey"
+          >
+            <StatusTimeline
+              trackingUpdates={repair.trackingUpdates}
+              onAddStep={() => setSelectedStatus("")}
+            />
+          </SectionCard>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-8">
+          <SectionCard
+            icon={
+              <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            }
+            title="Customer Information"
+          >
+            <div className="flex items-center gap-4 p-3">
+              <Link to={`/profile/${repair.customer?._id}`}>
+                <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
+                  <AvatarImage src={repair.customer?.profile?.avatar?.url} />
+                  <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
+                    {repair.customer?.username?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </Link>
+              <div>
+                <p className="font-medium">
+                  {repair.customer?.username || "Customer"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {repair.shippingRequired ? "Remote Service" : "Local Service"}
+                </p>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            icon={
+              <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            }
+            title="Payment Details"
+          >
+            <div className="space-y-4">
+              <InfoItem
+                label="Agreed Price"
+                value={`$${repair.paymentAmount?.toFixed(2)}`}
               />
-            </SectionCard>
-          </div>
+              <InfoItem
+                label="Payment Status"
+                value={
+                  <Badge
+                    variant={
+                      repair.paymentStatus === "paid"
+                        ? "success"
+                        : repair.paymentStatus === "refunded"
+                          ? "destructive"
+                          : "warning"
+                    }
+                  >
+                    {repair.paymentStatus?.toUpperCase()}
+                  </Badge>
+                }
+              />
 
-          {/* Right Column */}
-          <div className="space-y-8">
+              {repair.paymentStatus === "paid" &&
+                repair.status === "in_progress" && (
+                  <Button
+                    className="w-full gap-2"
+                    onClick={() => setShowCompleteDialog(true)}
+                    disabled={isCompleting}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Mark as Completed
+                  </Button>
+                )}
+            </div>
+          </SectionCard>
+
+          {(repair.status === "in_progress" ||
+            repair.status === "awaiting_payment") && (
             <SectionCard
               icon={
-                <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               }
-              title="Customer Information"
-            >
-              <div className="flex items-center gap-4 p-3">
-                <Link to={`/profile/${repair.customer?._id}`}>
-                  <Avatar className="border-2 border-indigo-100 cursor-pointer dark:border-gray-600">
-                    <AvatarImage src={repair.customer?.profile?.avatar?.url} />
-                    <AvatarFallback className="bg-indigo-100 dark:bg-gray-700">
-                      {repair.customer?.username?.[0]?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
-                <div>
-                  <p className="font-medium">
-                    {repair.customer?.username || "Customer"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {repair.shippingRequired
-                      ? "Remote Service"
-                      : "Local Service"}
-                  </p>
-                </div>
-              </div>
-            </SectionCard>
-
-            <SectionCard
-              icon={
-                <DollarSign className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-              }
-              title="Payment Details"
+              title="Repair Actions"
             >
               <div className="space-y-4">
-                <InfoItem
-                  label="Agreed Price"
-                  value={`$${repair.paymentAmount?.toFixed(2)}`}
-                />
-                <InfoItem
-                  label="Payment Status"
-                  value={
-                    <Badge
-                      variant={
-                        repair.paymentStatus === "paid"
-                          ? "success"
-                          : repair.paymentStatus === "refunded"
-                            ? "destructive"
-                            : "warning"
+                {/* Status update controls */}
+                {repair.trackingUpdates.length > 0 && (
+                  <>
+                    <Select
+                      onValueChange={setSelectedStatus}
+                      value={selectedStatus}
+                      disabled={repair.paymentStatus === "paid"}
+                    >
+                      <SelectTrigger className="w-full capitalize">
+                        {selectedStatus.replace(/_/g, " ") ||
+                          "Select next status"}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {trackingStatusOrder
+                          .slice(1, 5) // Only allow up to 'awaiting_payment'
+                          .filter((status) => {
+                            const currentIndex = trackingStatusOrder.indexOf(
+                              repair.trackingUpdates.slice(-1)[0].status
+                            );
+                            return (
+                              trackingStatusOrder.indexOf(status) ===
+                              currentIndex + 1
+                            );
+                          })
+                          .map((status) => (
+                            <SelectItem
+                              key={status}
+                              value={status}
+                              className="capitalize"
+                            >
+                              {status.replace(/_/g, " ")}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        updateStatus({ repairId: id, status: selectedStatus })
+                      }
+                      disabled={
+                        !selectedStatus || repair.paymentStatus === "paid"
                       }
                     >
-                      {repair.paymentStatus?.toUpperCase()}
-                    </Badge>
-                  }
-                />
-
-                {repair.paymentStatus === "paid" &&
-                  repair.status === "in_progress" && (
-                    <Button
-                      className="w-full gap-2"
-                      onClick={() => setShowCompleteDialog(true)}
-                      disabled={isCompleting}
-                    >
-                      <CheckCircle className="w-4 h-4" />
-                      Mark as Completed
+                      Update Status
                     </Button>
-                  )}
+                  </>
+                )}
+
+                {/* Return item button - only show if not paid */}
+                {repair.paymentStatus !== "paid" && (
+                  <Button
+                    variant="destructive"
+                    className="w-full gap-2"
+                    onClick={() => returnRepair({ repairId: id })}
+                    disabled={isReturning}
+                  >
+                    <Package className="w-4 h-4" />
+                    Return Item
+                  </Button>
+                )}
               </div>
             </SectionCard>
-
-            {(repair.status === "in_progress" ||
-              repair.status === "awaiting_payment") && (
-              <SectionCard
-                icon={
-                  <Hammer className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                }
-                title="Repair Actions"
-              >
-                <div className="space-y-4">
-                  {/* Status update controls */}
-                  {repair.trackingUpdates.length > 0 && (
-                    <>
-                      <Select
-                        onValueChange={setSelectedStatus}
-                        value={selectedStatus}
-                        disabled={repair.paymentStatus === "paid"}
-                      >
-                        <SelectTrigger className="w-full capitalize">
-                          {selectedStatus.replace(/_/g, " ") ||
-                            "Select next status"}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {trackingStatusOrder
-                            .slice(1, 5) // Only allow up to 'awaiting_payment'
-                            .filter((status) => {
-                              const currentIndex = trackingStatusOrder.indexOf(
-                                repair.trackingUpdates.slice(-1)[0].status
-                              );
-                              return (
-                                trackingStatusOrder.indexOf(status) ===
-                                currentIndex + 1
-                              );
-                            })
-                            .map((status) => (
-                              <SelectItem
-                                key={status}
-                                value={status}
-                                className="capitalize"
-                              >
-                                {status.replace(/_/g, " ")}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        className="w-full"
-                        onClick={() =>
-                          updateStatus({ repairId: id, status: selectedStatus })
-                        }
-                        disabled={
-                          !selectedStatus || repair.paymentStatus === "paid"
-                        }
-                      >
-                        Update Status
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Return item button - only show if not paid */}
-                  {repair.paymentStatus !== "paid" && (
-                    <Button
-                      variant="destructive"
-                      className="w-full gap-2"
-                      onClick={() => returnRepair({ repairId: id })}
-                      disabled={isReturning}
-                    >
-                      <Package className="w-4 h-4" />
-                      Return Item
-                    </Button>
-                  )}
-                </div>
-              </SectionCard>
-            )}
-          </div>
+          )}
         </div>
       </div>
 

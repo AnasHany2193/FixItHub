@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Rocket, AlertTriangle } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 // Star component for background
 const StarField = () => (
@@ -87,6 +88,9 @@ export default function NotFoundPage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden text-white bg-gradient-to-b from-gray-900 to-gray-800">
+      <Helmet>
+        <title>Not Found | FixItHub</title>
+      </Helmet>
       <style>
         {`
           @keyframes twinkle {

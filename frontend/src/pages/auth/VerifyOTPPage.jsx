@@ -7,10 +7,14 @@ import {
 } from "@/components/ui/card";
 import OTPForm from "@/components/auth/OTPForm";
 import { AuthLink } from "@/components/auth/AuthLink";
+import { Helmet } from "react-helmet-async";
 
 const VerifyOtpPage = () => {
   return (
     <div className="relative z-10 w-full space-y-6">
+      <Helmet>
+        <title>Verify OTP | FixItHub</title>
+      </Helmet>
       <CardHeader className="p-0 space-y-2 text-center">
         <motion.div
           initial={{ y: -20, opacity: 0 }}

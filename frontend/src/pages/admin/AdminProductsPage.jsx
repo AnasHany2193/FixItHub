@@ -54,9 +54,6 @@ export default function AdminProductsPage() {
         <HeaderPages
           title="Manage Products"
           subtitle="View and manage marketplace products"
-          icon={
-            <Package className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-          }
         />
 
         <div className="flex items-center gap-2">

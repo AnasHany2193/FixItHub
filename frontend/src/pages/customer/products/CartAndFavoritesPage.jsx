@@ -17,6 +17,7 @@ import {
 } from "@/hooks/useMarketplace";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import HeaderPages from "@/components/common/HeaderPages";
+import { Helmet } from "react-helmet-async";
 
 export default function CartAndFavoritesPage() {
   const [activeTab, setActiveTab] = useState("cart");
@@ -77,6 +78,9 @@ const CartSection = ({ cart, isLoading }) => {
 
   return (
     <div className="space-y-6">
+      <Helmet>
+        <title>Your Cart | FixItHub</title>
+      </Helmet>
       {/* Cart Items */}
       {cart?.items?.length > 0 ? (
         <>
@@ -220,6 +224,9 @@ const FavoritesSection = ({ favorites, isLoading }) => {
 
   return (
     <div className="space-y-4">
+      <Helmet>
+        <title>Your Favorites | FixItHub</title>
+      </Helmet>
       {favorites?.length > 0 ? (
         favorites.map((product) => (
           <motion.div

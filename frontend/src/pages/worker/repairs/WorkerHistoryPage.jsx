@@ -44,7 +44,7 @@ export default function WorkerHistoryPage() {
   return (
     <>
       {/* Header Section */}
-      <header className="flex flex-col justify-between gap-4 mb-8 sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <HeaderPages
           title="Repair History"
           subtitle="Your completed and returned repair jobs"
@@ -63,7 +63,7 @@ export default function WorkerHistoryPage() {
             ))}
           </SelectContent>
         </Select>
-      </header>
+      </div>
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 gap-4">

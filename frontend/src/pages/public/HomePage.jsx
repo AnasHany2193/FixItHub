@@ -18,6 +18,7 @@ import man from "../../img/home-page/man-bg-non.png";
 import maintenance from "../../img/home-page/maintenance.jpg";
 import qualityService from "../../img/home-page/qualityService.png";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Helmet } from "react-helmet-async";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -104,6 +105,10 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen text-gray-900 bg-gray-50 dark:bg-gray-900 dark:text-gray-100 font-JosefinSans">
+      <Helmet>
+        <title>Home | FixItHub</title>
+      </Helmet>
+
       {/* Hero Section */}
       <motion.header
         className="grid items-center grid-cols-1 gap-8 px-6 py-10 md:grid-cols-2 md:px-12"

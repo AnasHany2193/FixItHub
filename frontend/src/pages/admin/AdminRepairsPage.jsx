@@ -86,7 +86,7 @@ export default function AdminRepairsPage() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 mb-6 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <HeaderPages
           title="Repair Requests"
           subtitle="Manage and Review Repair Requests"

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import HeaderPages from "@/components/common/HeaderPages";
 import { Badge } from "@/components/ui/badge";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading: loadingStats } = useAdminDashboardStats();
@@ -33,6 +34,9 @@ export default function AdminDashboard() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      <Helmet>
+        <title>Dashboard | FixItHub</title>
+      </Helmet>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <HeaderPages
           title="Admin Dashboard"

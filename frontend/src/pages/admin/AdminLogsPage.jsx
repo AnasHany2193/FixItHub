@@ -82,7 +82,7 @@ const AdminLogsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <>
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <HeaderPages
           title="Admin Activity Logs"
@@ -131,7 +131,7 @@ const AdminLogsPage = () => {
       ) : (
         <NotFoundState />
       )}
-    </div>
+    </>
   );
 };
 

@@ -29,7 +29,7 @@ export default function WorkerActiveRepairsPage() {
 
   return (
     <>
-      <div className="flex flex-col justify-between gap-4 mb-8 sm:flex-row sm:items-center">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <HeaderPages
           title="Active Repair Jobs"
           subtitle=" Manage your current repair assignments and track progress"

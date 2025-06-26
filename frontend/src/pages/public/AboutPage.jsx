@@ -10,6 +10,7 @@ import worker from "../../img/about-page/worker.png";
 import vision from "../../img/about-page/vision.jpeg";
 import { useNavigate } from "react-router";
 import { Progress } from "@/components/ui/progress";
+import { Helmet } from "react-helmet-async";
 
 export default function AboutPage() {
   const [experience, setExperience] = useState(0);
@@ -65,6 +66,9 @@ export default function AboutPage() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
+      <Helmet>
+        <title>About | FixItHub</title>
+      </Helmet>
       {/* Hero Section */}
       <motion.div
         className="relative w-full h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden"

@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotFoundStatus from "@/components/common/NotFoundStatus";
 import { ImageCarousel } from "@/components/common/ImageCarousel";
 import { motion } from "framer-motion";
+import { Helmet } from "react-helmet-async";
 
 // Status configuration reused from customer page
 const STATUS_CONFIG = {
@@ -286,7 +287,10 @@ export default function AdminRepairDetailsPage() {
   const handleCancelRepair = () => cancelRepair.mutate(id);
 
   return (
-    <div className="min-h-screen px-4 py-8 mx-auto max-w-7xl">
+    <>
+      <Helmet>
+        <title>{repair.title || "Repair Details"} | FixItHub</title>
+      </Helmet>
       {/* Header */}
       <header className="mb-8 space-y-4">
         <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
@@ -383,6 +387,6 @@ export default function AdminRepairDetailsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

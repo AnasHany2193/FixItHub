@@ -32,7 +32,7 @@ export default function ProductListPage() {
   return (
     <>
       {/* Header section */}
-      <div className="flex flex-col gap-4 mb-8 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <HeaderPages
           title="My Products"
           subtitle="Manage your active Products"
@@ -40,7 +40,7 @@ export default function ProductListPage() {
 
         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
           <Button
-            className="gap-2 shadow-lg bg-gradient-to-r dark:text-gray-200 from-indigo-600 to-purple-600 hover:shadow-indigo-500/30"
+            className="gap-2 my-2 shadow-lg bg-gradient-to-r dark:text-gray-200 from-indigo-600 to-purple-600 hover:shadow-indigo-500/30"
             onClick={() => navigate("/marketplace/new-product")}
           >
             <PlusCircle className="w-5 h-5" />
