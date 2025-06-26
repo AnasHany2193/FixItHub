@@ -13,11 +13,11 @@ import {
 import buy from "../../img/home-page/buy.jpg";
 import hand from "../../img/home-page/hand.jpg";
 import sell from "../../img/home-page/sell.jpg";
-import testimonialsImg from "../../img/home-page/iceBear.jpg";
 import repair from "../../img/home-page/repair.jpg";
 import man from "../../img/home-page/man-bg-non.png";
 import maintenance from "../../img/home-page/maintenance.jpg";
 import qualityService from "../../img/home-page/qualityService.png";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -76,22 +76,29 @@ const HomePage = () => {
 
   const testimonials = [
     {
-      name: "Alex D",
-      image: testimonialsImg,
+      name: "Ahmed Mohamed",
+      avatar: "https://xsgames.co/randomusers/assets/avatars/male/1.jpg",
       feedback:
-        "Excellent service. Affordable. FixItHub makes any maintenance problem very easy.",
+        "FixItHub made fixing my laptop a breeze! The worker was professional, and the process was so smooth. Highly recommend! 😊",
+      role: "Customer",
+      context: "Electronics Repair",
     },
     {
-      name: "John Smith",
-      image: testimonialsImg,
+      name: "Fatima Hassan",
+      avatar: "https://xsgames.co/randomusers/assets/avatars/female/1.jpg",
       feedback:
-        "Excellent service. Affordable and reliable. I trust FixItHub for all my repairs. FixItHub saved me so much time and money.",
+        "I bought tools from the marketplace and got them delivered fast. Affordable and reliable service! 🌟",
+      role: "Customer",
+      context: "Marketplace Purchase",
     },
     {
-      name: "Maria Green",
-      image: testimonialsImg,
+      name: "Anas Hany",
+      avatar:
+        "http://localhost:5000/uploads/713d2b3b-09ca-4bfa-aadb-51f1494a069f.jpg",
       feedback:
-        "Excellent service. Affordable. Really, I’m very happy to work with you. They are truly professionals.",
+        "The repair request form was easy to use, and the worker fixed my AC in no time. FixItHub is a lifesaver! 🔧",
+      role: "Customer",
+      context: "Home Appliance Repair",
     },
   ];
 
@@ -270,25 +277,37 @@ const HomePage = () => {
             Testimonials
           </h2>
           <h1 className="mb-12 text-3xl font-bold">What Our Clients Say</h1>
-
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {testimonials.map((testimonial, i) => (
               <motion.div
                 key={i}
-                className="flex flex-col justify-around p-6 bg-white shadow-lg dark:bg-gray-800 rounded-xl"
+                className="flex flex-col justify-between p-6 bg-white border shadow-lg dark:bg-gray-800 rounded-xl border-indigo-100/50 dark:border-gray-700"
                 whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
               >
-                <ThumbsUp className="w-10 h-10 mx-auto mb-4 text-indigo-600" />
-                <p className="mb-6 text-gray-600 dark:text-gray-300">
+                <ThumbsUp className="w-10 h-10 mx-auto mb-4 text-indigo-600 dark:text-indigo-400" />
+                <p className="mb-4 text-center text-gray-600 dark:text-gray-300">
                   {testimonial.feedback}
                 </p>
-                <div className="flex items-center justify-center gap-4">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-12 h-12 border-2 border-indigo-600 rounded-full"
-                  />
-                  <span className="font-bold">{testimonial.name}</span>
+                <div className="flex flex-col items-center gap-2">
+                  <Avatar className="w-12 h-12 border-2 border-indigo-600 dark:border-indigo-400">
+                    <AvatarImage
+                      src={testimonial.avatar}
+                      alt={testimonial.name}
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-indigo-600 bg-indigo-100 dark:bg-indigo-800 dark:text-indigo-400">
+                      {testimonial.name.split(" ")[0][0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <span className="font-bold text-gray-900 dark:text-gray-100">
+                      {testimonial.name}
+                    </span>
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400">
+                      {testimonial.role} • {testimonial.context}
+                    </p>
+                  </div>
                 </div>
               </motion.div>
             ))}
