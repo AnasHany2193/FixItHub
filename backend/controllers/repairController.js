@@ -1,6 +1,7 @@
 import createHttpError from "http-errors";
 
 import Bid from "../models/Bid.js";
+import User from "../models/User.js";
 import Offer from "../models/Offer.js";
 import Auction from "../models/Auction.js";
 
