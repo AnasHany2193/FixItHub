@@ -21,6 +21,7 @@ import {
   startRepairAuction,
   submitBid,
   submitOffer,
+  submitRepairRating,
   updateBid,
   updateOffer,
   updateRepairRequest,
@@ -455,6 +456,33 @@ export const useUpdateOffer = () => {
         variant: "error",
         title: "Update Failed",
         description: error.message,
+      });
+    },
+  });
+};
+
+// Rating
+export const useSubmitRepairRating = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: submitRepairRating,
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: data.message,
+        variant: "success",
+      });
+      // Invalidate related queries
+      queryClient.invalidateQueries(["customer-history"]);
+      queryClient.invalidateQueries(["worker-profile"]);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });

@@ -196,6 +196,7 @@ export const getWorkerHistory = async (params = {}) => {
     );
   }
 };
+
 // Auction & Non-Auction endpoints
 export const getRepairList = async (type, filters) => {
   try {
@@ -277,5 +278,17 @@ export const updateOffer = async ({ offerId, offerPrice }) => {
     return data;
   } catch (error) {
     throw new Error(error.response?.data?.message || "Offer update failed");
+  }
+};
+
+// Rating
+export const submitRepairRating = async ({ repairId, rating }) => {
+  try {
+    const { data } = await axiosClient.post(`/repairs/${repairId}/rate`, {
+      rating,
+    });
+    return data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || "Failed to submit rating");
   }
 };
