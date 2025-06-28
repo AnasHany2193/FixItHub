@@ -80,6 +80,10 @@ const RepairRequestSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isRated: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       enum: Object.values(RepairStatus),

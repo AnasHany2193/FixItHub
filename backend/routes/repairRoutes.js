@@ -24,6 +24,7 @@ import {
   getWorkerRepair,
   getDirectOffersRepairs,
   getDirectOffersRepairDetails,
+  submitWorkerRating,
 } from "../controllers/repairController.js";
 import {
   getAuctionDetails,
@@ -181,6 +182,12 @@ router.put(
   protect,
   roleCheck("customer"),
   acceptOffer
+);
+router.post(
+  "/:repairId/rate",
+  protect,
+  roleCheck("customer"),
+  submitWorkerRating
 );
 
 export default router;

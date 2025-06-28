@@ -986,3 +986,57 @@ export const getWorkerRepairsHistory = async (req, res, next) => {
     next(error);
   }
 };
+
+// Submit a rating for a worker
+export const submitWorkerRating = async (req, res, next) => {
+  try {
+    const { repairId } = req.params;
+    const { rating } = req.body;
+    const customerId = req.user._id;
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5)
+      throw createHttpError.BadRequest("Rating must be between 1 and 5");
+
+    // Find the repair
+    const repair = await RepairRequest.findById(repairId);
+    if (!repair) throw createHttpError.NotFound("Repair not found");
+
+    // Verify customer is the requester
+    if (repair.customer.toString() !== customerId.toString())
+      throw createHttpError.Forbidden("Only the repair's customer can rate");
+
+    // Check if already rated (optional, assumes isRated field)
+    if (repair.isRated)
+      throw createHttpError.BadRequest("You have already rated this repair");
+
+    // Find the worker
+    const worker = await User.findById(repair.worker);
+    if (!worker) throw createHttpError.NotFound("Worker not found");
+
+    // Update worker's rating
+    const currentCount = worker.rating.count || 0;
+    const currentAverage = worker.rating.average || 0;
+    const newCount = currentCount + 1;
+    const newAverage = (currentAverage * currentCount + rating) / newCount;
+
+    worker.rating.average = parseFloat(newAverage.toFixed(1));
+    worker.rating.count = newCount;
+    await worker.save();
+
+    // Mark repair as rated (optional, requires isRated field in Repair model)
+    repair.isRated = true;
+    await repair.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Rating submitted successfully",
+      data: {
+        workerId: worker._id,
+        rating: worker.rating,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
